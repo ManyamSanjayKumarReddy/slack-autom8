@@ -1,4 +1,4 @@
-export const TOKEN_KEY = "slack_summarizer_token";
+export const TOKEN_KEY = "token";
 export const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 export function getToken(): string | null {
