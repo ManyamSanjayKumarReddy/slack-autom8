@@ -75,7 +75,10 @@ function OnboardingPage() {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Failed to save channels");
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Failed to save channels (${res.status}) ${text}`);
+      }
       navigate({ to: "/dashboard" });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save channels");
