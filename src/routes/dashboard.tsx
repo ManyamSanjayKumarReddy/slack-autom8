@@ -1,17 +1,27 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { apiFetch, clearToken, isAuthenticated } from "@/lib/auth";
+import { apiFetch, clearToken, isAuthenticated, setToken } from "@/lib/auth";
 import { SlackIcon } from "@/components/SlackIcon";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — Slack Summarizer" },
-      { name: "description", content: "Your Slack channel summaries." },
+      { name: "description", content: "Your tracked Slack channels and summaries." },
     ],
   }),
   beforeLoad: () => {
-    if (typeof window !== "undefined" && !isAuthenticated()) {
+    if (typeof window === "undefined") return;
+    // Capture token from URL (OAuth redirect)
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (token) {
+      setToken(token);
+      // Clean URL
+      window.history.replaceState({}, "", "/dashboard");
+      return;
+    }
+    if (!isAuthenticated()) {
       throw redirect({ to: "/" });
     }
   },
@@ -19,10 +29,17 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 interface UserInfo {
-  name?: string;
-  display_name?: string;
-  real_name?: string;
-  email?: string;
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface TrackedChannel {
+  channel_id: string;
+  channel_name: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 function getGreeting(): string {
@@ -35,17 +52,29 @@ function getGreeting(): string {
 function DashboardPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserInfo | null>(null);
+  const [channels, setChannels] = useState<TrackedChannel[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiFetch("/me");
-        if (!res.ok) return;
-        const data = (await res.json()) as UserInfo;
-        if (!cancelled) setUser(data);
+        const [meRes, chRes] = await Promise.all([
+          apiFetch("/users/me"),
+          apiFetch("/users/me/channels"),
+        ]);
+        if (!cancelled && meRes.ok) {
+          setUser((await meRes.json()) as UserInfo);
+        }
+        if (!cancelled && chRes.ok) {
+          const data = (await chRes.json()) as { total: number; channels: TrackedChannel[] };
+          setChannels(data.channels ?? []);
+        }
       } catch {
-        // ignore — UI gracefully falls back
+        // ignore
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
@@ -58,8 +87,19 @@ function DashboardPage() {
     navigate({ to: "/" });
   };
 
-  const displayName =
-    user?.display_name || user?.real_name || user?.name || user?.email || "there";
+  const handleRemove = async (channelId: string) => {
+    setRemovingId(channelId);
+    try {
+      const res = await apiFetch(`/users/me/channels/${channelId}`, { method: "DELETE" });
+      if (res.ok) {
+        setChannels((prev) => (prev ? prev.filter((c) => c.channel_id !== channelId) : prev));
+      }
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const displayName = user?.name || user?.email || "there";
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,36 +125,79 @@ function DashboardPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-12">
-        <div className="mb-10">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-            {getGreeting()}, {displayName}
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Here's an overview of your latest Slack summaries.
-          </p>
+        <div className="mb-10 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+              {getGreeting()}, {displayName}
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+              Manage the Slack channels you want summarized.
+            </p>
+          </div>
+          {channels && channels.length > 0 && (
+            <Link
+              to="/onboarding"
+              className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
+            >
+              Manage channels
+            </Link>
+          )}
         </div>
 
-        <section className="rounded-2xl border border-dashed border-border bg-card p-16 text-center shadow-[var(--shadow-card)]">
-          <div className="mx-auto h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-6 w-6 text-primary"
+        {loading ? (
+          <section className="rounded-2xl border border-border bg-card p-16 text-center text-muted-foreground shadow-[var(--shadow-card)]">
+            Loading…
+          </section>
+        ) : !channels || channels.length === 0 ? (
+          <section className="rounded-2xl border border-dashed border-border bg-card p-16 text-center shadow-[var(--shadow-card)]">
+            <div className="mx-auto h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
+              <SlackIcon className="h-6 w-6" />
+            </div>
+            <h2 className="mt-5 text-lg font-semibold text-foreground">
+              Select channels to track
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Pick the Slack channels you want summarized to get started.
+            </p>
+            <Link
+              to="/onboarding"
+              className="mt-6 inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
             >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="9" y1="13" x2="15" y2="13" />
-              <line x1="9" y1="17" x2="13" y2="17" />
-            </svg>
-          </div>
-          <h2 className="mt-5 text-lg font-semibold text-foreground">No summaries yet</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Check back soon.</p>
-        </section>
+              Choose channels
+            </Link>
+          </section>
+        ) : (
+          <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
+              <h2 className="text-sm font-semibold text-foreground">
+                Tracked channels ({channels.length})
+              </h2>
+            </div>
+            <ul className="divide-y divide-border">
+              {channels.map((c) => (
+                <li
+                  key={c.channel_id}
+                  className="flex items-center justify-between px-6 py-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-muted-foreground">#</span>
+                    <div>
+                      <div className="text-sm font-medium text-foreground">{c.channel_name}</div>
+                      <div className="text-xs text-muted-foreground">{c.channel_id}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleRemove(c.channel_id)}
+                    disabled={removingId === c.channel_id}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                  >
+                    {removingId === c.channel_id ? "Removing…" : "Remove"}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </main>
     </div>
   );

@@ -22,10 +22,10 @@ export const Route = createFileRoute("/")({
 });
 
 function LoginPage() {
-  // Capture token from OAuth redirect: /?access_token=xxx&token_type=bearer
+  // Capture token from OAuth redirect: /?token=xxx
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const token = params.get("access_token");
+    const token = params.get("token");
     if (token) {
       setToken(token);
       window.location.href = "/dashboard";
