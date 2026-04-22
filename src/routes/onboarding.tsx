@@ -4,12 +4,6 @@ import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { SlackIcon } from "@/components/SlackIcon";
 
 export const Route = createFileRoute("/onboarding")({
-  head: () => ({
-    meta: [
-      { title: "Select channels — Slack Summarizer" },
-      { name: "description", content: "Choose which Slack channels to track." },
-    ],
-  }),
   beforeLoad: () => {
     if (typeof window !== "undefined" && !isAuthenticated()) {
       throw redirect({ to: "/" });
@@ -34,6 +28,7 @@ function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "Select channels — Slack Summarizer";
     let cancelled = false;
     (async () => {
       try {
