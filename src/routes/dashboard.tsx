@@ -4,12 +4,6 @@ import { apiFetch, clearToken, isAuthenticated, setToken } from "@/lib/auth";
 import { SlackIcon } from "@/components/SlackIcon";
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({
-    meta: [
-      { title: "Dashboard — Slack Summarizer" },
-      { name: "description", content: "Your tracked Slack channels and summaries." },
-    ],
-  }),
   beforeLoad: () => {
     if (typeof window === "undefined") return;
     // Capture token from URL (OAuth redirect)
@@ -57,6 +51,7 @@ function DashboardPage() {
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "Dashboard — Slack Summarizer";
     let cancelled = false;
     (async () => {
       try {

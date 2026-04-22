@@ -4,15 +4,6 @@ import { API_URL, isAuthenticated, setToken } from "@/lib/auth";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Slack Summarizer — Sign in" },
-      {
-        name: "description",
-        content: "Sign in with Slack to get AI-powered summaries of your channels.",
-      },
-    ],
-  }),
   beforeLoad: () => {
     if (typeof window !== "undefined" && isAuthenticated()) {
       throw redirect({ to: "/dashboard" });
@@ -22,8 +13,8 @@ export const Route = createFileRoute("/")({
 });
 
 function LoginPage() {
-  // Capture token from OAuth redirect: /?token=xxx
   useEffect(() => {
+    document.title = "Slack Summarizer — Sign in";
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     if (token) {
