@@ -2,6 +2,17 @@ import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-ro
 import { useEffect, useState } from "react";
 import { apiFetch, clearToken, isAuthenticated, setToken } from "@/lib/auth";
 import { SlackIcon } from "@/components/SlackIcon";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: () => {
@@ -49,6 +60,7 @@ function DashboardPage() {
   const [channels, setChannels] = useState<TrackedChannel[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [confirmChannel, setConfirmChannel] = useState<TrackedChannel | null>(null);
 
   useEffect(() => {
     document.title = "Dashboard — Slack Summarizer";
@@ -88,9 +100,15 @@ function DashboardPage() {
       const res = await apiFetch(`/users/me/channels/${channelId}`, { method: "DELETE" });
       if (res.ok) {
         setChannels((prev) => (prev ? prev.filter((c) => c.channel_id !== channelId) : prev));
+        toast.success("Channel removed");
+      } else {
+        toast.error("Failed to remove channel");
       }
+    } catch {
+      toast.error("Failed to remove channel");
     } finally {
       setRemovingId(null);
+      setConfirmChannel(null);
     }
   };
 
@@ -190,7 +208,7 @@ function DashboardPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => handleRemove(c.channel_id)}
+                    onClick={() => setConfirmChannel(c)}
                     disabled={removingId === c.channel_id}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                   >
@@ -202,6 +220,37 @@ function DashboardPage() {
           </section>
         )}
       </main>
+
+      <AlertDialog
+        open={confirmChannel !== null}
+        onOpenChange={(open) => {
+          if (!open && removingId === null) setConfirmChannel(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this channel?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmChannel
+                ? `#${confirmChannel.channel_name} will no longer be summarized. You can add it back any time.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removingId !== null}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={removingId !== null}
+              onClick={(e) => {
+                e.preventDefault();
+                if (confirmChannel) handleRemove(confirmChannel.channel_id);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removingId !== null ? "Removing…" : "Remove"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
