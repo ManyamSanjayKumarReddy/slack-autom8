@@ -108,7 +108,15 @@ function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="hidden sm:block text-sm text-muted-foreground">{displayName}</span>
+            <Link
+              to="/profile"
+              className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span className="h-7 w-7 rounded-full bg-accent flex items-center justify-center text-xs font-semibold text-foreground">
+                {(displayName?.[0] ?? "?").toUpperCase()}
+              </span>
+              <span>{displayName}</span>
+            </Link>
             <button
               onClick={handleLogout}
               className="inline-flex items-center rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
