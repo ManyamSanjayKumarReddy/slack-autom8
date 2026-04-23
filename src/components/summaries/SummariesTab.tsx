@@ -248,13 +248,13 @@ export function SummariesTab() {
 
   return (
     <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
-      <div className="px-6 py-4 border-b border-border flex items-center justify-between gap-4">
+      <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-sm font-semibold text-foreground">
           {total > 0
             ? `${total} ${total === 1 ? "summary" : "summaries"} found`
             : "Summaries"}
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -273,9 +273,10 @@ export function SummariesTab() {
           </TooltipProvider>
           <button
             onClick={() => setGenerateOpen(true)}
-            className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
+            className="inline-flex items-center rounded-lg bg-primary px-3 sm:px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors whitespace-nowrap"
           >
-            Generate Summary
+            <span className="hidden sm:inline">Generate Summary</span>
+            <span className="sm:hidden">Generate</span>
           </button>
         </div>
       </div>
@@ -294,6 +295,7 @@ export function SummariesTab() {
         </div>
       ) : (
         <>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
