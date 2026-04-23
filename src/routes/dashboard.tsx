@@ -12,6 +12,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { SummariesTab } from "@/components/summaries/SummariesTab";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
@@ -146,79 +148,93 @@ function DashboardPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-12">
-        <div className="mb-10 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              {getGreeting()}, {displayName}
-            </h1>
-            <p className="mt-2 text-muted-foreground">
-              Manage the Slack channels you want summarized.
-            </p>
-          </div>
-          {channels && channels.length > 0 && (
-            <Link
-              to="/onboarding"
-              className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
-            >
-              Manage channels
-            </Link>
-          )}
+        <div className="mb-8">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            {getGreeting()}, {displayName}
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Manage tracked channels and review generated summaries.
+          </p>
         </div>
 
-        {loading ? (
-          <section className="rounded-2xl border border-border bg-card p-16 text-center text-muted-foreground shadow-[var(--shadow-card)]">
-            Loading…
-          </section>
-        ) : !channels || channels.length === 0 ? (
-          <section className="rounded-2xl border border-dashed border-border bg-card p-16 text-center shadow-[var(--shadow-card)]">
-            <div className="mx-auto h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
-              <SlackIcon className="h-6 w-6" />
-            </div>
-            <h2 className="mt-5 text-lg font-semibold text-foreground">
-              Select channels to track
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Pick the Slack channels you want summarized to get started.
-            </p>
-            <Link
-              to="/onboarding"
-              className="mt-6 inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
-            >
-              Choose channels
-            </Link>
-          </section>
-        ) : (
-          <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
-            <div className="px-6 py-4 border-b border-border">
-              <h2 className="text-sm font-semibold text-foreground">
-                Tracked channels ({channels.length})
-              </h2>
-            </div>
-            <ul className="divide-y divide-border">
-              {channels.map((c) => (
-                <li
-                  key={c.channel_id}
-                  className="flex items-center justify-between px-6 py-4"
+        <Tabs defaultValue="channels" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="channels">Channels</TabsTrigger>
+            <TabsTrigger value="summaries">Summaries</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="channels">
+            <div className="mb-4 flex items-center justify-end">
+              {channels && channels.length > 0 && (
+                <Link
+                  to="/onboarding"
+                  className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-muted-foreground">#</span>
-                    <div>
-                      <div className="text-sm font-medium text-foreground">{c.channel_name}</div>
-                      <div className="text-xs text-muted-foreground">{c.channel_id}</div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setConfirmChannel(c)}
-                    disabled={removingId === c.channel_id}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-                  >
-                    {removingId === c.channel_id ? "Removing…" : "Remove"}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+                  Manage channels
+                </Link>
+              )}
+            </div>
+
+            {loading ? (
+              <section className="rounded-2xl border border-border bg-card p-16 text-center text-muted-foreground shadow-[var(--shadow-card)]">
+                Loading…
+              </section>
+            ) : !channels || channels.length === 0 ? (
+              <section className="rounded-2xl border border-dashed border-border bg-card p-16 text-center shadow-[var(--shadow-card)]">
+                <div className="mx-auto h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
+                  <SlackIcon className="h-6 w-6" />
+                </div>
+                <h2 className="mt-5 text-lg font-semibold text-foreground">
+                  Select channels to track
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Pick the Slack channels you want summarized to get started.
+                </p>
+                <Link
+                  to="/onboarding"
+                  className="mt-6 inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
+                >
+                  Choose channels
+                </Link>
+              </section>
+            ) : (
+              <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
+                <div className="px-6 py-4 border-b border-border">
+                  <h2 className="text-sm font-semibold text-foreground">
+                    Tracked channels ({channels.length})
+                  </h2>
+                </div>
+                <ul className="divide-y divide-border">
+                  {channels.map((c) => (
+                    <li
+                      key={c.channel_id}
+                      className="flex items-center justify-between px-6 py-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground">#</span>
+                        <div>
+                          <div className="text-sm font-medium text-foreground">{c.channel_name}</div>
+                          <div className="text-xs text-muted-foreground">{c.channel_id}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setConfirmChannel(c)}
+                        disabled={removingId === c.channel_id}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                      >
+                        {removingId === c.channel_id ? "Removing…" : "Remove"}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </TabsContent>
+
+          <TabsContent value="summaries">
+            <SummariesTab />
+          </TabsContent>
+        </Tabs>
       </main>
 
       <AlertDialog
