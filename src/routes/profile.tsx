@@ -47,14 +47,18 @@ function ProfilePage() {
       try {
         const [meRes, chRes] = await Promise.all([
           apiFetch("/users/me"),
-          apiFetch("/users/me/channels"),
+          apiFetch("/users/me/channels?page=1&page_size=200"),
         ]);
         if (!cancelled && meRes.ok) {
           setUser((await meRes.json()) as UserInfo);
         }
         if (!cancelled && chRes.ok) {
-          const data = (await chRes.json()) as { total: number; channels: TrackedChannel[] };
-          setChannels(data.channels ?? []);
+          const data = (await chRes.json()) as
+            | { total: number; results: TrackedChannel[] }
+            | { total: number; channels: TrackedChannel[] };
+          const list =
+            "results" in data ? data.results : "channels" in data ? data.channels : [];
+          setChannels(list ?? []);
         }
         if (!meRes.ok) setError("Failed to load profile");
       } catch (e) {
