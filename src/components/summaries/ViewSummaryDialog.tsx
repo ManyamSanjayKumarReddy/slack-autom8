@@ -63,7 +63,9 @@ export function ViewSummaryDialog({ summary, onOpenChange, channelMap }: Props) 
                         <TooltipTrigger asChild>
                           <button
                             type="button"
-                            className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                            tabIndex={-1}
+                            onFocus={(e) => e.currentTarget.blur()}
+                            className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors outline-none"
                             aria-label="Show channels"
                           >
                             <Info className="h-3.5 w-3.5" />
