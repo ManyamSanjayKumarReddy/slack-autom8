@@ -68,13 +68,11 @@ export function SummariesTab() {
   const [confirmDelete, setConfirmDelete] = useState<Summary | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [channelMap, setChannelMap] = useState<Record<string, string>>({});
-  const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Refs to avoid stale closures inside intervals
   const summariesRef = useRef<Summary[] | null>(null);
   const generationPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const autoRefreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     summariesRef.current = summaries;
