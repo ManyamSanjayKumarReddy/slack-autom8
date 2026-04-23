@@ -72,7 +72,7 @@ export function SummariesTab() {
 
   // Refs to avoid stale closures inside intervals
   const summariesRef = useRef<Summary[] | null>(null);
-  const generationPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const generationPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     summariesRef.current = summaries;
@@ -132,32 +132,37 @@ export function SummariesTab() {
     })();
 
     return () => {
-      if (generationPollRef.current) clearInterval(generationPollRef.current);
+      if (generationPollRef.current) clearTimeout(generationPollRef.current);
     };
   }, []);
 
   const startGenerationPolling = (initialCount: number) => {
-    if (generationPollRef.current) clearInterval(generationPollRef.current);
-    let attempts = 0;
-    generationPollRef.current = setInterval(async () => {
-      attempts += 1;
+    if (generationPollRef.current) clearTimeout(generationPollRef.current);
+
+    // Exponential backoff delays: 2s, 4s, 8s, then stop.
+    const delays = [2000, 4000, 8000];
+    let attempt = 0;
+
+    const tick = async () => {
       const list = await fetchSummaries();
       if (list && list.length > initialCount) {
-        if (generationPollRef.current) {
-          clearInterval(generationPollRef.current);
-          generationPollRef.current = null;
-        }
+        generationPollRef.current = null;
         toast.success("Summary ready!");
         return;
       }
-      if (attempts >= 30) {
-        if (generationPollRef.current) {
-          clearInterval(generationPollRef.current);
-          generationPollRef.current = null;
-        }
+      if (attempt >= delays.length) {
+        generationPollRef.current = null;
         toast.error("Taking longer than expected, please refresh manually");
+        return;
       }
-    }, 2000);
+      const delay = delays[attempt];
+      attempt += 1;
+      generationPollRef.current = setTimeout(tick, delay);
+    };
+
+    // Kick off the first poll after the initial 2s delay.
+    attempt = 1;
+    generationPollRef.current = setTimeout(tick, delays[0]);
   };
 
   const handleGenerated = () => {
