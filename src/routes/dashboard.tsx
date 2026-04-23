@@ -164,17 +164,6 @@ function DashboardPage() {
           </TabsList>
 
           <TabsContent value="channels">
-            <div className="mb-4 flex items-center justify-end">
-              {channels && channels.length > 0 && (
-                <Link
-                  to="/onboarding"
-                  className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
-                >
-                  Manage channels
-                </Link>
-              )}
-            </div>
-
             {loading ? (
               <section className="rounded-2xl border border-border bg-card p-16 text-center text-muted-foreground shadow-[var(--shadow-card)]">
                 Loading…
@@ -199,10 +188,16 @@ function DashboardPage() {
               </section>
             ) : (
               <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
-                <div className="px-6 py-4 border-b border-border">
+                <div className="px-6 py-4 border-b border-border flex items-center justify-between gap-4">
                   <h2 className="text-sm font-semibold text-foreground">
                     Tracked channels ({channels.length})
                   </h2>
+                  <Link
+                    to="/onboarding"
+                    className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
+                  >
+                    Manage channels
+                  </Link>
                 </div>
                 <ul className="divide-y divide-border">
                   {channels.map((c) => (
