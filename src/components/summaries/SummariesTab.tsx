@@ -18,7 +18,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Info, RefreshCw } from "lucide-react";
 import {
   AlertDialog,
@@ -69,13 +68,11 @@ export function SummariesTab() {
   const [confirmDelete, setConfirmDelete] = useState<Summary | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [channelMap, setChannelMap] = useState<Record<string, string>>({});
-  const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Refs to avoid stale closures inside intervals
   const summariesRef = useRef<Summary[] | null>(null);
-  const generationPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const autoRefreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const generationPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     summariesRef.current = summaries;
@@ -135,51 +132,37 @@ export function SummariesTab() {
     })();
 
     return () => {
-      if (generationPollRef.current) clearInterval(generationPollRef.current);
-      if (autoRefreshIntervalRef.current) clearInterval(autoRefreshIntervalRef.current);
+      if (generationPollRef.current) clearTimeout(generationPollRef.current);
     };
   }, []);
 
-  // Auto-refresh interval
-  useEffect(() => {
-    if (autoRefresh) {
-      autoRefreshIntervalRef.current = setInterval(() => {
-        fetchSummaries();
-      }, 2000);
-    } else if (autoRefreshIntervalRef.current) {
-      clearInterval(autoRefreshIntervalRef.current);
-      autoRefreshIntervalRef.current = null;
-    }
-    return () => {
-      if (autoRefreshIntervalRef.current) {
-        clearInterval(autoRefreshIntervalRef.current);
-        autoRefreshIntervalRef.current = null;
-      }
-    };
-  }, [autoRefresh]);
-
   const startGenerationPolling = (initialCount: number) => {
-    if (generationPollRef.current) clearInterval(generationPollRef.current);
-    let attempts = 0;
-    generationPollRef.current = setInterval(async () => {
-      attempts += 1;
+    if (generationPollRef.current) clearTimeout(generationPollRef.current);
+
+    // Exponential backoff delays: 2s, 4s, 8s, then stop.
+    const delays = [2000, 4000, 8000];
+    let attempt = 0;
+
+    const tick = async () => {
       const list = await fetchSummaries();
       if (list && list.length > initialCount) {
-        if (generationPollRef.current) {
-          clearInterval(generationPollRef.current);
-          generationPollRef.current = null;
-        }
+        generationPollRef.current = null;
         toast.success("Summary ready!");
         return;
       }
-      if (attempts >= 30) {
-        if (generationPollRef.current) {
-          clearInterval(generationPollRef.current);
-          generationPollRef.current = null;
-        }
+      if (attempt >= delays.length) {
+        generationPollRef.current = null;
         toast.error("Taking longer than expected, please refresh manually");
+        return;
       }
-    }, 2000);
+      const delay = delays[attempt];
+      attempt += 1;
+      generationPollRef.current = setTimeout(tick, delay);
+    };
+
+    // Kick off the first poll after the initial 2s delay.
+    attempt = 1;
+    generationPollRef.current = setTimeout(tick, delays[0]);
   };
 
   const handleGenerated = () => {
@@ -232,25 +215,6 @@ export function SummariesTab() {
           Summaries{summaries ? ` (${summaries.length})` : ""}
         </h2>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Switch
-              id="auto-refresh"
-              checked={autoRefresh}
-              onCheckedChange={setAutoRefresh}
-            />
-            <label
-              htmlFor="auto-refresh"
-              className="text-xs font-medium text-foreground cursor-pointer select-none inline-flex items-center gap-1.5"
-            >
-              Auto Refresh
-              {autoRefresh && (
-                <span className="relative inline-flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                </span>
-              )}
-            </label>
-          </div>
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
