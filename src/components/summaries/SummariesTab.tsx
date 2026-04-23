@@ -382,6 +382,7 @@ export function SummariesTab() {
               ))}
             </TableBody>
           </Table>
+          </div>
 
           <PaginationControls
             page={page}
