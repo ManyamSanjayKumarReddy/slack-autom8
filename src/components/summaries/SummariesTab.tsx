@@ -187,7 +187,31 @@ export function SummariesTab() {
                   {formatDate(s.from_date)} – {formatDate(s.to_date)}
                 </TableCell>
                 <TableCell className="text-sm text-foreground">
-                  {s.channel_ids?.length ?? 0}
+                  <div className="inline-flex items-center gap-1.5">
+                    <span>{s.channel_ids?.length ?? 0}</span>
+                    {(s.channel_ids?.length ?? 0) > 0 && (
+                      <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                              aria-label="Show channels"
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <ul className="space-y-0.5">
+                              {s.channel_ids.map((id) => (
+                                <li key={id}>#{channelMap[id] ?? id}</li>
+                              ))}
+                            </ul>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-sm text-foreground">{s.message_count}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
