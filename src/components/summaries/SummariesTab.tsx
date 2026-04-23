@@ -133,27 +133,8 @@ export function SummariesTab() {
 
     return () => {
       if (generationPollRef.current) clearInterval(generationPollRef.current);
-      if (autoRefreshIntervalRef.current) clearInterval(autoRefreshIntervalRef.current);
     };
   }, []);
-
-  // Auto-refresh interval
-  useEffect(() => {
-    if (autoRefresh) {
-      autoRefreshIntervalRef.current = setInterval(() => {
-        fetchSummaries();
-      }, 2000);
-    } else if (autoRefreshIntervalRef.current) {
-      clearInterval(autoRefreshIntervalRef.current);
-      autoRefreshIntervalRef.current = null;
-    }
-    return () => {
-      if (autoRefreshIntervalRef.current) {
-        clearInterval(autoRefreshIntervalRef.current);
-        autoRefreshIntervalRef.current = null;
-      }
-    };
-  }, [autoRefresh]);
 
   const startGenerationPolling = (initialCount: number) => {
     if (generationPollRef.current) clearInterval(generationPollRef.current);
