@@ -12,6 +12,13 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -58,6 +65,7 @@ export function SummariesTab() {
   const [viewing, setViewing] = useState<Summary | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Summary | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [channelMap, setChannelMap] = useState<Record<string, string>>({});
 
   const load = async () => {
     setLoading(true);
@@ -78,7 +86,25 @@ export function SummariesTab() {
 
   useEffect(() => {
     load();
+    (async () => {
+      try {
+        const res = await apiFetch("/users/me/channels");
+        if (res.ok) {
+          const data = (await res.json()) as {
+            channels: { channel_id: string; channel_name: string }[];
+          };
+          const map: Record<string, string> = {};
+          for (const c of data.channels ?? []) {
+            map[c.channel_id] = c.channel_name;
+          }
+          setChannelMap(map);
+        }
+      } catch {
+        // ignore
+      }
+    })();
   }, []);
+
 
   const handleView = async (s: Summary) => {
     // Fetch full summary if summary_text/summary is missing
@@ -161,7 +187,31 @@ export function SummariesTab() {
                   {formatDate(s.from_date)} – {formatDate(s.to_date)}
                 </TableCell>
                 <TableCell className="text-sm text-foreground">
-                  {s.channel_ids?.length ?? 0}
+                  <div className="inline-flex items-center gap-1.5">
+                    <span>{s.channel_ids?.length ?? 0}</span>
+                    {(s.channel_ids?.length ?? 0) > 0 && (
+                      <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                              aria-label="Show channels"
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <ul className="space-y-0.5">
+                              {s.channel_ids.map((id) => (
+                                <li key={id}>#{channelMap[id] ?? id}</li>
+                              ))}
+                            </ul>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-sm text-foreground">{s.message_count}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
@@ -202,6 +252,7 @@ export function SummariesTab() {
 
       <ViewSummaryDialog
         summary={viewing}
+        channelMap={channelMap}
         onOpenChange={(open) => {
           if (!open) setViewing(null);
         }}
