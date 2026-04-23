@@ -12,6 +12,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { SummariesTab } from "@/components/summaries/SummariesTab";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
