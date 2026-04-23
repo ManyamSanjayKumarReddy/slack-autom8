@@ -15,16 +15,15 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SummariesTab } from "@/components/summaries/SummariesTab";
 import { toast } from "sonner";
+import { PaginationControls, type PaginatedResponse } from "@/components/PaginationControls";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: () => {
     if (typeof window === "undefined") return;
-    // Capture token from URL (OAuth redirect)
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     if (token) {
       setToken(token);
-      // Clean URL
       window.history.replaceState({}, "", "/dashboard");
       return;
     }
@@ -64,24 +63,70 @@ function DashboardPage() {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [confirmChannel, setConfirmChannel] = useState<TrackedChannel | null>(null);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
+
   useEffect(() => {
     document.title = "Dashboard — Slack Summarizer";
+  }, []);
+
+  // Load user once
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [meRes, chRes] = await Promise.all([
-          apiFetch("/users/me"),
-          apiFetch("/users/me/channels"),
-        ]);
+        const meRes = await apiFetch("/users/me");
         if (!cancelled && meRes.ok) {
           setUser((await meRes.json()) as UserInfo);
         }
-        if (!cancelled && chRes.ok) {
-          const data = (await chRes.json()) as { total: number; channels: TrackedChannel[] };
-          setChannels(data.channels ?? []);
-        }
       } catch {
         // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const fetchChannels = async (targetPage = page, targetSize = pageSize) => {
+    try {
+      const res = await apiFetch(
+        `/users/me/channels?page=${targetPage}&page_size=${targetSize}`,
+      );
+      if (res.ok) {
+        const data = (await res.json()) as
+          | PaginatedResponse<TrackedChannel>
+          | { channels: TrackedChannel[]; total?: number };
+        const list = "results" in data ? data.results : data.channels ?? [];
+        setChannels(list);
+        if ("results" in data) {
+          setTotal(data.total ?? list.length);
+          setTotalPages(data.total_pages ?? 1);
+          setHasNext(Boolean(data.has_next));
+          setHasPrevious(Boolean(data.has_previous));
+        } else {
+          setTotal(data.total ?? list.length);
+          setTotalPages(1);
+          setHasNext(false);
+          setHasPrevious(false);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        if (!cancelled) await fetchChannels();
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -89,7 +134,8 @@ function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]);
 
   const handleLogout = () => {
     clearToken();
@@ -101,8 +147,12 @@ function DashboardPage() {
     try {
       const res = await apiFetch(`/users/me/channels/${channelId}`, { method: "DELETE" });
       if (res.ok) {
-        setChannels((prev) => (prev ? prev.filter((c) => c.channel_id !== channelId) : prev));
         toast.success("Channel removed");
+        // Refetch current page; if page becomes empty step back
+        await fetchChannels();
+        if (channels && channels.length === 1 && page > 1) {
+          setPage((p) => Math.max(1, p - 1));
+        }
       } else {
         toast.error("Failed to remove channel");
       }
@@ -190,7 +240,7 @@ function DashboardPage() {
               <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
                 <div className="px-6 py-4 border-b border-border flex items-center justify-between gap-4">
                   <h2 className="text-sm font-semibold text-foreground">
-                    Tracked channels ({channels.length})
+                    Tracked channels ({total})
                   </h2>
                   <Link
                     to="/onboarding"
@@ -222,6 +272,22 @@ function DashboardPage() {
                     </li>
                   ))}
                 </ul>
+
+                <PaginationControls
+                  page={page}
+                  total_pages={totalPages}
+                  has_next={hasNext}
+                  has_previous={hasPrevious}
+                  page_size={pageSize}
+                  onPageChange={(p) => {
+                    if (p < 1 || p > totalPages) return;
+                    setPage(p);
+                  }}
+                  onPageSizeChange={(s) => {
+                    setPageSize(s);
+                    setPage(1);
+                  }}
+                />
               </section>
             )}
           </TabsContent>

@@ -2,6 +2,7 @@ import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-ro
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { SlackIcon } from "@/components/SlackIcon";
+import { PaginationControls, type PaginatedResponse } from "@/components/PaginationControls";
 
 export const Route = createFileRoute("/onboarding")({
   beforeLoad: () => {
@@ -29,6 +30,7 @@ interface TrackedChannel {
 function OnboardingPage() {
   const navigate = useNavigate();
   const [channels, setChannels] = useState<WorkspaceChannel[] | null>(null);
+  const [channelNameMap, setChannelNameMap] = useState<Record<string, string>>({});
   const [initialSelected, setInitialSelected] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -36,29 +38,74 @@ function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
+  // Pagination state for workspace channels
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
+
   useEffect(() => {
     document.title = "Select channels — Slack Summarizer";
+  }, []);
+
+  // Load saved tracked channels once on mount (collect all pages so selection persists)
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [chRes, savedRes] = await Promise.all([
-          apiFetch("/channels/"),
-          apiFetch("/users/me/channels"),
-        ]);
-        if (!chRes.ok) throw new Error("Failed to load channels");
-        const data = (await chRes.json()) as { total: number; channels: WorkspaceChannel[] };
-        if (!cancelled) setChannels(data.channels ?? []);
-
-        if (savedRes.ok) {
-          const saved = (await savedRes.json()) as { total: number; channels: TrackedChannel[] };
+        const res = await apiFetch("/users/me/channels?page=1&page_size=200");
+        if (!cancelled && res.ok) {
+          const data = (await res.json()) as
+            | PaginatedResponse<TrackedChannel>
+            | { channels: TrackedChannel[] };
+          const list =
+            "results" in data
+              ? data.results
+              : "channels" in data
+                ? data.channels
+                : [];
           const ids = new Set(
-            (saved.channels ?? []).filter((c) => c.is_active).map((c) => c.channel_id),
+            (list ?? []).filter((c) => c.is_active).map((c) => c.channel_id),
           );
-          if (!cancelled) {
-            setInitialSelected(ids);
-            setSelected(new Set(ids));
-          }
+          const nameMap: Record<string, string> = {};
+          for (const c of list ?? []) nameMap[c.channel_id] = c.channel_name;
+          setInitialSelected(ids);
+          setSelected(new Set(ids));
+          setChannelNameMap((prev) => ({ ...prev, ...nameMap }));
         }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fetch workspace channels whenever page/pageSize changes
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await apiFetch(`/channels/?page=${page}&page_size=${pageSize}`);
+        if (!res.ok) throw new Error("Failed to load channels");
+        const data = (await res.json()) as PaginatedResponse<WorkspaceChannel>;
+        if (cancelled) return;
+        const list = data.results ?? [];
+        setChannels(list);
+        setTotal(data.total ?? list.length);
+        setTotalPages(data.total_pages ?? 1);
+        setHasNext(Boolean(data.has_next));
+        setHasPrevious(Boolean(data.has_previous));
+        setChannelNameMap((prev) => {
+          const next = { ...prev };
+          for (const c of list) next[c.id] = c.name;
+          return next;
+        });
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load channels");
       } finally {
@@ -68,7 +115,7 @@ function OnboardingPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [page, pageSize]);
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -97,16 +144,16 @@ function OnboardingPage() {
   const hasChanges = toAdd.length > 0 || toRemove.length > 0;
 
   const handleSubmit = async () => {
-    if (!channels) return;
     setSubmitting(true);
     setError(null);
     try {
       // Add new selections
       if (toAdd.length > 0) {
         const payload = {
-          channels: channels
-            .filter((c) => toAdd.includes(c.id))
-            .map((c) => ({ channel_id: c.id, channel_name: c.name })),
+          channels: toAdd.map((id) => ({
+            channel_id: id,
+            channel_name: channelNameMap[id] ?? id,
+          })),
         };
         const res = await apiFetch("/users/me/channels", {
           method: "POST",
@@ -170,14 +217,17 @@ function OnboardingPage() {
           </div>
         )}
 
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search channels…"
-            className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Search channels on this page…"
+            className="flex-1 min-w-[220px] rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
+          <span className="text-xs text-muted-foreground">
+            {total} channel{total === 1 ? "" : "s"} in workspace
+          </span>
         </div>
 
         <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
@@ -189,10 +239,10 @@ function OnboardingPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-16 text-center text-muted-foreground">
-              No channels match "{query}".
+              No channels match "{query}" on this page.
             </div>
           ) : (
-            <ul className="divide-y divide-border max-h-[60vh] overflow-y-auto">
+            <ul className="divide-y divide-border">
               {filtered.map((c) => {
                 const checked = selected.has(c.id);
                 const wasTracked = initialSelected.has(c.id);
@@ -228,6 +278,24 @@ function OnboardingPage() {
                 );
               })}
             </ul>
+          )}
+
+          {channels && channels.length > 0 && (
+            <PaginationControls
+              page={page}
+              total_pages={totalPages}
+              has_next={hasNext}
+              has_previous={hasPrevious}
+              page_size={pageSize}
+              onPageChange={(p) => {
+                if (p < 1 || p > totalPages) return;
+                setPage(p);
+              }}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(1);
+              }}
+            />
           )}
         </section>
 
