@@ -252,6 +252,7 @@ export function SummariesTab() {
 
       <ViewSummaryDialog
         summary={viewing}
+        channelMap={channelMap}
         onOpenChange={(open) => {
           if (!open) setViewing(null);
         }}
