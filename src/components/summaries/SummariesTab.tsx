@@ -231,25 +231,6 @@ export function SummariesTab() {
           Summaries{summaries ? ` (${summaries.length})` : ""}
         </h2>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Switch
-              id="auto-refresh"
-              checked={autoRefresh}
-              onCheckedChange={setAutoRefresh}
-            />
-            <label
-              htmlFor="auto-refresh"
-              className="text-xs font-medium text-foreground cursor-pointer select-none inline-flex items-center gap-1.5"
-            >
-              Auto Refresh
-              {autoRefresh && (
-                <span className="relative inline-flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                </span>
-              )}
-            </label>
-          </div>
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
