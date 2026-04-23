@@ -84,7 +84,7 @@ export function GenerateSummaryDialog({ open, onOpenChange, onGenerated }: Props
         </DialogHeader>
 
         <div className="grid gap-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="from-date">From Date</Label>
               <Popover>

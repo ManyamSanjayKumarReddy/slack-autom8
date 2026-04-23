@@ -36,7 +36,7 @@ export function PaginationControls({
 
   return (
     <div
-      className={`flex items-center justify-between gap-4 flex-wrap px-6 py-4 border-t border-border ${className}`}
+      className={`flex items-center justify-between gap-3 flex-wrap px-4 sm:px-6 py-3 sm:py-4 border-t border-border ${className}`}
     >
       <div className="flex items-center gap-3">
         {showPageSize && onPageSizeChange && (

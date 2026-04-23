@@ -169,23 +169,30 @@ function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/80 backdrop-blur sticky top-0 z-10">
-        <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center">
-              <SlackIcon className="h-4.5 w-4.5" />
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-8 w-8 shrink-0 rounded-lg bg-accent flex items-center justify-center">
+              <SlackIcon className="h-4 w-4" />
             </div>
-            <span className="font-semibold tracking-tight text-foreground">Slack Summarizer</span>
+            <span className="font-semibold tracking-tight text-foreground truncate">Slack Summarizer</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <Link
               to="/profile"
-              className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors max-w-[160px]"
             >
               <span className="h-7 w-7 rounded-full bg-accent flex items-center justify-center text-xs font-semibold text-foreground">
                 {(displayName?.[0] ?? "?").toUpperCase()}
               </span>
-              <span>{displayName}</span>
+              <span className="truncate">{displayName}</span>
+            </Link>
+            <Link
+              to="/profile"
+              className="sm:hidden h-8 w-8 rounded-full bg-accent flex items-center justify-center text-xs font-semibold text-foreground"
+              aria-label="Profile"
+            >
+              {(displayName?.[0] ?? "?").toUpperCase()}
             </Link>
             <button
               onClick={handleLogout}
@@ -197,12 +204,12 @@ function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-12">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
             {getGreeting()}, {displayName}
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground">
             Manage tracked channels and review generated summaries.
           </p>
         </div>
@@ -238,13 +245,13 @@ function DashboardPage() {
               </section>
             ) : (
               <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
-                <div className="px-6 py-4 border-b border-border flex items-center justify-between gap-4">
+                <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
                   <h2 className="text-sm font-semibold text-foreground">
                     Tracked channels ({total})
                   </h2>
                   <Link
                     to="/onboarding"
-                    className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
+                    className="inline-flex items-center rounded-lg bg-primary px-3 sm:px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
                   >
                     Manage channels
                   </Link>
@@ -253,19 +260,19 @@ function DashboardPage() {
                   {channels.map((c) => (
                     <li
                       key={c.channel_id}
-                      className="flex items-center justify-between px-6 py-4"
+                      className="flex items-center justify-between gap-3 px-4 sm:px-6 py-4"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground">#</span>
-                        <div>
-                          <div className="text-sm font-medium text-foreground">{c.channel_name}</div>
-                          <div className="text-xs text-muted-foreground">{c.channel_id}</div>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-muted-foreground shrink-0">#</span>
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-foreground truncate">{c.channel_name}</div>
+                          <div className="text-xs text-muted-foreground truncate">{c.channel_id}</div>
                         </div>
                       </div>
                       <button
                         onClick={() => setConfirmChannel(c)}
                         disabled={removingId === c.channel_id}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 shrink-0"
                       >
                         {removingId === c.channel_id ? "Removing…" : "Remove"}
                       </button>

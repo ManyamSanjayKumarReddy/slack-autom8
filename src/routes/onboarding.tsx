@@ -183,28 +183,28 @@ function OnboardingPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/80 backdrop-blur sticky top-0 z-10">
-        <div className="mx-auto max-w-3xl px-6 h-16 flex items-center justify-between">
-          <Link to="/dashboard" className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center">
-              <SlackIcon className="h-4.5 w-4.5" />
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+          <Link to="/dashboard" className="flex items-center gap-2.5 min-w-0">
+            <div className="h-8 w-8 shrink-0 rounded-lg bg-accent flex items-center justify-center">
+              <SlackIcon className="h-4 w-4" />
             </div>
-            <span className="font-semibold tracking-tight text-foreground">Slack Summarizer</span>
+            <span className="font-semibold tracking-tight text-foreground truncate">Slack Summarizer</span>
           </Link>
           <Link
             to="/dashboard"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
           >
             Cancel
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+      <main className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-12">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
             {initialSelected.size > 0 ? "Manage tracked channels" : "Select channels to track"}
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground">
             {initialSelected.size > 0
               ? "Your existing selections are pre-checked. Add or remove channels and save."
               : "Choose the Slack channels you want summarized."}
@@ -248,16 +248,16 @@ function OnboardingPage() {
                 const wasTracked = initialSelected.has(c.id);
                 return (
                   <li key={c.id}>
-                    <label className="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-secondary/50 transition-colors">
+                    <label className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 cursor-pointer hover:bg-secondary/50 transition-colors">
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggle(c.id)}
-                        className="h-4 w-4 rounded border-border accent-primary"
+                        className="h-4 w-4 shrink-0 rounded border-border accent-primary"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-foreground flex items-center gap-2">
-                          <span>
+                        <div className="text-sm font-medium text-foreground flex items-center gap-2 flex-wrap">
+                          <span className="truncate">
                             <span className="text-muted-foreground">
                               {c.is_private ? "🔒 " : "# "}
                             </span>
