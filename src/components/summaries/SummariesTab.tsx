@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { GenerateSummaryDialog } from "./GenerateSummaryDialog";
 import { ViewSummaryDialog } from "./ViewSummaryDialog";
+import { PaginationControls, type PaginatedResponse } from "@/components/PaginationControls";
 
 export interface Summary {
   id: string;
@@ -70,6 +71,14 @@ export function SummariesTab() {
   const [channelMap, setChannelMap] = useState<Record<string, string>>({});
   const [refreshing, setRefreshing] = useState(false);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
+
   // Refs to avoid stale closures inside intervals
   const summariesRef = useRef<Summary[] | null>(null);
   const generationPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,13 +87,20 @@ export function SummariesTab() {
     summariesRef.current = summaries;
   }, [summaries]);
 
-  const fetchSummaries = async (): Promise<Summary[] | null> => {
+  const fetchSummaries = async (
+    targetPage = page,
+    targetSize = pageSize,
+  ): Promise<Summary[] | null> => {
     try {
-      const res = await apiFetch("/summaries/");
+      const res = await apiFetch(`/summaries/?page=${targetPage}&page_size=${targetSize}`);
       if (res.ok) {
-        const data = (await res.json()) as { total: number; summaries: Summary[] };
-        const list = data.summaries ?? [];
+        const data = (await res.json()) as PaginatedResponse<Summary>;
+        const list = data.results ?? [];
         setSummaries(list);
+        setTotal(data.total ?? list.length);
+        setTotalPages(data.total_pages ?? 1);
+        setHasNext(Boolean(data.has_next));
+        setHasPrevious(Boolean(data.has_previous));
         return list;
       }
       return null;
@@ -111,17 +127,28 @@ export function SummariesTab() {
     }
   };
 
+  // Re-fetch when page or page size changes
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]);
+
+  useEffect(() => {
     (async () => {
       try {
-        const res = await apiFetch("/users/me/channels");
+        const res = await apiFetch("/users/me/channels?page=1&page_size=100");
         if (res.ok) {
-          const data = (await res.json()) as {
-            channels: { channel_id: string; channel_name: string }[];
-          };
+          const data = (await res.json()) as
+            | PaginatedResponse<{ channel_id: string; channel_name: string }>
+            | { channels: { channel_id: string; channel_name: string }[] };
+          const list =
+            "results" in data
+              ? data.results
+              : "channels" in data
+                ? data.channels
+                : [];
           const map: Record<string, string> = {};
-          for (const c of data.channels ?? []) {
+          for (const c of list ?? []) {
             map[c.channel_id] = c.channel_name;
           }
           setChannelMap(map);
@@ -144,7 +171,9 @@ export function SummariesTab() {
     let attempt = 0;
 
     const tick = async () => {
-      const list = await fetchSummaries();
+      const list = await fetchSummaries(1, pageSize);
+      // Reset to page 1 so newest summary is visible
+      setPage(1);
       if (list && list.length > initialCount) {
         generationPollRef.current = null;
         toast.success("Summary ready!");
@@ -160,7 +189,6 @@ export function SummariesTab() {
       generationPollRef.current = setTimeout(tick, delay);
     };
 
-    // Kick off the first poll after the initial 2s delay.
     attempt = 1;
     generationPollRef.current = setTimeout(tick, delays[0]);
   };
@@ -195,8 +223,8 @@ export function SummariesTab() {
     try {
       const res = await apiFetch(`/summaries/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setSummaries((prev) => (prev ? prev.filter((s) => s.id !== id) : prev));
         toast.success("Summary deleted");
+        await fetchSummaries();
       } else {
         toast.error("Failed to delete summary");
       }
@@ -208,11 +236,23 @@ export function SummariesTab() {
     }
   };
 
+  const handlePageChange = (next: number) => {
+    if (next < 1 || next > totalPages) return;
+    setPage(next);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPage(1);
+  };
+
   return (
     <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
       <div className="px-6 py-4 border-b border-border flex items-center justify-between gap-4">
         <h2 className="text-sm font-semibold text-foreground">
-          Summaries{summaries ? ` (${summaries.length})` : ""}
+          {total > 0
+            ? `${total} ${total === 1 ? "summary" : "summaries"} found`
+            : "Summaries"}
         </h2>
         <div className="flex items-center gap-3">
           <TooltipProvider delayDuration={200}>
@@ -253,92 +293,104 @@ export function SummariesTab() {
           </p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="px-6">Date Range</TableHead>
-              <TableHead>Channels</TableHead>
-              <TableHead>Messages</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead className="text-right pr-6">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {summaries.map((s) => (
-              <TableRow key={s.id}>
-                <TableCell className="px-6 text-sm text-foreground">
-                  {formatDate(s.from_date)} – {formatDate(s.to_date)}
-                </TableCell>
-                <TableCell className="text-sm text-foreground">
-                  <div className="inline-flex items-center gap-1.5">
-                    <span>{s.channel_ids?.length ?? 0}</span>
-                    {(s.channel_ids?.length ?? 0) > 0 && (
-                      <TooltipProvider delayDuration={100}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                              aria-label="Show channels"
-                            >
-                              <Info className="h-3.5 w-3.5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <ul className="space-y-0.5">
-                              {s.channel_ids.map((id) => (
-                                <li key={id}>#{channelMap[id] ?? id}</li>
-                              ))}
-                            </ul>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm text-foreground">{s.message_count}</TableCell>
-                <TableCell>
-                  {s.is_auto_generated ? (
-                    <Badge
-                      variant="outline"
-                      className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-medium"
-                    >
-                      Auto
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="outline"
-                      className="border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-400 font-medium"
-                    >
-                      Manual
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {formatDateTime(s.created_at)}
-                </TableCell>
-                <TableCell className="text-right pr-6">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => handleView(s)}
-                      className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => setConfirmDelete(s)}
-                      disabled={deletingId === s.id}
-                      className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                    >
-                      {deletingId === s.id ? "Deleting…" : "Delete"}
-                    </button>
-                  </div>
-                </TableCell>
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="px-6">Date Range</TableHead>
+                <TableHead>Channels</TableHead>
+                <TableHead>Messages</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead className="text-right pr-6">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {summaries.map((s) => (
+                <TableRow key={s.id}>
+                  <TableCell className="px-6 text-sm text-foreground">
+                    {formatDate(s.from_date)} – {formatDate(s.to_date)}
+                  </TableCell>
+                  <TableCell className="text-sm text-foreground">
+                    <div className="inline-flex items-center gap-1.5">
+                      <span>{s.channel_ids?.length ?? 0}</span>
+                      {(s.channel_ids?.length ?? 0) > 0 && (
+                        <TooltipProvider delayDuration={100}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                                aria-label="Show channels"
+                              >
+                                <Info className="h-3.5 w-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <ul className="space-y-0.5">
+                                {s.channel_ids.map((id) => (
+                                  <li key={id}>#{channelMap[id] ?? id}</li>
+                                ))}
+                              </ul>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-foreground">{s.message_count}</TableCell>
+                  <TableCell>
+                    {s.is_auto_generated ? (
+                      <Badge
+                        variant="outline"
+                        className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-medium"
+                      >
+                        Auto
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-400 font-medium"
+                      >
+                        Manual
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDateTime(s.created_at)}
+                  </TableCell>
+                  <TableCell className="text-right pr-6">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleView(s)}
+                        className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(s)}
+                        disabled={deletingId === s.id}
+                        className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                      >
+                        {deletingId === s.id ? "Deleting…" : "Delete"}
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <PaginationControls
+            page={page}
+            total_pages={totalPages}
+            has_next={hasNext}
+            has_previous={hasPrevious}
+            page_size={pageSize}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        </>
       )}
 
       <GenerateSummaryDialog
