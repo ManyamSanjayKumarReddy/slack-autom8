@@ -65,6 +65,7 @@ export function SummariesTab() {
   const [viewing, setViewing] = useState<Summary | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Summary | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [channelMap, setChannelMap] = useState<Record<string, string>>({});
 
   const load = async () => {
     setLoading(true);
@@ -85,7 +86,25 @@ export function SummariesTab() {
 
   useEffect(() => {
     load();
+    (async () => {
+      try {
+        const res = await apiFetch("/users/me/channels");
+        if (res.ok) {
+          const data = (await res.json()) as {
+            channels: { channel_id: string; channel_name: string }[];
+          };
+          const map: Record<string, string> = {};
+          for (const c of data.channels ?? []) {
+            map[c.channel_id] = c.channel_name;
+          }
+          setChannelMap(map);
+        }
+      } catch {
+        // ignore
+      }
+    })();
   }, []);
+
 
   const handleView = async (s: Summary) => {
     // Fetch full summary if summary_text/summary is missing
