@@ -295,7 +295,90 @@ export function SummariesTab() {
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto">
+          {/* Mobile card list */}
+          <ul className="md:hidden divide-y divide-border">
+            {summaries.map((s) => (
+              <li key={s.id} className="px-4 py-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-foreground">
+                      {formatDate(s.from_date)} – {formatDate(s.to_date)}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {formatDateTime(s.created_at)}
+                    </div>
+                  </div>
+                  {s.is_auto_generated ? (
+                    <Badge
+                      variant="outline"
+                      className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-medium shrink-0"
+                    >
+                      Auto
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-400 font-medium shrink-0"
+                    >
+                      Manual
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="font-medium text-foreground">{s.channel_ids?.length ?? 0}</span>
+                    channel{(s.channel_ids?.length ?? 0) === 1 ? "" : "s"}
+                    {(s.channel_ids?.length ?? 0) > 0 && (
+                      <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                              aria-label="Show channels"
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <ul className="space-y-0.5">
+                              {s.channel_ids.map((id) => (
+                                <li key={id}>#{channelMap[id] ?? id}</li>
+                              ))}
+                            </ul>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="font-medium text-foreground">{s.message_count}</span>
+                    message{s.message_count === 1 ? "" : "s"}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => handleView(s)}
+                    className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                  >
+                    View
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(s)}
+                    disabled={deletingId === s.id}
+                    className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                  >
+                    {deletingId === s.id ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
