@@ -199,8 +199,13 @@ export function ScopedSummariesView({
                 </div>
                 {showUser && (s.user_name || s.user_email || s.user_id) && (
                   <div className="text-xs text-muted-foreground">
-                    <div className="text-foreground font-medium">
-                      {s.user_name || s.user_email || s.user_id}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-foreground font-medium">
+                        {s.user_name || s.user_email || s.user_id}
+                      </span>
+                      {(s.user_role || s.role) && (
+                        <RoleBadge role={(s.user_role || s.role) as Role} size="xs" />
+                      )}
                     </div>
                     {s.user_name && s.user_email && (
                       <div className="text-muted-foreground">{s.user_email}</div>
