@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Pencil, Trash2, Users as UsersIcon, Plus, X, UserCheck, UserCog } from "lucide-react";
+import { Pencil, Trash2, Users as UsersIcon, Plus, X, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
