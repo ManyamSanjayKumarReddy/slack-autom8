@@ -519,22 +519,61 @@ function MembersDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, team.id]);
 
+  // Debounced user search
+  useEffect(() => {
+    if (!adding) return;
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await apiFetch(`/admin/users/search?q=${encodeURIComponent(q)}`);
+        if (!res.ok) {
+          setSearchResults([]);
+          return;
+        }
+        const data = (await res.json()) as { results?: { id: string; name: string; email: string; role?: Role }[] };
+        setSearchResults(data.results ?? []);
+        setShowResults(true);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, adding]);
+
+  const resetAdd = () => {
+    setAdding(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSelectedUser(null);
+    setShowResults(false);
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserId.trim()) return;
+    if (!selectedUser) {
+      toast.error("Please select a user from the search results");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await apiFetch(`/teams/${team.id}/members`, {
         method: "POST",
-        body: JSON.stringify({ user_id: newUserId.trim() }),
+        body: JSON.stringify({ user_id: selectedUser.id }),
       });
       if (!res.ok) {
         await handleApiError(res, "Failed to add member");
         return;
       }
       toast.success("Member added");
-      setNewUserId("");
-      setAdding(false);
+      resetAdd();
       onChanged();
       fetchMembers(1, pageSize);
       setPage(1);
