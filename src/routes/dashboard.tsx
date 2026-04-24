@@ -314,31 +314,81 @@ function DashboardStats() {
   }, []);
 
   const cards = [
-    { label: "Total Users", value: stats?.total_users },
-    { label: "Total Teams", value: stats?.total_teams },
-    { label: "Total Summaries", value: stats?.total_summaries },
-    { label: "Auto Generated", value: stats?.auto_summaries },
-    { label: "Manual", value: stats?.manual_summaries },
+    {
+      label: "Total Users",
+      value: stats?.total_users,
+      icon: Users,
+      gradient: "from-violet-500/15 via-fuchsia-500/10 to-transparent",
+      iconBg: "bg-violet-500/15 text-violet-600 dark:text-violet-300",
+    },
+    {
+      label: "Total Teams",
+      value: stats?.total_teams,
+      icon: Layers,
+      gradient: "from-sky-500/15 via-cyan-500/10 to-transparent",
+      iconBg: "bg-sky-500/15 text-sky-600 dark:text-sky-300",
+    },
+    {
+      label: "Total Summaries",
+      value: stats?.total_summaries,
+      icon: FileText,
+      gradient: "from-amber-500/15 via-orange-500/10 to-transparent",
+      iconBg: "bg-amber-500/15 text-amber-600 dark:text-amber-300",
+    },
+    {
+      label: "Auto Generated",
+      value: stats?.auto_summaries,
+      icon: Sparkles,
+      gradient: "from-emerald-500/15 via-teal-500/10 to-transparent",
+      iconBg: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
+    },
+    {
+      label: "Manual",
+      value: stats?.manual_summaries,
+      icon: PenLine,
+      gradient: "from-rose-500/15 via-pink-500/10 to-transparent",
+      iconBg: "bg-rose-500/15 text-rose-600 dark:text-rose-300",
+    },
   ];
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-      {cards.map((c) => (
-        <div
-          key={c.label}
-          className="rounded-2xl bg-card border border-border p-4 sm:p-5 shadow-[var(--shadow-card)]"
-        >
+      {cards.map((c) => {
+        const Icon = c.icon;
+        return (
           <div
-            className="text-2xl sm:text-3xl font-bold leading-none"
-            style={{ color: "#4A154B" }}
+            key={c.label}
+            className={`group relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:shadow-lg`}
           >
-            {loading ? "—" : (c.value ?? 0)}
+            <div
+              className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${c.gradient} opacity-80`}
+              aria-hidden
+            />
+            <div className="relative flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div
+                  className="text-3xl sm:text-4xl font-bold leading-none tracking-tight"
+                  style={{ color: "#4A154B" }}
+                >
+                  {loading ? (
+                    <span className="inline-block h-7 w-10 rounded-md bg-muted-foreground/20 animate-pulse" />
+                  ) : (
+                    (c.value ?? 0)
+                  )}
+                </div>
+                <div className="mt-2 text-xs sm:text-sm text-muted-foreground font-medium">
+                  {c.label}
+                </div>
+              </div>
+              <div
+                className={`shrink-0 inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl ${c.iconBg} ring-1 ring-inset ring-black/5`}
+              >
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              </div>
+            </div>
           </div>
-          <div className="mt-2 text-xs sm:text-sm text-muted-foreground font-medium">
-            {c.label}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
