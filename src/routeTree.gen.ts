@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspaceSummariesRouteImport } from './routes/workspace-summaries'
-import { Route as TeamsSummariesRouteImport } from './routes/teams-summaries'
 import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as TeamSummariesRouteImport } from './routes/team-summaries'
 import { Route as SummariesRouteImport } from './routes/summaries'
@@ -23,11 +22,6 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 const WorkspaceSummariesRoute = WorkspaceSummariesRouteImport.update({
   id: '/workspace-summaries',
   path: '/workspace-summaries',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TeamsSummariesRoute = TeamsSummariesRouteImport.update({
-  id: '/teams-summaries',
-  path: '/teams-summaries',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeamsRoute = TeamsRouteImport.update({
@@ -79,7 +73,6 @@ export interface FileRoutesByFullPath {
   '/summaries': typeof SummariesRoute
   '/team-summaries': typeof TeamSummariesRoute
   '/teams': typeof TeamsRoute
-  '/teams-summaries': typeof TeamsSummariesRoute
   '/workspace-summaries': typeof WorkspaceSummariesRoute
   '/admin/users': typeof AdminUsersRoute
 }
@@ -91,7 +84,6 @@ export interface FileRoutesByTo {
   '/summaries': typeof SummariesRoute
   '/team-summaries': typeof TeamSummariesRoute
   '/teams': typeof TeamsRoute
-  '/teams-summaries': typeof TeamsSummariesRoute
   '/workspace-summaries': typeof WorkspaceSummariesRoute
   '/admin/users': typeof AdminUsersRoute
 }
@@ -104,7 +96,6 @@ export interface FileRoutesById {
   '/summaries': typeof SummariesRoute
   '/team-summaries': typeof TeamSummariesRoute
   '/teams': typeof TeamsRoute
-  '/teams-summaries': typeof TeamsSummariesRoute
   '/workspace-summaries': typeof WorkspaceSummariesRoute
   '/admin/users': typeof AdminUsersRoute
 }
@@ -118,7 +109,6 @@ export interface FileRouteTypes {
     | '/summaries'
     | '/team-summaries'
     | '/teams'
-    | '/teams-summaries'
     | '/workspace-summaries'
     | '/admin/users'
   fileRoutesByTo: FileRoutesByTo
@@ -130,7 +120,6 @@ export interface FileRouteTypes {
     | '/summaries'
     | '/team-summaries'
     | '/teams'
-    | '/teams-summaries'
     | '/workspace-summaries'
     | '/admin/users'
   id:
@@ -142,7 +131,6 @@ export interface FileRouteTypes {
     | '/summaries'
     | '/team-summaries'
     | '/teams'
-    | '/teams-summaries'
     | '/workspace-summaries'
     | '/admin/users'
   fileRoutesById: FileRoutesById
@@ -155,7 +143,6 @@ export interface RootRouteChildren {
   SummariesRoute: typeof SummariesRoute
   TeamSummariesRoute: typeof TeamSummariesRoute
   TeamsRoute: typeof TeamsRoute
-  TeamsSummariesRoute: typeof TeamsSummariesRoute
   WorkspaceSummariesRoute: typeof WorkspaceSummariesRoute
   AdminUsersRoute: typeof AdminUsersRoute
 }
@@ -167,13 +154,6 @@ declare module '@tanstack/react-router' {
       path: '/workspace-summaries'
       fullPath: '/workspace-summaries'
       preLoaderRoute: typeof WorkspaceSummariesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/teams-summaries': {
-      id: '/teams-summaries'
-      path: '/teams-summaries'
-      fullPath: '/teams-summaries'
-      preLoaderRoute: typeof TeamsSummariesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teams': {
@@ -243,7 +223,6 @@ const rootRouteChildren: RootRouteChildren = {
   SummariesRoute: SummariesRoute,
   TeamSummariesRoute: TeamSummariesRoute,
   TeamsRoute: TeamsRoute,
-  TeamsSummariesRoute: TeamsSummariesRoute,
   WorkspaceSummariesRoute: WorkspaceSummariesRoute,
   AdminUsersRoute: AdminUsersRoute,
 }

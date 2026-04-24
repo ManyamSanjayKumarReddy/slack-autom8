@@ -41,12 +41,12 @@ interface TrackedChannel {
   created_at: string;
 }
 
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
-}
+const ROLE_SUBTITLES: Record<string, string> = {
+  employee: "Here are your latest summaries.",
+  team_lead: "View your summaries or generate a team summary.",
+  manager: "Select a team to view their summaries.",
+  admin: "View workspace-wide activity.",
+};
 
 function DashboardPage() {
   const { user } = useCurrentUser();
@@ -132,11 +132,12 @@ function DashboardPage() {
   };
 
   const displayName = user?.name || user?.email || "there";
+  const roleSubtitle = user?.role ? ROLE_SUBTITLES[user.role] : "Manage tracked channels and review generated summaries.";
 
   return (
     <AppShell
-      title={`${getGreeting()}, ${displayName}`}
-      subtitle="Manage tracked channels and review generated summaries."
+      title={`Welcome back, ${displayName}`}
+      subtitle={roleSubtitle}
     >
       {loading ? (
         <section className="rounded-2xl border border-border bg-card p-16 text-center text-muted-foreground shadow-[var(--shadow-card)]">
