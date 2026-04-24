@@ -1,7 +1,7 @@
-import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
-import { SlackIcon } from "@/components/SlackIcon";
+import { AppShell } from "@/components/AppShell";
 import { PaginationControls, type PaginatedResponse } from "@/components/PaginationControls";
 
 export const Route = createFileRoute("/onboarding")({
