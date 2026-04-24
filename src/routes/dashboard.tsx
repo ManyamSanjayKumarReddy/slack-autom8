@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Users, Layers, FileText, Sparkles, PenLine } from "lucide-react";
 import { apiFetch, isAuthenticated, setToken } from "@/lib/auth";
 import { SlackIcon } from "@/components/SlackIcon";
 import { AppShell } from "@/components/AppShell";
