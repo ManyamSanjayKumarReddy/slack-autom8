@@ -47,6 +47,7 @@ interface Team {
   id: string;
   name: string;
   description?: string;
+  member_count?: number;
   members_count?: number;
   created_at?: string;
 }
@@ -201,7 +202,7 @@ function Inner() {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span>
                       <span className="font-medium text-foreground">
-                        {t.members_count ?? 0}
+                        {t.member_count ?? t.members_count ?? 0}
                       </span>{" "}
                       members
                     </span>
@@ -255,7 +256,7 @@ function Inner() {
                         {t.description || "—"}
                       </TableCell>
                       <TableCell className="text-sm text-foreground">
-                        {t.members_count ?? 0}
+                        {t.member_count ?? t.members_count ?? 0}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {fmt(t.created_at)}
@@ -482,7 +483,13 @@ function MembersDialog({
   const [hasNext, setHasNext] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [newUserId, setNewUserId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<
+    { id: string; name: string; email: string; role?: Role }[]
+  >([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [showResults, setShowResults] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchMembers = async (p = page, s = pageSize) => {
@@ -512,22 +519,61 @@ function MembersDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, team.id]);
 
+  // Debounced user search
+  useEffect(() => {
+    if (!adding) return;
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await apiFetch(`/admin/users/search?q=${encodeURIComponent(q)}`);
+        if (!res.ok) {
+          setSearchResults([]);
+          return;
+        }
+        const data = (await res.json()) as { results?: { id: string; name: string; email: string; role?: Role }[] };
+        setSearchResults(data.results ?? []);
+        setShowResults(true);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, adding]);
+
+  const resetAdd = () => {
+    setAdding(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSelectedUser(null);
+    setShowResults(false);
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserId.trim()) return;
+    if (!selectedUser) {
+      toast.error("Please select a user from the search results");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await apiFetch(`/teams/${team.id}/members`, {
         method: "POST",
-        body: JSON.stringify({ user_id: newUserId.trim() }),
+        body: JSON.stringify({ user_id: selectedUser.id }),
       });
       if (!res.ok) {
         await handleApiError(res, "Failed to add member");
         return;
       }
       toast.success("Member added");
-      setNewUserId("");
-      setAdding(false);
+      resetAdd();
       onChanged();
       fetchMembers(1, pageSize);
       setPage(1);
@@ -570,27 +616,70 @@ function MembersDialog({
               <Plus className="h-4 w-4" /> Add Member
             </button>
           ) : (
-            <form onSubmit={handleAdd} className="flex w-full gap-2">
-              <input
-                autoFocus
-                value={newUserId}
-                onChange={(e) => setNewUserId(e.target.value)}
-                placeholder="User ID (uuid)"
-                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+            <form onSubmit={handleAdd} className="flex w-full gap-2 items-start">
+              <div className="flex-1 relative">
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSelectedUser(null);
+                    setShowResults(true);
+                  }}
+                  onFocus={() => setShowResults(true)}
+                  placeholder="Search by name or email…"
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                {selectedUser && (
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Selected:{" "}
+                    <span className="text-foreground font-medium">{selectedUser.name}</span>{" "}
+                    <span>({selectedUser.email})</span>
+                  </div>
+                )}
+                {showResults && searchQuery.trim() && !selectedUser && (
+                  <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+                    {searching ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">No users found.</div>
+                    ) : (
+                      <ul className="divide-y divide-border">
+                        {searchResults.map((u) => (
+                          <li key={u.id}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedUser({ id: u.id, name: u.name, email: u.email });
+                                setSearchQuery(u.name);
+                                setShowResults(false);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
+                            >
+                              <div className="text-sm font-medium text-foreground truncate">
+                                {u.name || "Unnamed"}
+                              </div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {u.email}
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
               <button
                 type="submit"
-                disabled={submitting || !newUserId.trim()}
+                disabled={submitting || !selectedUser}
                 className="inline-flex items-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
               >
                 {submitting ? "Adding…" : "Add"}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setAdding(false);
-                  setNewUserId("");
-                }}
+                onClick={resetAdd}
                 className="inline-flex items-center rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
                 aria-label="Cancel"
               >

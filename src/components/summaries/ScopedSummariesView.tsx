@@ -25,6 +25,8 @@ import type { Summary } from "@/components/summaries/SummariesTab";
 
 interface ScopedSummary extends Summary {
   user_id?: string;
+  user_name?: string;
+  user_email?: string;
 }
 
 function formatDate(d: string) {
@@ -191,9 +193,14 @@ export function ScopedSummariesView({
                     {s.is_auto_generated ? "Auto" : "Manual"}
                   </Badge>
                 </div>
-                {showUser && s.user_id && (
+                {showUser && (s.user_name || s.user_email || s.user_id) && (
                   <div className="text-xs text-muted-foreground">
-                    User: <span className="font-mono text-foreground">{s.user_id}</span>
+                    <div className="text-foreground font-medium">
+                      {s.user_name || s.user_email || s.user_id}
+                    </div>
+                    {s.user_name && s.user_email && (
+                      <div className="text-muted-foreground">{s.user_email}</div>
+                    )}
                   </div>
                 )}
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -223,7 +230,7 @@ export function ScopedSummariesView({
             <Table>
               <TableHeader>
                 <TableRow>
-                  {showUser && <TableHead className="px-6">User ID</TableHead>}
+                  {showUser && <TableHead className="px-6">User</TableHead>}
                   <TableHead className={showUser ? "" : "px-6"}>Date Range</TableHead>
                   <TableHead>Channels</TableHead>
                   <TableHead>Messages</TableHead>
@@ -236,8 +243,15 @@ export function ScopedSummariesView({
                 {summaries.map((s) => (
                   <TableRow key={s.id}>
                     {showUser && (
-                      <TableCell className="px-6 text-xs text-foreground font-mono max-w-[160px] truncate">
-                        {s.user_id ?? "—"}
+                      <TableCell className="px-6 text-sm max-w-[200px]">
+                        <div className="truncate font-medium text-foreground">
+                          {s.user_name || s.user_email || s.user_id || "—"}
+                        </div>
+                        {s.user_name && s.user_email && (
+                          <div className="truncate text-xs text-muted-foreground">
+                            {s.user_email}
+                          </div>
+                        )}
                       </TableCell>
                     )}
                     <TableCell className={`text-sm text-foreground ${showUser ? "" : "px-6"}`}>
