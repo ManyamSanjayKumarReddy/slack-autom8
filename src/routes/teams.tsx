@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Pencil, Trash2, Users as UsersIcon, Plus, X, UserCheck, UserCog } from "lucide-react";
+import { Pencil, Trash2, Users as UsersIcon, Plus, X, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
@@ -41,6 +41,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Role } from "@/lib/roles";
 
 interface Team {
@@ -109,8 +116,7 @@ function Inner() {
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<Team | null>(null);
   const [membersOf, setMembersOf] = useState<Team | null>(null);
-  const [assigningManager, setAssigningManager] = useState<Team | null>(null);
-  const [assigningTeamLead, setAssigningTeamLead] = useState<Team | null>(null);
+  const [managingRoles, setManagingRoles] = useState<Team | null>(null);
 
   useEffect(() => {
     document.title = "Teams Management — Slack Summarizer";
@@ -229,19 +235,11 @@ function Inner() {
                     >
                       <UsersIcon className="h-3.5 w-3.5" /> Members
                     </button>
-                    {isAdmin && (
-                      <button
-                        onClick={() => setAssigningManager(t)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                      >
-                        <UserCheck className="h-3.5 w-3.5" /> Manage Manager
-                      </button>
-                    )}
                     <button
-                      onClick={() => setAssigningTeamLead(t)}
+                      onClick={() => setManagingRoles(t)}
                       className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
                     >
-                      <UserCog className="h-3.5 w-3.5" /> Manage Team Lead
+                      <UserCog className="h-3.5 w-3.5" /> Manage Roles
                     </button>
                     <button
                       onClick={() => setEditing(t)}
@@ -311,19 +309,11 @@ function Inner() {
                           >
                             <UsersIcon className="h-3.5 w-3.5" /> Members
                           </button>
-                          {isAdmin && (
-                            <button
-                              onClick={() => setAssigningManager(t)}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                            >
-                              <UserCheck className="h-3.5 w-3.5" /> Manage Manager
-                            </button>
-                          )}
                           <button
-                            onClick={() => setAssigningTeamLead(t)}
+                            onClick={() => setManagingRoles(t)}
                             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
                           >
-                            <UserCog className="h-3.5 w-3.5" /> Manage Team Lead
+                            <UserCog className="h-3.5 w-3.5" /> Manage Roles
                           </button>
                           <button
                             onClick={() => setEditing(t)}
@@ -390,11 +380,12 @@ function Inner() {
         />
       )}
 
-      {assigningManager && (
-        <AssignManagerDialog
-          team={assigningManager}
+      {managingRoles && (
+        <ManageAssignmentsDialog
+          team={managingRoles}
+          isAdmin={isAdmin}
           onOpenChange={(o) => {
-            if (!o) setAssigningManager(null);
+            if (!o) setManagingRoles(null);
           }}
           onSaved={(updated) => {
             invalidateTeamsCache();
@@ -406,27 +397,8 @@ function Inner() {
                     )
                   : prev,
               );
-            }
-            fetchTeams();
-          }}
-        />
-      )}
-
-      {assigningTeamLead && (
-        <AssignTeamLeadDialog
-          team={assigningTeamLead}
-          onOpenChange={(o) => {
-            if (!o) setAssigningTeamLead(null);
-          }}
-          onSaved={(updated) => {
-            invalidateTeamsCache();
-            if (updated) {
-              setTeams((prev) =>
-                prev
-                  ? prev.map((t) =>
-                      t.id === updated.id ? { ...t, ...updated } : t,
-                    )
-                  : prev,
+              setManagingRoles((cur) =>
+                cur && cur.id === updated.id ? { ...cur, ...updated } : cur,
               );
             }
             fetchTeams();
@@ -851,40 +823,56 @@ function MembersDialog({
   );
 }
 
-function AssignManagerDialog({
+type AssignmentRole = "manager" | "team_lead";
+
+function ManageAssignmentsDialog({
   team,
+  isAdmin,
   onOpenChange,
   onSaved,
 }: {
   team: Team;
+  isAdmin: boolean;
   onOpenChange: (o: boolean) => void;
   onSaved: (updated?: Partial<Team> & { id: string }) => void;
 }) {
+  // Default to manager tab if admin (can edit), otherwise team_lead
+  const [roleTab, setRoleTab] = useState<AssignmentRole>(isAdmin ? "manager" : "team_lead");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<
     { id: string; name: string; email: string; role?: Role }[]
   >([]);
   const [searching, setSearching] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [selectedUser, setSelectedUser] = useState<
+    { id: string; name: string; email: string } | null
+  >(null);
   const [showResults, setShowResults] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [unassigning, setUnassigning] = useState(false);
-  const [mode, setMode] = useState<"view" | "edit">(team.manager_id ? "view" : "edit");
 
-  // Debounced search filtered to managers only
+  const currentId = roleTab === "manager" ? team.manager_id : team.team_lead_id;
+  const currentName = roleTab === "manager" ? team.manager_name : team.team_lead_name;
+  const [mode, setMode] = useState<"view" | "edit">(currentId ? "view" : "edit");
+
+  // Reset local state when switching role tab
+  useEffect(() => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setSelectedUser(null);
+    setShowResults(false);
+    setMode(currentId ? "view" : "edit");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roleTab, team.id]);
+
+  // Debounced search filtered by current role
   useEffect(() => {
     if (mode !== "edit") return;
     const q = searchQuery.trim();
-    if (!q) {
-      setSearchResults([]);
-      setSearching(false);
-      return;
-    }
     setSearching(true);
     const timer = setTimeout(async () => {
       try {
         const res = await apiFetch(
-          `/admin/users/search?q=${encodeURIComponent(q)}&role=manager`,
+          `/admin/users/search?q=${encodeURIComponent(q)}&role=${roleTab}`,
         );
         if (!res.ok) {
           setSearchResults([]);
@@ -894,7 +882,7 @@ function AssignManagerDialog({
           results?: { id: string; name: string; email: string; role?: Role }[];
         };
         const all = data.results ?? [];
-        setSearchResults(all.filter((u) => !u.role || u.role === "manager"));
+        setSearchResults(all.filter((u) => !u.role || u.role === roleTab));
         setShowResults(true);
       } catch {
         setSearchResults([]);
@@ -903,429 +891,252 @@ function AssignManagerDialog({
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, mode]);
+  }, [searchQuery, mode, roleTab]);
+
+  const canEditCurrent = roleTab === "manager" ? isAdmin : true; // team lead manageable by managers/admins
 
   const handleSubmit = async () => {
     if (!selectedUser) {
-      toast.error("Please select a manager from the search results");
+      toast.error(`Please select a ${roleTab === "manager" ? "manager" : "team lead"} from the search results`);
       return;
     }
     setSubmitting(true);
     try {
-      const res = await apiFetch(`/teams/${team.id}/manager`, {
+      const url =
+        roleTab === "manager"
+          ? `/teams/${team.id}/manager`
+          : `/teams/${team.id}/team-lead`;
+      const body =
+        roleTab === "manager"
+          ? { manager_id: selectedUser.id }
+          : { user_id: selectedUser.id };
+      const res = await apiFetch(url, {
         method: "PUT",
-        body: JSON.stringify({ manager_id: selectedUser.id }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
-        await handleApiError(res, "Failed to assign manager");
-        return;
-      }
-      let updated: { manager_id?: string; manager_name?: string } = {
-        manager_id: selectedUser.id,
-        manager_name: selectedUser.name,
-      };
-      try {
-        const data = (await res.json()) as {
-          manager_id?: string;
-          manager_name?: string;
-        };
-        if (data && (data.manager_id || data.manager_name)) {
-          updated = { ...updated, ...data };
-        }
-      } catch {
-        // keep optimistic values
-      }
-      toast.success(`Manager assigned: ${updated.manager_name ?? selectedUser.name}`);
-      onSaved({ id: team.id, ...updated });
-      onOpenChange(false);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleUnassign = async () => {
-    setUnassigning(true);
-    try {
-      const res = await apiFetch(`/teams/${team.id}/manager`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        await handleApiError(res, "Failed to unassign manager");
-        return;
-      }
-      toast.success("Manager unassigned");
-      onSaved({ id: team.id, manager_id: null, manager_name: null });
-      onOpenChange(false);
-    } finally {
-      setUnassigning(false);
-    }
-  };
-
-  return (
-    <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Manage manager</DialogTitle>
-          <DialogDescription>
-            {team.manager_name ? (
-              <>
-                Current manager for{" "}
-                <span className="font-medium text-foreground">{team.name}</span>:{" "}
-                <span className="text-foreground font-medium">{team.manager_name}</span>.
-              </>
-            ) : (
-              <>
-                No manager assigned to{" "}
-                <span className="font-medium text-foreground">{team.name}</span> yet.
-              </>
-            )}
-          </DialogDescription>
-        </DialogHeader>
-
-        {mode === "view" && team.manager_id ? (
-          <div className="space-y-3">
-            <div className="rounded-lg border border-border bg-secondary/40 px-4 py-3">
-              <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
-                Assigned manager
-              </div>
-              <div className="text-sm font-semibold text-foreground">
-                {team.manager_name || "Unknown"}
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setMode("edit")}
-                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors"
-              >
-                <Pencil className="h-3.5 w-3.5" /> Change manager
-              </button>
-              <button
-                type="button"
-                onClick={handleUnassign}
-                disabled={unassigning}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-              >
-                <Trash2 className="h-3.5 w-3.5" />{" "}
-                {unassigning ? "Removing…" : "Unassign"}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <label className="block text-xs font-medium text-muted-foreground">
-              Search manager
-            </label>
-            <div className="relative">
-              <input
-                autoFocus
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setSelectedUser(null);
-                  setShowResults(true);
-                }}
-                onFocus={() => setShowResults(true)}
-                placeholder="Search managers by name or email…"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              {selectedUser && (
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Selected:{" "}
-                  <span className="text-foreground font-medium">{selectedUser.name}</span>{" "}
-                  <span>({selectedUser.email})</span>
-                </div>
-              )}
-              {showResults && searchQuery.trim() && !selectedUser && (
-                <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
-                  {searching ? (
-                    <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
-                  ) : searchResults.length === 0 ? (
-                    <div className="px-3 py-2 text-xs text-muted-foreground">
-                      No managers found.
-                    </div>
-                  ) : (
-                    <ul className="divide-y divide-border">
-                      {searchResults.map((u) => (
-                        <li key={u.id}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedUser({ id: u.id, name: u.name, email: u.email });
-                              setSearchQuery(u.name);
-                              setShowResults(false);
-                            }}
-                            className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
-                          >
-                            <div className="text-sm font-medium text-foreground truncate">
-                              {u.name || "Unnamed"}
-                            </div>
-                            <div className="text-xs text-muted-foreground truncate">{u.email}</div>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        <DialogFooter>
-          {mode === "edit" && team.manager_id && (
-            <button
-              onClick={() => setMode("view")}
-              className="inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors mr-auto"
-            >
-              Back
-            </button>
-          )}
-          <button
-            onClick={() => onOpenChange(false)}
-            className="inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
-          >
-            Close
-          </button>
-          {mode === "edit" && (
-            <button
-              onClick={handleSubmit}
-              disabled={submitting || !selectedUser}
-              className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
-            >
-              {submitting ? "Saving…" : team.manager_id ? "Save" : "Assign"}
-            </button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function AssignTeamLeadDialog({
-  team,
-  onOpenChange,
-  onSaved,
-}: {
-  team: Team;
-  onOpenChange: (o: boolean) => void;
-  onSaved: (updated?: Partial<Team> & { id: string }) => void;
-}) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<
-    { id: string; name: string; email: string; role?: Role }[]
-  >([]);
-  const [searching, setSearching] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; email: string } | null>(null);
-  const [showResults, setShowResults] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [unassigning, setUnassigning] = useState(false);
-  const [mode, setMode] = useState<"view" | "edit">(team.team_lead_id ? "view" : "edit");
-
-  useEffect(() => {
-    if (mode !== "edit") return;
-    const q = searchQuery.trim();
-    if (!q) {
-      setSearchResults([]);
-      setSearching(false);
-      return;
-    }
-    setSearching(true);
-    const timer = setTimeout(async () => {
-      try {
-        const res = await apiFetch(
-          `/admin/users/search?q=${encodeURIComponent(q)}&role=team_lead`,
+        await handleApiError(
+          res,
+          roleTab === "manager" ? "Failed to assign manager" : "Failed to assign team lead",
         );
-        if (!res.ok) {
-          setSearchResults([]);
-          return;
-        }
-        const data = (await res.json()) as {
-          results?: { id: string; name: string; email: string; role?: Role }[];
-        };
-        const all = data.results ?? [];
-        setSearchResults(all.filter((u) => !u.role || u.role === "team_lead"));
-        setShowResults(true);
-      } catch {
-        setSearchResults([]);
-      } finally {
-        setSearching(false);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery, mode]);
-
-  const handleSubmit = async () => {
-    if (!selectedUser) {
-      toast.error("Please select a team lead from the search results");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const res = await apiFetch(`/teams/${team.id}/team-lead`, {
-        method: "PUT",
-        body: JSON.stringify({ user_id: selectedUser.id }),
-      });
-      if (!res.ok) {
-        await handleApiError(res, "Failed to assign team lead");
         return;
       }
-      let updated: { team_lead_id?: string; team_lead_name?: string } = {
-        team_lead_id: selectedUser.id,
-        team_lead_name: selectedUser.name,
-      };
+      let updated: Partial<Team> = {};
       try {
-        const data = (await res.json()) as {
-          team_lead_id?: string;
-          team_lead_name?: string;
-        };
-        if (data && (data.team_lead_id || data.team_lead_name)) {
-          updated = { ...updated, ...data };
+        const data = (await res.json()) as Record<string, unknown>;
+        if (roleTab === "manager") {
+          updated = {
+            manager_id: (data.manager_id as string) ?? selectedUser.id,
+            manager_name: (data.manager_name as string) ?? selectedUser.name,
+          };
+        } else {
+          updated = {
+            team_lead_id: (data.team_lead_id as string) ?? selectedUser.id,
+            team_lead_name: (data.team_lead_name as string) ?? selectedUser.name,
+          };
         }
       } catch {
-        // keep optimistic
+        updated =
+          roleTab === "manager"
+            ? { manager_id: selectedUser.id, manager_name: selectedUser.name }
+            : { team_lead_id: selectedUser.id, team_lead_name: selectedUser.name };
       }
-      toast.success(`Team lead assigned: ${updated.team_lead_name ?? selectedUser.name}`);
+      toast.success(
+        roleTab === "manager"
+          ? `Manager assigned: ${updated.manager_name}`
+          : `Team lead assigned: ${updated.team_lead_name}`,
+      );
       onSaved({ id: team.id, ...updated });
-      onOpenChange(false);
+      setMode("view");
+      setSelectedUser(null);
+      setSearchQuery("");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleUnassign = async () => {
+    if (!currentId) return;
     setUnassigning(true);
     try {
-      const res = await apiFetch(`/teams/${team.id}/team-lead`, {
+      // Per API spec: team lead is removed via the team members endpoint.
+      // Manager has no documented unassign endpoint, so we surface a friendly message.
+      if (roleTab === "manager") {
+        toast.info(
+          "To remove a manager, assign a different one. Direct unassignment is not supported.",
+        );
+        return;
+      }
+      const res = await apiFetch(`/teams/${team.id}/members/${currentId}`, {
         method: "DELETE",
       });
       if (!res.ok) {
-        await handleApiError(res, "Failed to unassign team lead");
+        await handleApiError(res, "Failed to remove team lead");
         return;
       }
-      toast.success("Team lead unassigned");
+      toast.success("Team lead removed");
       onSaved({ id: team.id, team_lead_id: null, team_lead_name: null });
-      onOpenChange(false);
+      setMode("edit");
     } finally {
       setUnassigning(false);
     }
   };
 
+  const roleLabel = roleTab === "manager" ? "Manager" : "Team Lead";
+  const roleLabelLower = roleTab === "manager" ? "manager" : "team lead";
+
   return (
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Manage team lead</DialogTitle>
+          <DialogTitle>Manage roles — {team.name}</DialogTitle>
           <DialogDescription>
-            {team.team_lead_name ? (
-              <>
-                Current team lead for{" "}
-                <span className="font-medium text-foreground">{team.name}</span>:{" "}
-                <span className="text-foreground font-medium">{team.team_lead_name}</span>.
-              </>
-            ) : (
-              <>
-                No team lead assigned to{" "}
-                <span className="font-medium text-foreground">{team.name}</span> yet.
-              </>
-            )}
+            Assign or change the manager and team lead for this team.
           </DialogDescription>
         </DialogHeader>
 
-        {mode === "view" && team.team_lead_id ? (
-          <div className="space-y-3">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+              Role to manage
+            </label>
+            <Select
+              value={roleTab}
+              onValueChange={(v) => setRoleTab(v as AssignmentRole)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="manager" disabled={!isAdmin}>
+                  Manager{!isAdmin ? " (admin only)" : ""}
+                </SelectItem>
+                <SelectItem value="team_lead">Team Lead</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {!canEditCurrent ? (
             <div className="rounded-lg border border-border bg-secondary/40 px-4 py-3">
               <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
-                Assigned team lead
+                Current {roleLabelLower}
               </div>
               <div className="text-sm font-semibold text-foreground">
-                {team.team_lead_name || "Unknown"}
+                {currentName || "Unassigned"}
+              </div>
+              <div className="text-xs text-muted-foreground mt-2">
+                Only admins can change the manager.
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setMode("edit")}
-                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors"
-              >
-                <Pencil className="h-3.5 w-3.5" /> Change team lead
-              </button>
-              <button
-                type="button"
-                onClick={handleUnassign}
-                disabled={unassigning}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-              >
-                <Trash2 className="h-3.5 w-3.5" />{" "}
-                {unassigning ? "Removing…" : "Unassign"}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <label className="block text-xs font-medium text-muted-foreground">
-              Search team lead
-            </label>
-            <div className="relative">
-              <input
-                autoFocus
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setSelectedUser(null);
-                  setShowResults(true);
-                }}
-                onFocus={() => setShowResults(true)}
-                placeholder="Search team leads by name or email…"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              {selectedUser && (
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Selected:{" "}
-                  <span className="text-foreground font-medium">{selectedUser.name}</span>{" "}
-                  <span>({selectedUser.email})</span>
+          ) : mode === "view" && currentId ? (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-secondary/40 px-4 py-3">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                  Current {roleLabelLower}
                 </div>
-              )}
-              {showResults && searchQuery.trim() && !selectedUser && (
-                <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
-                  {searching ? (
-                    <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
-                  ) : searchResults.length === 0 ? (
-                    <div className="px-3 py-2 text-xs text-muted-foreground">
-                      No team leads found.
-                    </div>
-                  ) : (
-                    <ul className="divide-y divide-border">
-                      {searchResults.map((u) => (
-                        <li key={u.id}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedUser({ id: u.id, name: u.name, email: u.email });
-                              setSearchQuery(u.name);
-                              setShowResults(false);
-                            }}
-                            className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
-                          >
-                            <div className="text-sm font-medium text-foreground truncate">
-                              {u.name || "Unnamed"}
-                            </div>
-                            <div className="text-xs text-muted-foreground truncate">{u.email}</div>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                <div className="text-sm font-semibold text-foreground">
+                  {currentName || "Unknown"}
                 </div>
-              )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMode("edit")}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Change {roleLabelLower}
+                </button>
+                {roleTab === "team_lead" && (
+                  <button
+                    type="button"
+                    onClick={handleUnassign}
+                    disabled={unassigning}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />{" "}
+                    {unassigning ? "Removing…" : "Remove"}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-muted-foreground">
+                Search {roleLabelLower}s
+              </label>
+              <div className="relative">
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSelectedUser(null);
+                    setShowResults(true);
+                  }}
+                  onFocus={() => setShowResults(true)}
+                  placeholder={`Search ${roleLabelLower}s by name…`}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                {selectedUser && (
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Selected:{" "}
+                    <span className="text-foreground font-medium">{selectedUser.name}</span>{" "}
+                    <span>({selectedUser.email})</span>
+                  </div>
+                )}
+                {showResults && !selectedUser && (
+                  <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+                    {searching ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">
+                        Searching…
+                      </div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">
+                        No {roleLabelLower}s found.
+                      </div>
+                    ) : (
+                      <ul className="divide-y divide-border">
+                        {searchResults.map((u) => (
+                          <li key={u.id}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedUser({
+                                  id: u.id,
+                                  name: u.name,
+                                  email: u.email,
+                                });
+                                setSearchQuery(u.name);
+                                setShowResults(false);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
+                            >
+                              <div className="text-sm font-medium text-foreground truncate">
+                                {u.name || "Unnamed"}
+                              </div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {u.email}
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         <DialogFooter>
-          {mode === "edit" && team.team_lead_id && (
+          {canEditCurrent && mode === "edit" && currentId && (
             <button
-              onClick={() => setMode("view")}
+              onClick={() => {
+                setMode("view");
+                setSelectedUser(null);
+                setSearchQuery("");
+              }}
               className="inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors mr-auto"
             >
               Back
@@ -1337,13 +1148,13 @@ function AssignTeamLeadDialog({
           >
             Close
           </button>
-          {mode === "edit" && (
+          {canEditCurrent && mode === "edit" && (
             <button
               onClick={handleSubmit}
               disabled={submitting || !selectedUser}
               className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
             >
-              {submitting ? "Saving…" : team.team_lead_id ? "Save" : "Assign"}
+              {submitting ? "Saving…" : currentId ? `Save ${roleLabel}` : `Assign ${roleLabel}`}
             </button>
           )}
         </DialogFooter>
