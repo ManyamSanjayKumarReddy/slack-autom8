@@ -1036,55 +1036,66 @@ function AssignManagerDialog({
                   <span>({selectedUser.email})</span>
                 </div>
               )}
-            {showResults && searchQuery.trim() && !selectedUser && (
-              <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
-                {searching ? (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
-                ) : searchResults.length === 0 ? (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">
-                    No managers found.
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-border">
-                    {searchResults.map((u) => (
-                      <li key={u.id}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedUser({ id: u.id, name: u.name, email: u.email });
-                            setSearchQuery(u.name);
-                            setShowResults(false);
-                          }}
-                          className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
-                        >
-                          <div className="text-sm font-medium text-foreground truncate">
-                            {u.name || "Unnamed"}
-                          </div>
-                          <div className="text-xs text-muted-foreground truncate">{u.email}</div>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
+              {showResults && searchQuery.trim() && !selectedUser && (
+                <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+                  {searching ? (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
+                  ) : searchResults.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">
+                      No managers found.
+                    </div>
+                  ) : (
+                    <ul className="divide-y divide-border">
+                      {searchResults.map((u) => (
+                        <li key={u.id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedUser({ id: u.id, name: u.name, email: u.email });
+                              setSearchQuery(u.name);
+                              setShowResults(false);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
+                          >
+                            <div className="text-sm font-medium text-foreground truncate">
+                              {u.name || "Unnamed"}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">{u.email}</div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         <DialogFooter>
+          {mode === "edit" && team.manager_id && (
+            <button
+              onClick={() => setMode("view")}
+              className="inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors mr-auto"
+            >
+              Back
+            </button>
+          )}
           <button
             onClick={() => onOpenChange(false)}
             className="inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
           >
-            Cancel
+            Close
           </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || !selectedUser}
-            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
-          >
-            {submitting ? "Saving…" : "Assign"}
-          </button>
+          {mode === "edit" && (
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || !selectedUser}
+              className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
+            >
+              {submitting ? "Saving…" : team.manager_id ? "Save" : "Assign"}
+            </button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
