@@ -139,11 +139,12 @@ function DashboardPage() {
   };
 
   const displayName = user?.name || user?.email || "there";
+  const roleSubtitle = user?.role ? ROLE_SUBTITLES[user.role] : "Manage tracked channels and review generated summaries.";
 
   return (
     <AppShell
-      title={`${getGreeting()}, ${displayName}`}
-      subtitle="Manage tracked channels and review generated summaries."
+      title={`Welcome back, ${displayName}`}
+      subtitle={roleSubtitle}
     >
       {loading ? (
         <section className="rounded-2xl border border-border bg-card p-16 text-center text-muted-foreground shadow-[var(--shadow-card)]">
