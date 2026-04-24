@@ -47,6 +47,7 @@ interface Team {
   id: string;
   name: string;
   description?: string;
+  member_count?: number;
   members_count?: number;
   created_at?: string;
 }
@@ -201,7 +202,7 @@ function Inner() {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span>
                       <span className="font-medium text-foreground">
-                        {t.members_count ?? 0}
+                        {t.member_count ?? t.members_count ?? 0}
                       </span>{" "}
                       members
                     </span>
@@ -255,7 +256,7 @@ function Inner() {
                         {t.description || "—"}
                       </TableCell>
                       <TableCell className="text-sm text-foreground">
-                        {t.members_count ?? 0}
+                        {t.member_count ?? t.members_count ?? 0}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {fmt(t.created_at)}
