@@ -133,6 +133,28 @@ function DashboardPage() {
 
   const displayName = user?.name || user?.email || "there";
   const roleSubtitle = user?.role ? ROLE_SUBTITLES[user.role] : "Manage tracked channels and review generated summaries.";
+  const canManageChannels = user?.role === "employee" || user?.role === "team_lead";
+
+  // For manager/admin, don't show the channels section at all
+  if (!canManageChannels) {
+    return (
+      <AppShell title={`Welcome back, ${displayName}`} subtitle={roleSubtitle}>
+        <section className="rounded-2xl border border-border bg-card p-12 sm:p-16 text-center shadow-[var(--shadow-card)]">
+          <div className="mx-auto h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
+            <SlackIcon className="h-6 w-6" />
+          </div>
+          <h2 className="mt-5 text-lg font-semibold text-foreground">
+            {user?.role === "admin" ? "Workspace overview" : "Team overview"}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+            {user?.role === "admin"
+              ? "Use the sidebar to view workspace summaries, manage teams, or administer users."
+              : "Use the sidebar to view team summaries or manage your teams."}
+          </p>
+        </section>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell
