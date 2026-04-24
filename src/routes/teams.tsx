@@ -188,7 +188,7 @@ function Inner() {
           </div>
         ) : !teams || teams.length === 0 ? (
           <div className="p-12 text-center text-sm text-muted-foreground">
-            No teams yet. Click "Add Team" to create one.
+            {isAdmin ? "No teams yet. Click \"Add Team\" to create one." : "No teams assigned to you yet."}
           </div>
         ) : (
           <>
@@ -204,12 +204,18 @@ function Inner() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                     <span>
                       <span className="font-medium text-foreground">
                         {t.member_count ?? t.members_count ?? 0}
                       </span>{" "}
                       members
+                    </span>
+                    <span>
+                      Manager:{" "}
+                      <span className={t.manager_name ? "text-foreground font-medium" : "italic"}>
+                        {t.manager_name || "Unassigned"}
+                      </span>
                     </span>
                     <span>{fmt(t.created_at)}</span>
                   </div>
@@ -220,19 +226,27 @@ function Inner() {
                     >
                       <UsersIcon className="h-3.5 w-3.5" /> Members
                     </button>
-                    <button
-                      onClick={() => setEditing(t)}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                    >
-                      <Pencil className="h-3.5 w-3.5" /> Edit
-                    </button>
                     {isAdmin && (
-                      <button
-                        onClick={() => setConfirmDelete(t)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Delete
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setAssigningManager(t)}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <UserCheck className="h-3.5 w-3.5" /> Manager
+                        </button>
+                        <button
+                          onClick={() => setEditing(t)}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> Edit
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(t)}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </button>
+                      </>
                     )}
                   </div>
                 </li>
@@ -246,6 +260,7 @@ function Inner() {
                   <TableRow>
                     <TableHead className="px-6">Name</TableHead>
                     <TableHead>Description</TableHead>
+                    <TableHead>Manager</TableHead>
                     <TableHead>Members</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead className="text-right pr-6">Actions</TableHead>
@@ -257,8 +272,15 @@ function Inner() {
                       <TableCell className="px-6 text-sm font-medium text-foreground">
                         {t.name}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[280px] truncate">
+                      <TableCell className="text-sm text-muted-foreground max-w-[260px] truncate">
                         {t.description || "—"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {t.manager_name ? (
+                          <span className="text-foreground">{t.manager_name}</span>
+                        ) : (
+                          <span className="text-muted-foreground italic">Unassigned</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm text-foreground">
                         {t.member_count ?? t.members_count ?? 0}
@@ -274,19 +296,27 @@ function Inner() {
                           >
                             <UsersIcon className="h-3.5 w-3.5" /> Members
                           </button>
-                          <button
-                            onClick={() => setEditing(t)}
-                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                          >
-                            <Pencil className="h-3.5 w-3.5" /> Edit
-                          </button>
                           {isAdmin && (
-                            <button
-                              onClick={() => setConfirmDelete(t)}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" /> Delete
-                            </button>
+                            <>
+                              <button
+                                onClick={() => setAssigningManager(t)}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                              >
+                                <UserCheck className="h-3.5 w-3.5" /> Assign Manager
+                              </button>
+                              <button
+                                onClick={() => setEditing(t)}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                              >
+                                <Pencil className="h-3.5 w-3.5" /> Edit
+                              </button>
+                              <button
+                                onClick={() => setConfirmDelete(t)}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" /> Delete
+                              </button>
+                            </>
                           )}
                         </div>
                       </TableCell>
