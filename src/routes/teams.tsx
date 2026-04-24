@@ -483,7 +483,13 @@ function MembersDialog({
   const [hasNext, setHasNext] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [newUserId, setNewUserId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<
+    { id: string; name: string; email: string; role?: Role }[]
+  >([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [showResults, setShowResults] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchMembers = async (p = page, s = pageSize) => {
