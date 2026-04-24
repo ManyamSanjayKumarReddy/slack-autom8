@@ -234,14 +234,14 @@ function Inner() {
                         onClick={() => setAssigningManager(t)}
                         className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
                       >
-                        <UserCheck className="h-3.5 w-3.5" /> Manager
+                        <UserCheck className="h-3.5 w-3.5" /> Manage Manager
                       </button>
                     )}
                     <button
                       onClick={() => setAssigningTeamLead(t)}
                       className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
                     >
-                      <UserCog className="h-3.5 w-3.5" /> Team Lead
+                      <UserCog className="h-3.5 w-3.5" /> Manage Team Lead
                     </button>
                     <button
                       onClick={() => setEditing(t)}
