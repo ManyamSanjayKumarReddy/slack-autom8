@@ -858,7 +858,7 @@ function AssignManagerDialog({
 }: {
   team: Team;
   onOpenChange: (o: boolean) => void;
-  onSaved: () => void;
+  onSaved: (updated?: Partial<Team> & { id: string }) => void;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<
@@ -868,9 +868,12 @@ function AssignManagerDialog({
   const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; email: string } | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [unassigning, setUnassigning] = useState(false);
+  const [mode, setMode] = useState<"view" | "edit">(team.manager_id ? "view" : "edit");
 
   // Debounced search filtered to managers only
   useEffect(() => {
+    if (mode !== "edit") return;
     const q = searchQuery.trim();
     if (!q) {
       setSearchResults([]);
@@ -880,7 +883,9 @@ function AssignManagerDialog({
     setSearching(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await apiFetch(`/admin/users/search?q=${encodeURIComponent(q)}`);
+        const res = await apiFetch(
+          `/admin/users/search?q=${encodeURIComponent(q)}&role=manager`,
+        );
         if (!res.ok) {
           setSearchResults([]);
           return;
@@ -889,7 +894,7 @@ function AssignManagerDialog({
           results?: { id: string; name: string; email: string; role?: Role }[];
         };
         const all = data.results ?? [];
-        setSearchResults(all.filter((u) => u.role === "manager"));
+        setSearchResults(all.filter((u) => !u.role || u.role === "manager"));
         setShowResults(true);
       } catch {
         setSearchResults([]);
@@ -898,7 +903,7 @@ function AssignManagerDialog({
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, mode]);
 
   const handleSubmit = async () => {
     if (!selectedUser) {
@@ -915,11 +920,44 @@ function AssignManagerDialog({
         await handleApiError(res, "Failed to assign manager");
         return;
       }
-      toast.success(`Manager assigned: ${selectedUser.name}`);
-      onSaved();
+      let updated: { manager_id?: string; manager_name?: string } = {
+        manager_id: selectedUser.id,
+        manager_name: selectedUser.name,
+      };
+      try {
+        const data = (await res.json()) as {
+          manager_id?: string;
+          manager_name?: string;
+        };
+        if (data && (data.manager_id || data.manager_name)) {
+          updated = { ...updated, ...data };
+        }
+      } catch {
+        // keep optimistic values
+      }
+      toast.success(`Manager assigned: ${updated.manager_name ?? selectedUser.name}`);
+      onSaved({ id: team.id, ...updated });
       onOpenChange(false);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleUnassign = async () => {
+    setUnassigning(true);
+    try {
+      const res = await apiFetch(`/teams/${team.id}/manager`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        await handleApiError(res, "Failed to unassign manager");
+        return;
+      }
+      toast.success("Manager unassigned");
+      onSaved({ id: team.id, manager_id: null, manager_name: null });
+      onOpenChange(false);
+    } finally {
+      setUnassigning(false);
     }
   };
 
@@ -927,41 +965,77 @@ function AssignManagerDialog({
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Assign manager</DialogTitle>
+          <DialogTitle>Manage manager</DialogTitle>
           <DialogDescription>
-            Search for a user with the manager role to assign to{" "}
-            <span className="font-medium text-foreground">{team.name}</span>.
-            {team.manager_name && (
+            {team.manager_name ? (
               <>
-                {" "}Current manager:{" "}
+                Current manager for{" "}
+                <span className="font-medium text-foreground">{team.name}</span>:{" "}
                 <span className="text-foreground font-medium">{team.manager_name}</span>.
+              </>
+            ) : (
+              <>
+                No manager assigned to{" "}
+                <span className="font-medium text-foreground">{team.name}</span> yet.
               </>
             )}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
-          <label className="block text-xs font-medium text-muted-foreground">Manager</label>
-          <div className="relative">
-            <input
-              autoFocus
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setSelectedUser(null);
-                setShowResults(true);
-              }}
-              onFocus={() => setShowResults(true)}
-              placeholder="Search managers by name or email…"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            {selectedUser && (
-              <div className="mt-1 text-xs text-muted-foreground">
-                Selected:{" "}
-                <span className="text-foreground font-medium">{selectedUser.name}</span>{" "}
-                <span>({selectedUser.email})</span>
+        {mode === "view" && team.manager_id ? (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border bg-secondary/40 px-4 py-3">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                Assigned manager
               </div>
-            )}
+              <div className="text-sm font-semibold text-foreground">
+                {team.manager_name || "Unknown"}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setMode("edit")}
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Change manager
+              </button>
+              <button
+                type="button"
+                onClick={handleUnassign}
+                disabled={unassigning}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />{" "}
+                {unassigning ? "Removing…" : "Unassign"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <label className="block text-xs font-medium text-muted-foreground">
+              Search manager
+            </label>
+            <div className="relative">
+              <input
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSelectedUser(null);
+                  setShowResults(true);
+                }}
+                onFocus={() => setShowResults(true)}
+                placeholder="Search managers by name or email…"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              {selectedUser && (
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Selected:{" "}
+                  <span className="text-foreground font-medium">{selectedUser.name}</span>{" "}
+                  <span>({selectedUser.email})</span>
+                </div>
+              )}
             {showResults && searchQuery.trim() && !selectedUser && (
               <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
                 {searching ? (
