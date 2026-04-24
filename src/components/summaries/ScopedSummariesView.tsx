@@ -21,12 +21,16 @@ import {
 } from "@/components/ui/tooltip";
 import { PaginationControls, type PaginatedResponse } from "@/components/PaginationControls";
 import { ViewSummaryDialog } from "@/components/summaries/ViewSummaryDialog";
+import { RoleBadge } from "@/components/RoleBadge";
 import type { Summary } from "@/components/summaries/SummariesTab";
+import type { Role } from "@/lib/roles";
 
 interface ScopedSummary extends Summary {
   user_id?: string;
   user_name?: string;
   user_email?: string;
+  user_role?: Role;
+  role?: Role;
 }
 
 function formatDate(d: string) {
