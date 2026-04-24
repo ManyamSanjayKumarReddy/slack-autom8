@@ -230,27 +230,31 @@ function Inner() {
                       <UsersIcon className="h-3.5 w-3.5" /> Members
                     </button>
                     {isAdmin && (
-                      <>
-                        <button
-                          onClick={() => setAssigningManager(t)}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                        >
-                          <UserCheck className="h-3.5 w-3.5" /> Manager
-                        </button>
-                        <button
-                          onClick={() => setEditing(t)}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                        >
-                          <Pencil className="h-3.5 w-3.5" /> Edit
-                        </button>
-                        <button
-                          onClick={() => setConfirmDelete(t)}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" /> Delete
-                        </button>
-                      </>
+                      <button
+                        onClick={() => setAssigningManager(t)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                      >
+                        <UserCheck className="h-3.5 w-3.5" /> Manager
+                      </button>
                     )}
+                    <button
+                      onClick={() => setAssigningTeamLead(t)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                    >
+                      <UserCog className="h-3.5 w-3.5" /> Team Lead
+                    </button>
+                    <button
+                      onClick={() => setEditing(t)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Edit
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(t)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                    </button>
                   </div>
                 </li>
               ))}
@@ -292,7 +296,7 @@ function Inner() {
                         {fmt(t.created_at)}
                       </TableCell>
                       <TableCell className="text-right pr-6">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
                           <button
                             onClick={() => setMembersOf(t)}
                             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
@@ -300,27 +304,31 @@ function Inner() {
                             <UsersIcon className="h-3.5 w-3.5" /> Members
                           </button>
                           {isAdmin && (
-                            <>
-                              <button
-                                onClick={() => setAssigningManager(t)}
-                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                              >
-                                <UserCheck className="h-3.5 w-3.5" /> Assign Manager
-                              </button>
-                              <button
-                                onClick={() => setEditing(t)}
-                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                              >
-                                <Pencil className="h-3.5 w-3.5" /> Edit
-                              </button>
-                              <button
-                                onClick={() => setConfirmDelete(t)}
-                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" /> Delete
-                              </button>
-                            </>
+                            <button
+                              onClick={() => setAssigningManager(t)}
+                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                            >
+                              <UserCheck className="h-3.5 w-3.5" /> Assign Manager
+                            </button>
                           )}
+                          <button
+                            onClick={() => setAssigningTeamLead(t)}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                          >
+                            <UserCog className="h-3.5 w-3.5" /> Assign Team Lead
+                          </button>
+                          <button
+                            onClick={() => setEditing(t)}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                          >
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(t)}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
+                          </button>
                         </div>
                       </TableCell>
                     </TableRow>
