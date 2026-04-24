@@ -403,6 +403,19 @@ function Inner() {
         />
       )}
 
+      {assigningTeamLead && (
+        <AssignTeamLeadDialog
+          team={assigningTeamLead}
+          onOpenChange={(o) => {
+            if (!o) setAssigningTeamLead(null);
+          }}
+          onSaved={() => {
+            invalidateTeamsCache();
+            fetchTeams();
+          }}
+        />
+      )}
+
       <AlertDialog
         open={confirmDelete !== null}
         onOpenChange={(o) => {
