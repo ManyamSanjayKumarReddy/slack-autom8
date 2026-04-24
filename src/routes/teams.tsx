@@ -109,8 +109,7 @@ function Inner() {
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<Team | null>(null);
   const [membersOf, setMembersOf] = useState<Team | null>(null);
-  const [assigningManager, setAssigningManager] = useState<Team | null>(null);
-  const [assigningTeamLead, setAssigningTeamLead] = useState<Team | null>(null);
+  const [managingRoles, setManagingRoles] = useState<Team | null>(null);
 
   useEffect(() => {
     document.title = "Teams Management — Slack Summarizer";
