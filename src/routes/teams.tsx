@@ -268,6 +268,7 @@ function Inner() {
                     <TableHead className="px-6">Name</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Manager</TableHead>
+                    <TableHead>Team Lead</TableHead>
                     <TableHead>Members</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead className="text-right pr-6">Actions</TableHead>
@@ -285,6 +286,13 @@ function Inner() {
                       <TableCell className="text-sm">
                         {t.manager_name ? (
                           <span className="text-foreground">{t.manager_name}</span>
+                        ) : (
+                          <span className="text-muted-foreground italic">Unassigned</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {t.team_lead_name ? (
+                          <span className="text-foreground">{t.team_lead_name}</span>
                         ) : (
                           <span className="text-muted-foreground italic">Unassigned</span>
                         )}
