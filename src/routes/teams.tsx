@@ -616,27 +616,70 @@ function MembersDialog({
               <Plus className="h-4 w-4" /> Add Member
             </button>
           ) : (
-            <form onSubmit={handleAdd} className="flex w-full gap-2">
-              <input
-                autoFocus
-                value={newUserId}
-                onChange={(e) => setNewUserId(e.target.value)}
-                placeholder="User ID (uuid)"
-                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+            <form onSubmit={handleAdd} className="flex w-full gap-2 items-start">
+              <div className="flex-1 relative">
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSelectedUser(null);
+                    setShowResults(true);
+                  }}
+                  onFocus={() => setShowResults(true)}
+                  placeholder="Search by name or email…"
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                {selectedUser && (
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Selected:{" "}
+                    <span className="text-foreground font-medium">{selectedUser.name}</span>{" "}
+                    <span>({selectedUser.email})</span>
+                  </div>
+                )}
+                {showResults && searchQuery.trim() && !selectedUser && (
+                  <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+                    {searching ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">No users found.</div>
+                    ) : (
+                      <ul className="divide-y divide-border">
+                        {searchResults.map((u) => (
+                          <li key={u.id}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedUser({ id: u.id, name: u.name, email: u.email });
+                                setSearchQuery(u.name);
+                                setShowResults(false);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
+                            >
+                              <div className="text-sm font-medium text-foreground truncate">
+                                {u.name || "Unnamed"}
+                              </div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {u.email}
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
               <button
                 type="submit"
-                disabled={submitting || !newUserId.trim()}
+                disabled={submitting || !selectedUser}
                 className="inline-flex items-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
               >
                 {submitting ? "Adding…" : "Add"}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setAdding(false);
-                  setNewUserId("");
-                }}
+                onClick={resetAdd}
                 className="inline-flex items-center rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
                 aria-label="Cancel"
               >
