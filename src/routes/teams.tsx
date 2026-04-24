@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Pencil, Trash2, Users as UsersIcon, Plus, X } from "lucide-react";
+import { Pencil, Trash2, Users as UsersIcon, Plus, X, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
@@ -49,6 +49,8 @@ interface Team {
   description?: string;
   member_count?: number;
   members_count?: number;
+  manager_id?: string | null;
+  manager_name?: string | null;
   created_at?: string;
 }
 
@@ -105,6 +107,7 @@ function Inner() {
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<Team | null>(null);
   const [membersOf, setMembersOf] = useState<Team | null>(null);
+  const [assigningManager, setAssigningManager] = useState<Team | null>(null);
 
   useEffect(() => {
     document.title = "Teams Management — Slack Summarizer";
@@ -165,14 +168,16 @@ function Inner() {
           <h2 className="text-sm font-semibold text-foreground">
             {total > 0 ? `${total} team${total === 1 ? "" : "s"}` : "Teams"}
           </h2>
-          <button
-            onClick={() => setCreating(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 sm:px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Team</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setCreating(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 sm:px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Team</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -183,7 +188,7 @@ function Inner() {
           </div>
         ) : !teams || teams.length === 0 ? (
           <div className="p-12 text-center text-sm text-muted-foreground">
-            No teams yet. Click "Add Team" to create one.
+            {isAdmin ? "No teams yet. Click \"Add Team\" to create one." : "No teams assigned to you yet."}
           </div>
         ) : (
           <>
@@ -199,12 +204,18 @@ function Inner() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                     <span>
                       <span className="font-medium text-foreground">
                         {t.member_count ?? t.members_count ?? 0}
                       </span>{" "}
                       members
+                    </span>
+                    <span>
+                      Manager:{" "}
+                      <span className={t.manager_name ? "text-foreground font-medium" : "italic"}>
+                        {t.manager_name || "Unassigned"}
+                      </span>
                     </span>
                     <span>{fmt(t.created_at)}</span>
                   </div>
@@ -215,19 +226,27 @@ function Inner() {
                     >
                       <UsersIcon className="h-3.5 w-3.5" /> Members
                     </button>
-                    <button
-                      onClick={() => setEditing(t)}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                    >
-                      <Pencil className="h-3.5 w-3.5" /> Edit
-                    </button>
                     {isAdmin && (
-                      <button
-                        onClick={() => setConfirmDelete(t)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Delete
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setAssigningManager(t)}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <UserCheck className="h-3.5 w-3.5" /> Manager
+                        </button>
+                        <button
+                          onClick={() => setEditing(t)}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> Edit
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(t)}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </button>
+                      </>
                     )}
                   </div>
                 </li>
@@ -241,6 +260,7 @@ function Inner() {
                   <TableRow>
                     <TableHead className="px-6">Name</TableHead>
                     <TableHead>Description</TableHead>
+                    <TableHead>Manager</TableHead>
                     <TableHead>Members</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead className="text-right pr-6">Actions</TableHead>
@@ -252,8 +272,15 @@ function Inner() {
                       <TableCell className="px-6 text-sm font-medium text-foreground">
                         {t.name}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[280px] truncate">
+                      <TableCell className="text-sm text-muted-foreground max-w-[260px] truncate">
                         {t.description || "—"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {t.manager_name ? (
+                          <span className="text-foreground">{t.manager_name}</span>
+                        ) : (
+                          <span className="text-muted-foreground italic">Unassigned</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm text-foreground">
                         {t.member_count ?? t.members_count ?? 0}
@@ -269,19 +296,27 @@ function Inner() {
                           >
                             <UsersIcon className="h-3.5 w-3.5" /> Members
                           </button>
-                          <button
-                            onClick={() => setEditing(t)}
-                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                          >
-                            <Pencil className="h-3.5 w-3.5" /> Edit
-                          </button>
                           {isAdmin && (
-                            <button
-                              onClick={() => setConfirmDelete(t)}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" /> Delete
-                            </button>
+                            <>
+                              <button
+                                onClick={() => setAssigningManager(t)}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                              >
+                                <UserCheck className="h-3.5 w-3.5" /> Assign Manager
+                              </button>
+                              <button
+                                onClick={() => setEditing(t)}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                              >
+                                <Pencil className="h-3.5 w-3.5" /> Edit
+                              </button>
+                              <button
+                                onClick={() => setConfirmDelete(t)}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" /> Delete
+                              </button>
+                            </>
                           )}
                         </div>
                       </TableCell>
@@ -332,6 +367,19 @@ function Inner() {
           }}
           onChanged={() => {
             invalidateTeamsCache();
+          }}
+        />
+      )}
+
+      {assigningManager && (
+        <AssignManagerDialog
+          team={assigningManager}
+          onOpenChange={(o) => {
+            if (!o) setAssigningManager(null);
+          }}
+          onSaved={() => {
+            invalidateTeamsCache();
+            fetchTeams();
           }}
         />
       )}
@@ -748,6 +796,172 @@ function MembersDialog({
             />
           )}
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AssignManagerDialog({
+  team,
+  onOpenChange,
+  onSaved,
+}: {
+  team: Team;
+  onOpenChange: (o: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<
+    { id: string; name: string; email: string; role?: Role }[]
+  >([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Debounced search filtered to managers only
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await apiFetch(`/admin/users/search?q=${encodeURIComponent(q)}`);
+        if (!res.ok) {
+          setSearchResults([]);
+          return;
+        }
+        const data = (await res.json()) as {
+          results?: { id: string; name: string; email: string; role?: Role }[];
+        };
+        const all = data.results ?? [];
+        setSearchResults(all.filter((u) => u.role === "manager"));
+        setShowResults(true);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSubmit = async () => {
+    if (!selectedUser) {
+      toast.error("Please select a manager from the search results");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await apiFetch(`/teams/${team.id}/manager`, {
+        method: "PUT",
+        body: JSON.stringify({ manager_id: selectedUser.id }),
+      });
+      if (!res.ok) {
+        await handleApiError(res, "Failed to assign manager");
+        return;
+      }
+      toast.success(`Manager assigned: ${selectedUser.name}`);
+      onSaved();
+      onOpenChange(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Assign manager</DialogTitle>
+          <DialogDescription>
+            Search for a user with the manager role to assign to{" "}
+            <span className="font-medium text-foreground">{team.name}</span>.
+            {team.manager_name && (
+              <>
+                {" "}Current manager:{" "}
+                <span className="text-foreground font-medium">{team.manager_name}</span>.
+              </>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <label className="block text-xs font-medium text-muted-foreground">Manager</label>
+          <div className="relative">
+            <input
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSelectedUser(null);
+                setShowResults(true);
+              }}
+              onFocus={() => setShowResults(true)}
+              placeholder="Search managers by name or email…"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            {selectedUser && (
+              <div className="mt-1 text-xs text-muted-foreground">
+                Selected:{" "}
+                <span className="text-foreground font-medium">{selectedUser.name}</span>{" "}
+                <span>({selectedUser.email})</span>
+              </div>
+            )}
+            {showResults && searchQuery.trim() && !selectedUser && (
+              <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+                {searching ? (
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
+                ) : searchResults.length === 0 ? (
+                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                    No managers found.
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {searchResults.map((u) => (
+                      <li key={u.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedUser({ id: u.id, name: u.name, email: u.email });
+                            setSearchQuery(u.name);
+                            setShowResults(false);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
+                        >
+                          <div className="text-sm font-medium text-foreground truncate">
+                            {u.name || "Unnamed"}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">{u.email}</div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !selectedUser}
+            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
+          >
+            {submitting ? "Saving…" : "Assign"}
+          </button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
