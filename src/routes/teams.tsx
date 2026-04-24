@@ -373,11 +373,12 @@ function Inner() {
         />
       )}
 
-      {assigningManager && (
-        <AssignManagerDialog
-          team={assigningManager}
+      {managingRoles && (
+        <ManageAssignmentsDialog
+          team={managingRoles}
+          isAdmin={isAdmin}
           onOpenChange={(o) => {
-            if (!o) setAssigningManager(null);
+            if (!o) setManagingRoles(null);
           }}
           onSaved={(updated) => {
             invalidateTeamsCache();
@@ -389,27 +390,8 @@ function Inner() {
                     )
                   : prev,
               );
-            }
-            fetchTeams();
-          }}
-        />
-      )}
-
-      {assigningTeamLead && (
-        <AssignTeamLeadDialog
-          team={assigningTeamLead}
-          onOpenChange={(o) => {
-            if (!o) setAssigningTeamLead(null);
-          }}
-          onSaved={(updated) => {
-            invalidateTeamsCache();
-            if (updated) {
-              setTeams((prev) =>
-                prev
-                  ? prev.map((t) =>
-                      t.id === updated.id ? { ...t, ...updated } : t,
-                    )
-                  : prev,
+              setManagingRoles((cur) =>
+                cur && cur.id === updated.id ? { ...cur, ...updated } : cur,
               );
             }
             fetchTeams();
