@@ -30,10 +30,9 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, allowed: ["employee", "team_lead", "manager", "admin"] },
-  { to: "/onboarding", label: "Manage Channels", icon: Hash, allowed: ["employee", "team_lead", "manager", "admin"] },
-  { to: "/summaries", label: "My Summaries", icon: FileText, allowed: ["employee", "team_lead", "manager", "admin"] },
+  { to: "/onboarding", label: "Manage Channels", icon: Hash, allowed: ["employee", "team_lead"] },
+  { to: "/summaries", label: "My Summaries", icon: FileText, allowed: ["employee", "team_lead"] },
   { to: "/team-summaries", label: "Team Summaries", icon: Users, allowed: ["team_lead", "manager", "admin"] },
-  { to: "/teams-summaries", label: "All Teams Summaries", icon: UsersRound, allowed: ["manager", "admin"] },
   { to: "/workspace-summaries", label: "Workspace Summaries", icon: Globe, allowed: ["admin"] },
   { to: "/teams", label: "Teams Management", icon: Building2, allowed: ["manager", "admin"] },
   { to: "/admin/users", label: "User Management", icon: UserCog, allowed: ["admin"] },
