@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Pencil, Trash2, Users as UsersIcon, Plus, X, UserCheck } from "lucide-react";
+import { Pencil, Trash2, Users as UsersIcon, Plus, X, UserCheck, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
@@ -51,6 +51,8 @@ interface Team {
   members_count?: number;
   manager_id?: string | null;
   manager_name?: string | null;
+  team_lead_id?: string | null;
+  team_lead_name?: string | null;
   created_at?: string;
 }
 
@@ -108,6 +110,7 @@ function Inner() {
   const [confirmDelete, setConfirmDelete] = useState<Team | null>(null);
   const [membersOf, setMembersOf] = useState<Team | null>(null);
   const [assigningManager, setAssigningManager] = useState<Team | null>(null);
+  const [assigningTeamLead, setAssigningTeamLead] = useState<Team | null>(null);
 
   useEffect(() => {
     document.title = "Teams Management — Slack Summarizer";
