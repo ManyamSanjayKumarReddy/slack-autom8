@@ -371,6 +371,19 @@ function Inner() {
         />
       )}
 
+      {assigningManager && (
+        <AssignManagerDialog
+          team={assigningManager}
+          onOpenChange={(o) => {
+            if (!o) setAssigningManager(null);
+          }}
+          onSaved={() => {
+            invalidateTeamsCache();
+            fetchTeams();
+          }}
+        />
+      )}
+
       <AlertDialog
         open={confirmDelete !== null}
         onOpenChange={(o) => {
