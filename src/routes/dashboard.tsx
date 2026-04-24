@@ -95,6 +95,10 @@ function DashboardPage() {
   };
 
   useEffect(() => {
+    if (user && user.role !== "employee" && user.role !== "team_lead") {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -108,7 +112,7 @@ function DashboardPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize]);
+  }, [page, pageSize, user?.role]);
 
   const handleRemove = async (channelId: string) => {
     setRemovingId(channelId);
