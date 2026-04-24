@@ -139,11 +139,12 @@ function DashboardPage() {
   const roleSubtitle = user?.role ? ROLE_SUBTITLES[user.role] : "Manage tracked channels and review generated summaries.";
   const canManageChannels = user?.role === "employee" || user?.role === "team_lead";
 
-  // For manager/admin, don't show the channels section at all
+  // For manager/admin, show stats overview instead of channels section
   if (!canManageChannels) {
     return (
       <AppShell title={`Welcome back, ${displayName}`} subtitle={roleSubtitle}>
-        <section className="rounded-2xl border border-border bg-card p-12 sm:p-16 text-center shadow-[var(--shadow-card)]">
+        <DashboardStats />
+        <section className="rounded-2xl border border-border bg-card p-12 sm:p-16 text-center shadow-[var(--shadow-card)] mt-6">
           <div className="mx-auto h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
             <SlackIcon className="h-6 w-6" />
           </div>
