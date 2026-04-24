@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Pencil, Trash2, Users as UsersIcon, Plus, X } from "lucide-react";
+import { Pencil, Trash2, Users as UsersIcon, Plus, X, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
@@ -49,6 +49,8 @@ interface Team {
   description?: string;
   member_count?: number;
   members_count?: number;
+  manager_id?: string | null;
+  manager_name?: string | null;
   created_at?: string;
 }
 
