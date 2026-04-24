@@ -21,12 +21,16 @@ import {
 } from "@/components/ui/tooltip";
 import { PaginationControls, type PaginatedResponse } from "@/components/PaginationControls";
 import { ViewSummaryDialog } from "@/components/summaries/ViewSummaryDialog";
+import { RoleBadge } from "@/components/RoleBadge";
 import type { Summary } from "@/components/summaries/SummariesTab";
+import type { Role } from "@/lib/roles";
 
 interface ScopedSummary extends Summary {
   user_id?: string;
   user_name?: string;
   user_email?: string;
+  user_role?: Role;
+  role?: Role;
 }
 
 function formatDate(d: string) {
@@ -195,8 +199,13 @@ export function ScopedSummariesView({
                 </div>
                 {showUser && (s.user_name || s.user_email || s.user_id) && (
                   <div className="text-xs text-muted-foreground">
-                    <div className="text-foreground font-medium">
-                      {s.user_name || s.user_email || s.user_id}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-foreground font-medium">
+                        {s.user_name || s.user_email || s.user_id}
+                      </span>
+                      {(s.user_role || s.role) && (
+                        <RoleBadge role={(s.user_role || s.role) as Role} size="xs" />
+                      )}
                     </div>
                     {s.user_name && s.user_email && (
                       <div className="text-muted-foreground">{s.user_email}</div>
@@ -231,6 +240,7 @@ export function ScopedSummariesView({
               <TableHeader>
                 <TableRow>
                   {showUser && <TableHead className="px-6">User</TableHead>}
+                  {showUser && <TableHead>Role</TableHead>}
                   <TableHead className={showUser ? "" : "px-6"}>Date Range</TableHead>
                   <TableHead>Channels</TableHead>
                   <TableHead>Messages</TableHead>
@@ -251,6 +261,15 @@ export function ScopedSummariesView({
                           <div className="truncate text-xs text-muted-foreground">
                             {s.user_email}
                           </div>
+                        )}
+                      </TableCell>
+                    )}
+                    {showUser && (
+                      <TableCell className="text-sm">
+                        {s.user_role || s.role ? (
+                          <RoleBadge role={(s.user_role || s.role) as Role} size="xs" />
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                     )}
