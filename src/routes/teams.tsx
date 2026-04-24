@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Pencil, Trash2, Users as UsersIcon, Plus, X, UserCheck } from "lucide-react";
+import { Pencil, Trash2, Users as UsersIcon, Plus, X, UserCheck, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
@@ -51,6 +51,8 @@ interface Team {
   members_count?: number;
   manager_id?: string | null;
   manager_name?: string | null;
+  team_lead_id?: string | null;
+  team_lead_name?: string | null;
   created_at?: string;
 }
 
@@ -108,6 +110,7 @@ function Inner() {
   const [confirmDelete, setConfirmDelete] = useState<Team | null>(null);
   const [membersOf, setMembersOf] = useState<Team | null>(null);
   const [assigningManager, setAssigningManager] = useState<Team | null>(null);
+  const [assigningTeamLead, setAssigningTeamLead] = useState<Team | null>(null);
 
   useEffect(() => {
     document.title = "Teams Management — Slack Summarizer";
@@ -227,27 +230,31 @@ function Inner() {
                       <UsersIcon className="h-3.5 w-3.5" /> Members
                     </button>
                     {isAdmin && (
-                      <>
-                        <button
-                          onClick={() => setAssigningManager(t)}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                        >
-                          <UserCheck className="h-3.5 w-3.5" /> Manager
-                        </button>
-                        <button
-                          onClick={() => setEditing(t)}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                        >
-                          <Pencil className="h-3.5 w-3.5" /> Edit
-                        </button>
-                        <button
-                          onClick={() => setConfirmDelete(t)}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" /> Delete
-                        </button>
-                      </>
+                      <button
+                        onClick={() => setAssigningManager(t)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                      >
+                        <UserCheck className="h-3.5 w-3.5" /> Manager
+                      </button>
                     )}
+                    <button
+                      onClick={() => setAssigningTeamLead(t)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                    >
+                      <UserCog className="h-3.5 w-3.5" /> Team Lead
+                    </button>
+                    <button
+                      onClick={() => setEditing(t)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Edit
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(t)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                    </button>
                   </div>
                 </li>
               ))}
@@ -261,6 +268,7 @@ function Inner() {
                     <TableHead className="px-6">Name</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Manager</TableHead>
+                    <TableHead>Team Lead</TableHead>
                     <TableHead>Members</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead className="text-right pr-6">Actions</TableHead>
@@ -282,6 +290,13 @@ function Inner() {
                           <span className="text-muted-foreground italic">Unassigned</span>
                         )}
                       </TableCell>
+                      <TableCell className="text-sm">
+                        {t.team_lead_name ? (
+                          <span className="text-foreground">{t.team_lead_name}</span>
+                        ) : (
+                          <span className="text-muted-foreground italic">Unassigned</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm text-foreground">
                         {t.member_count ?? t.members_count ?? 0}
                       </TableCell>
@@ -289,7 +304,7 @@ function Inner() {
                         {fmt(t.created_at)}
                       </TableCell>
                       <TableCell className="text-right pr-6">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
                           <button
                             onClick={() => setMembersOf(t)}
                             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
@@ -297,27 +312,31 @@ function Inner() {
                             <UsersIcon className="h-3.5 w-3.5" /> Members
                           </button>
                           {isAdmin && (
-                            <>
-                              <button
-                                onClick={() => setAssigningManager(t)}
-                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                              >
-                                <UserCheck className="h-3.5 w-3.5" /> Assign Manager
-                              </button>
-                              <button
-                                onClick={() => setEditing(t)}
-                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                              >
-                                <Pencil className="h-3.5 w-3.5" /> Edit
-                              </button>
-                              <button
-                                onClick={() => setConfirmDelete(t)}
-                                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" /> Delete
-                              </button>
-                            </>
+                            <button
+                              onClick={() => setAssigningManager(t)}
+                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                            >
+                              <UserCheck className="h-3.5 w-3.5" /> Assign Manager
+                            </button>
                           )}
+                          <button
+                            onClick={() => setAssigningTeamLead(t)}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                          >
+                            <UserCog className="h-3.5 w-3.5" /> Assign Team Lead
+                          </button>
+                          <button
+                            onClick={() => setEditing(t)}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
+                          >
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(t)}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
+                          </button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -376,6 +395,19 @@ function Inner() {
           team={assigningManager}
           onOpenChange={(o) => {
             if (!o) setAssigningManager(null);
+          }}
+          onSaved={() => {
+            invalidateTeamsCache();
+            fetchTeams();
+          }}
+        />
+      )}
+
+      {assigningTeamLead && (
+        <AssignTeamLeadDialog
+          team={assigningTeamLead}
+          onOpenChange={(o) => {
+            if (!o) setAssigningTeamLead(null);
           }}
           onSaved={() => {
             invalidateTeamsCache();
@@ -919,6 +951,174 @@ function AssignManagerDialog({
                 ) : searchResults.length === 0 ? (
                   <div className="px-3 py-2 text-xs text-muted-foreground">
                     No managers found.
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {searchResults.map((u) => (
+                      <li key={u.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedUser({ id: u.id, name: u.name, email: u.email });
+                            setSearchQuery(u.name);
+                            setShowResults(false);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
+                        >
+                          <div className="text-sm font-medium text-foreground truncate">
+                            {u.name || "Unnamed"}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">{u.email}</div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !selectedUser}
+            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
+          >
+            {submitting ? "Saving…" : "Assign"}
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AssignTeamLeadDialog({
+  team,
+  onOpenChange,
+  onSaved,
+}: {
+  team: Team;
+  onOpenChange: (o: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<
+    { id: string; name: string; email: string; role?: Role }[]
+  >([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await apiFetch(
+          `/admin/users/search?q=${encodeURIComponent(q)}&role=team_lead`,
+        );
+        if (!res.ok) {
+          setSearchResults([]);
+          return;
+        }
+        const data = (await res.json()) as {
+          results?: { id: string; name: string; email: string; role?: Role }[];
+        };
+        const all = data.results ?? [];
+        // Server should already filter, but double-check on client.
+        setSearchResults(all.filter((u) => !u.role || u.role === "team_lead"));
+        setShowResults(true);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSubmit = async () => {
+    if (!selectedUser) {
+      toast.error("Please select a team lead from the search results");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await apiFetch(`/teams/${team.id}/team-lead`, {
+        method: "PUT",
+        body: JSON.stringify({ user_id: selectedUser.id }),
+      });
+      if (!res.ok) {
+        await handleApiError(res, "Failed to assign team lead");
+        return;
+      }
+      toast.success(`Team lead assigned: ${selectedUser.name}`);
+      onSaved();
+      onOpenChange(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Assign team lead</DialogTitle>
+          <DialogDescription>
+            Search for a team lead to assign to{" "}
+            <span className="font-medium text-foreground">{team.name}</span>.
+            {team.team_lead_name && (
+              <>
+                {" "}Current team lead:{" "}
+                <span className="text-foreground font-medium">{team.team_lead_name}</span>.
+              </>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <label className="block text-xs font-medium text-muted-foreground">Team Lead</label>
+          <div className="relative">
+            <input
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSelectedUser(null);
+                setShowResults(true);
+              }}
+              onFocus={() => setShowResults(true)}
+              placeholder="Search team leads by name or email…"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            {selectedUser && (
+              <div className="mt-1 text-xs text-muted-foreground">
+                Selected:{" "}
+                <span className="text-foreground font-medium">{selectedUser.name}</span>{" "}
+                <span>({selectedUser.email})</span>
+              </div>
+            )}
+            {showResults && searchQuery.trim() && !selectedUser && (
+              <div className="absolute z-50 left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+                {searching ? (
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
+                ) : searchResults.length === 0 ? (
+                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                    No team leads found.
                   </div>
                 ) : (
                   <ul className="divide-y divide-border">

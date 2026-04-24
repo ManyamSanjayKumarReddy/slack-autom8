@@ -139,11 +139,12 @@ function DashboardPage() {
   const roleSubtitle = user?.role ? ROLE_SUBTITLES[user.role] : "Manage tracked channels and review generated summaries.";
   const canManageChannels = user?.role === "employee" || user?.role === "team_lead";
 
-  // For manager/admin, don't show the channels section at all
+  // For manager/admin, show stats overview instead of channels section
   if (!canManageChannels) {
     return (
       <AppShell title={`Welcome back, ${displayName}`} subtitle={roleSubtitle}>
-        <section className="rounded-2xl border border-border bg-card p-12 sm:p-16 text-center shadow-[var(--shadow-card)]">
+        <DashboardStats />
+        <section className="rounded-2xl border border-border bg-card p-12 sm:p-16 text-center shadow-[var(--shadow-card)] mt-6">
           <div className="mx-auto h-12 w-12 rounded-xl bg-accent flex items-center justify-center">
             <SlackIcon className="h-6 w-6" />
           </div>
@@ -277,5 +278,66 @@ function DashboardPage() {
         </AlertDialogContent>
       </AlertDialog>
     </AppShell>
+  );
+}
+
+interface AdminStats {
+  total_users?: number;
+  total_teams?: number;
+  total_summaries?: number;
+  auto_summaries?: number;
+  manual_summaries?: number;
+}
+
+function DashboardStats() {
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch("/admin/stats");
+        if (!res.ok) return;
+        const data = (await res.json()) as AdminStats;
+        if (!cancelled) setStats(data);
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const cards = [
+    { label: "Total Users", value: stats?.total_users },
+    { label: "Total Teams", value: stats?.total_teams },
+    { label: "Total Summaries", value: stats?.total_summaries },
+    { label: "Auto Generated", value: stats?.auto_summaries },
+    { label: "Manual", value: stats?.manual_summaries },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      {cards.map((c) => (
+        <div
+          key={c.label}
+          className="rounded-2xl bg-card border border-border p-4 sm:p-5 shadow-[var(--shadow-card)]"
+        >
+          <div
+            className="text-2xl sm:text-3xl font-bold leading-none"
+            style={{ color: "#4A154B" }}
+          >
+            {loading ? "—" : (c.value ?? 0)}
+          </div>
+          <div className="mt-2 text-xs sm:text-sm text-muted-foreground font-medium">
+            {c.label}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
