@@ -168,14 +168,16 @@ function Inner() {
           <h2 className="text-sm font-semibold text-foreground">
             {total > 0 ? `${total} team${total === 1 ? "" : "s"}` : "Teams"}
           </h2>
-          <button
-            onClick={() => setCreating(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 sm:px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Team</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setCreating(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 sm:px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-button)] hover:bg-[var(--color-primary-hover)] transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Team</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+          )}
         </div>
 
         {loading ? (
