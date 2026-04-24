@@ -41,13 +41,6 @@ interface TrackedChannel {
   created_at: string;
 }
 
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
-}
-
 const ROLE_SUBTITLES: Record<string, string> = {
   employee: "Here are your latest summaries.",
   team_lead: "View your summaries or generate a team summary.",
