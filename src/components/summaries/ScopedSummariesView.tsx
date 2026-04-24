@@ -240,6 +240,7 @@ export function ScopedSummariesView({
               <TableHeader>
                 <TableRow>
                   {showUser && <TableHead className="px-6">User</TableHead>}
+                  {showUser && <TableHead>Role</TableHead>}
                   <TableHead className={showUser ? "" : "px-6"}>Date Range</TableHead>
                   <TableHead>Channels</TableHead>
                   <TableHead>Messages</TableHead>
@@ -260,6 +261,15 @@ export function ScopedSummariesView({
                           <div className="truncate text-xs text-muted-foreground">
                             {s.user_email}
                           </div>
+                        )}
+                      </TableCell>
+                    )}
+                    {showUser && (
+                      <TableCell className="text-sm">
+                        {s.user_role || s.role ? (
+                          <RoleBadge role={(s.user_role || s.role) as Role} size="xs" />
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                     )}
