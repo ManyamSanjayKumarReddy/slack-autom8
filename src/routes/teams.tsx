@@ -302,19 +302,11 @@ function Inner() {
                           >
                             <UsersIcon className="h-3.5 w-3.5" /> Members
                           </button>
-                          {isAdmin && (
-                            <button
-                              onClick={() => setAssigningManager(t)}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
-                            >
-                              <UserCheck className="h-3.5 w-3.5" /> Manage Manager
-                            </button>
-                          )}
                           <button
-                            onClick={() => setAssigningTeamLead(t)}
+                            onClick={() => setManagingRoles(t)}
                             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors"
                           >
-                            <UserCog className="h-3.5 w-3.5" /> Manage Team Lead
+                            <UserCog className="h-3.5 w-3.5" /> Manage Roles
                           </button>
                           <button
                             onClick={() => setEditing(t)}
