@@ -396,8 +396,17 @@ function Inner() {
           onOpenChange={(o) => {
             if (!o) setAssigningManager(null);
           }}
-          onSaved={() => {
+          onSaved={(updated) => {
             invalidateTeamsCache();
+            if (updated) {
+              setTeams((prev) =>
+                prev
+                  ? prev.map((t) =>
+                      t.id === updated.id ? { ...t, ...updated } : t,
+                    )
+                  : prev,
+              );
+            }
             fetchTeams();
           }}
         />
@@ -409,8 +418,17 @@ function Inner() {
           onOpenChange={(o) => {
             if (!o) setAssigningTeamLead(null);
           }}
-          onSaved={() => {
+          onSaved={(updated) => {
             invalidateTeamsCache();
+            if (updated) {
+              setTeams((prev) =>
+                prev
+                  ? prev.map((t) =>
+                      t.id === updated.id ? { ...t, ...updated } : t,
+                    )
+                  : prev,
+              );
+            }
             fetchTeams();
           }}
         />
