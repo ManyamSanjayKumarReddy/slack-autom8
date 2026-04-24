@@ -48,6 +48,13 @@ function getGreeting(): string {
   return "Good evening";
 }
 
+const ROLE_SUBTITLES: Record<string, string> = {
+  employee: "Here are your latest summaries.",
+  team_lead: "View your summaries or generate a team summary.",
+  manager: "Select a team to view their summaries.",
+  admin: "View workspace-wide activity.",
+};
+
 function DashboardPage() {
   const { user } = useCurrentUser();
   const [channels, setChannels] = useState<TrackedChannel[] | null>(null);
