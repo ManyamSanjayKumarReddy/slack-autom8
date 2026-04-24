@@ -1,7 +1,7 @@
-import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
-import { SlackIcon } from "@/components/SlackIcon";
+import { AppShell } from "@/components/AppShell";
 import { PaginationControls, type PaginatedResponse } from "@/components/PaginationControls";
 
 export const Route = createFileRoute("/onboarding")({
@@ -181,36 +181,15 @@ function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/80 backdrop-blur sticky top-0 z-10">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-          <Link to="/dashboard" className="flex items-center gap-2.5 min-w-0">
-            <div className="h-8 w-8 shrink-0 rounded-lg bg-accent flex items-center justify-center">
-              <SlackIcon className="h-4 w-4" />
-            </div>
-            <span className="font-semibold tracking-tight text-foreground truncate">Slack Summarizer</span>
-          </Link>
-          <Link
-            to="/dashboard"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
-          >
-            Cancel
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-12">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-            {initialSelected.size > 0 ? "Manage tracked channels" : "Select channels to track"}
-          </h1>
-          <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-            {initialSelected.size > 0
-              ? "Your existing selections are pre-checked. Add or remove channels and save."
-              : "Choose the Slack channels you want summarized."}
-          </p>
-        </div>
-
+    <AppShell
+      title={initialSelected.size > 0 ? "Manage tracked channels" : "Select channels to track"}
+      subtitle={
+        initialSelected.size > 0
+          ? "Your existing selections are pre-checked. Add or remove channels and save."
+          : "Choose the Slack channels you want summarized."
+      }
+      maxWidth="max-w-3xl"
+    >
         {error && (
           <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {error}
@@ -319,7 +298,6 @@ function OnboardingPage() {
             {submitting ? "Saving…" : initialSelected.size > 0 ? "Save changes" : "Save channels"}
           </button>
         </div>
-      </main>
-    </div>
+    </AppShell>
   );
 }
