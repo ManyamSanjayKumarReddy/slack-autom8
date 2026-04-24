@@ -8,6 +8,7 @@ import {
   Globe,
   UserCog,
   UsersRound,
+  Hash,
   Menu,
   X,
   LogOut,
@@ -29,6 +30,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, allowed: ["employee", "team_lead", "manager", "admin"] },
+  { to: "/onboarding", label: "Manage Channels", icon: Hash, allowed: ["employee", "team_lead", "manager", "admin"] },
   { to: "/summaries", label: "My Summaries", icon: FileText, allowed: ["employee", "team_lead", "manager", "admin"] },
   { to: "/team-summaries", label: "Team Summaries", icon: Users, allowed: ["team_lead", "manager", "admin"] },
   { to: "/teams-summaries", label: "All Teams Summaries", icon: UsersRound, allowed: ["manager", "admin"] },
