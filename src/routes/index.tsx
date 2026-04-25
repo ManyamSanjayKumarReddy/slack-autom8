@@ -41,22 +41,22 @@ function LoginPage() {
       <div
         className="hidden lg:flex flex-col justify-between w-[52%] shrink-0 p-12 relative overflow-hidden"
         style={{
-          background: "linear-gradient(145deg, #0f0e1a 0%, #1a1035 40%, #0d1b3e 100%)",
+          background: "linear-gradient(145deg, #1e1b4b 0%, #312e81 35%, #1d4ed8 75%, #1e40af 100%)",
         }}
       >
         {/* Decorative blobs */}
         <div
-          className="absolute top-[-120px] right-[-80px] h-[500px] w-[500px] rounded-full pointer-events-none"
+          className="absolute top-[-100px] right-[-60px] h-[420px] w-[420px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle, rgba(139,92,246,0.25) 0%, rgba(99,102,241,0.1) 50%, transparent 70%)",
+              "radial-gradient(circle, rgba(165,180,252,0.2) 0%, rgba(99,102,241,0.08) 50%, transparent 70%)",
           }}
         />
         <div
-          className="absolute bottom-[-80px] left-[-60px] h-[400px] w-[400px] rounded-full pointer-events-none"
+          className="absolute bottom-[-60px] left-[-40px] h-[320px] w-[320px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(59,130,246,0.08) 50%, transparent 70%)",
+              "radial-gradient(circle, rgba(96,165,250,0.18) 0%, rgba(59,130,246,0.06) 50%, transparent 70%)",
           }}
         />
 
@@ -65,8 +65,8 @@ function LoginPage() {
           <div
             className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
             style={{
-              background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-              boxShadow: "0 6px 20px rgba(139,92,246,0.5)",
+              background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+              boxShadow: "0 6px 20px rgba(99,102,241,0.4)",
             }}
           >
             <SlackIcon className="h-6 w-6" />
@@ -82,9 +82,9 @@ function LoginPage() {
           <div
             className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold mb-6"
             style={{
-              background: "rgba(139,92,246,0.15)",
-              border: "1px solid rgba(139,92,246,0.3)",
-              color: "#a78bfa",
+              background: "rgba(165,180,252,0.18)",
+              border: "1px solid rgba(165,180,252,0.35)",
+              color: "#c7d2fe",
             }}
           >
             <Sparkles className="h-3 w-3" />
@@ -99,7 +99,7 @@ function LoginPage() {
             into{" "}
             <span
               style={{
-                background: "linear-gradient(90deg, #a78bfa 0%, #818cf8 100%)",
+                background: "linear-gradient(90deg, #93c5fd 0%, #c7d2fe 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -108,7 +108,7 @@ function LoginPage() {
             </span>
           </h1>
 
-          <p className="text-[#94a3b8] text-base leading-relaxed mb-10 max-w-sm">
+          <p className="text-[#bfdbfe] text-base leading-relaxed mb-10 max-w-sm">
             Automatically summarise your team's Slack conversations and
             deliver concise digests straight to your dashboard.
           </p>
@@ -119,20 +119,20 @@ function LoginPage() {
                 <div
                   className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
                   style={{
-                    background: "rgba(139,92,246,0.15)",
-                    border: "1px solid rgba(139,92,246,0.25)",
+                    background: "rgba(165,180,252,0.15)",
+                    border: "1px solid rgba(165,180,252,0.3)",
                   }}
                 >
-                  <Icon className="h-3.5 w-3.5 text-violet-400" />
+                  <Icon className="h-3.5 w-3.5 text-blue-300" />
                 </div>
-                <span className="text-sm text-[#cbd5e1]">{text}</span>
+                <span className="text-sm text-[#dbeafe]">{text}</span>
               </li>
             ))}
           </ul>
         </div>
 
         {/* Footer */}
-        <div className="relative text-xs text-[#475569]">
+        <div className="relative text-xs text-[#93c5fd] opacity-60">
           © {new Date().getFullYear()} Slack Autom8. All rights reserved.
         </div>
       </div>
@@ -144,8 +144,8 @@ function LoginPage() {
           <div
             className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
             style={{
-              background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-              boxShadow: "0 6px 20px rgba(139,92,246,0.4)",
+              background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+              boxShadow: "0 6px 20px rgba(99,102,241,0.4)",
             }}
           >
             <SlackIcon className="h-6 w-6" />
@@ -178,8 +178,8 @@ function LoginPage() {
               onClick={handleLogin}
               className="w-full flex items-center justify-center gap-3 rounded-xl py-3.5 px-5 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
               style={{
-                background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                boxShadow: "0 4px 14px rgba(139,92,246,0.45)",
+                background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+                boxShadow: "0 4px 14px rgba(99,102,241,0.45)",
               }}
             >
               <SlackIcon className="h-5 w-5" />

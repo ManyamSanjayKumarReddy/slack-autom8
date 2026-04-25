@@ -8,7 +8,7 @@ import {
   Menu,
   X,
   LogOut,
-  User as UserIcon,
+  ChevronRight,
 } from "lucide-react";
 import { SlackIcon } from "@/components/SlackIcon";
 import { clearToken } from "@/lib/auth";
@@ -37,31 +37,71 @@ const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
 };
 
+/* Indigo palette constants so changes are centralised */
+const INDIGO = {
+  50: "#eef2ff",
+  100: "#e0e7ff",
+  500: "#6366f1",
+  600: "#4f46e5",
+  700: "#4338ca",
+};
+const SLATE = {
+  50: "#f8fafc",
+  100: "#f1f5f9",
+  200: "#e2e8f0",
+  400: "#94a3b8",
+  500: "#64748b",
+  700: "#334155",
+  900: "#0f172a",
+};
+
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   const Icon = item.icon;
   return (
     <Link
       to={item.to}
-      className={[
-        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150 no-underline",
+      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-all duration-150 no-underline relative"
+      style={
         active
-          ? "bg-white/10 text-white shadow-sm"
-          : "text-[#94a3b8] hover:bg-white/6 hover:text-[#cbd5e1]",
-      ].join(" ")}
+          ? {
+              background: INDIGO[50],
+              color: INDIGO[700],
+              fontWeight: 600,
+            }
+          : {
+              color: SLATE[500],
+            }
+      }
+      onMouseEnter={(e) => {
+        if (!active) (e.currentTarget as HTMLAnchorElement).style.background = SLATE[50];
+      }}
+      onMouseLeave={(e) => {
+        if (!active) (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+      }}
     >
+      {/* Active left-bar indicator */}
+      {active && (
+        <span
+          className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full"
+          style={{ background: INDIGO[500] }}
+        />
+      )}
       <Icon
-        className="h-4 w-4 shrink-0 transition-opacity"
-        style={{ opacity: active ? 1 : 0.65 }}
+        className="h-[17px] w-[17px] shrink-0"
+        style={{ color: active ? INDIGO[500] : SLATE[400] }}
       />
       <span className="truncate">{item.label}</span>
       {active && (
-        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-violet-400 shrink-0" />
+        <ChevronRight
+          className="h-3.5 w-3.5 ml-auto shrink-0"
+          style={{ color: INDIGO[500], opacity: 0.6 }}
+        />
       )}
     </Link>
   );
 }
 
-function SidebarInner({
+function SidebarContent({
   items,
   displayName,
   initial,
@@ -79,33 +119,45 @@ function SidebarInner({
   const location = useLocation();
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Logo */}
+    <div
+      className="flex flex-col h-full bg-white"
+      style={{ borderRight: `1px solid ${SLATE[200]}` }}
+    >
+      {/* ── Logo ── */}
       <div
-        className="px-5 py-5 flex items-center justify-between gap-3 shrink-0"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        className="px-5 py-4 flex items-center justify-between gap-3 shrink-0"
+        style={{ borderBottom: `1px solid ${SLATE[100]}` }}
       >
         <Link to="/dashboard" className="flex items-center gap-3 no-underline group">
           <div
             className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
             style={{
-              background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-              boxShadow: "0 4px 14px rgba(139,92,246,0.5)",
+              background: `linear-gradient(135deg, ${INDIGO[500]} 0%, ${INDIGO[600]} 100%)`,
+              boxShadow: `0 4px 12px ${INDIGO[500]}40`,
             }}
           >
             <SlackIcon className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-[14px] font-bold leading-tight tracking-tight text-[#f1f5f9]">
+            <div
+              className="text-[14px] font-extrabold leading-tight tracking-tight"
+              style={{ color: SLATE[900], letterSpacing: "-0.02em" }}
+            >
               Slack Autom8
             </div>
-            <div className="text-[11px] leading-tight text-[#64748b]">AI Summarizer</div>
+            <div className="text-[11px] leading-tight font-medium" style={{ color: SLATE[400] }}>
+              AI Summarizer
+            </div>
           </div>
         </Link>
+
         {onClose && (
           <button
             onClick={onClose}
-            className="h-8 w-8 flex items-center justify-center rounded-lg text-[#64748b] hover:text-[#94a3b8] hover:bg-white/6 transition-colors"
+            className="h-7 w-7 flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: SLATE[400] }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = SLATE[100])}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "transparent")}
             aria-label="Close navigation"
           >
             <X className="h-4 w-4" />
@@ -113,9 +165,12 @@ function SidebarInner({
         )}
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
-        <div className="px-3 pb-2.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#475569]">
+      {/* ── Navigation ── */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <div
+          className="px-3 mb-2 text-[10.5px] font-semibold uppercase tracking-[0.09em]"
+          style={{ color: SLATE[400] }}
+        >
           Navigation
         </div>
         {items.map((item) => {
@@ -126,36 +181,51 @@ function SidebarInner({
         })}
       </nav>
 
-      {/* User section */}
-      <div className="p-3 shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+      {/* ── User card + logout ── */}
+      <div
+        className="p-3 shrink-0 space-y-1"
+        style={{ borderTop: `1px solid ${SLATE[100]}` }}
+      >
         <Link
           to="/profile"
-          className="flex items-center gap-3 rounded-xl p-3 no-underline transition-all hover:bg-white/6 mb-1"
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.07)",
-          }}
+          className="flex items-center gap-3 rounded-xl p-3 no-underline transition-all"
+          style={{ background: SLATE[50], border: `1px solid ${SLATE[200]}` }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = INDIGO[50])}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = SLATE[50])}
         >
           <div
             className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-            style={{ background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)" }}
+            style={{ background: `linear-gradient(135deg, ${INDIGO[500]}, ${INDIGO[600]})` }}
           >
             {initial}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[13px] font-semibold text-[#f1f5f9] truncate">{displayName}</div>
-            <div className="text-[11px] text-[#64748b] truncate">
+            <div
+              className="text-[13px] font-semibold truncate"
+              style={{ color: SLATE[900] }}
+            >
+              {displayName}
+            </div>
+            <div className="text-[11px] truncate" style={{ color: SLATE[500] }}>
               {role ? (ROLE_LABELS[role] ?? role) : ""}
             </div>
           </div>
-          <UserIcon className="h-3.5 w-3.5 text-[#475569] shrink-0" />
         </Link>
+
         <button
           onClick={onLogout}
-          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium text-[#64748b] hover:text-[#94a3b8] hover:bg-white/6 transition-all text-left"
-          style={{ background: "transparent", border: "none", cursor: "pointer" }}
+          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all text-left"
+          style={{ background: "transparent", border: "none", cursor: "pointer", color: SLATE[500] }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = SLATE[50];
+            (e.currentTarget as HTMLButtonElement).style.color = SLATE[700];
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+            (e.currentTarget as HTMLButtonElement).style.color = SLATE[500];
+          }}
         >
-          <LogOut className="h-4 w-4 shrink-0 opacity-70" />
+          <LogOut className="h-4 w-4 shrink-0" />
           <span>Log out</span>
         </button>
       </div>
@@ -176,12 +246,10 @@ export function AppShell({
 }) {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
-  const location = useLocation();
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [location.pathname]);
+  const location = useLocation();
+  useEffect(() => { setOpen(false); }, [location.pathname]);
 
   const role = user?.role;
   const items = NAV.filter((n) => (role ? isOneOf(role, n.allowed) : false));
@@ -197,16 +265,12 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Desktop sidebar — always dark */}
+      {/* Desktop sidebar */}
       <aside
-        className="hidden lg:flex flex-col w-64 shrink-0 sticky top-0 h-screen z-20"
-        style={{
-          background: "#0f0e1a",
-          borderRight: "1px solid rgba(255,255,255,0.07)",
-          boxShadow: "4px 0 24px rgba(0,0,0,0.2)",
-        }}
+        className="hidden lg:flex flex-col w-[240px] shrink-0 sticky top-0 h-screen z-20"
+        style={{ boxShadow: "var(--shadow-sidebar)" }}
       >
-        <SidebarInner
+        <SidebarContent
           items={items}
           displayName={displayName}
           initial={initial}
@@ -218,7 +282,7 @@ export function AppShell({
       {/* Mobile drawer backdrop */}
       {open && (
         <div
-          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          className="lg:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         />
       )}
@@ -226,13 +290,10 @@ export function AppShell({
       {/* Mobile drawer */}
       {open && (
         <aside
-          className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 flex flex-col animate-in slide-in-from-left duration-200"
-          style={{
-            background: "#0f0e1a",
-            borderRight: "1px solid rgba(255,255,255,0.07)",
-          }}
+          className="lg:hidden fixed inset-y-0 left-0 z-50 w-[260px] flex flex-col animate-in slide-in-from-left duration-200"
+          style={{ boxShadow: "var(--shadow-elevated)" }}
         >
-          <SidebarInner
+          <SidebarContent
             items={items}
             displayName={displayName}
             initial={initial}
@@ -243,54 +304,69 @@ export function AppShell({
         </aside>
       )}
 
-      {/* Content area */}
+      {/* Main content area */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Mobile top bar */}
         <header
-          className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 h-14 border-b border-border"
-          style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(12px)" }}
+          className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 h-[56px]"
+          style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(12px)",
+            borderBottom: `1px solid ${SLATE[200]}`,
+          }}
         >
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="h-9 w-9 rounded-lg flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
+              className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors"
+              style={{ color: SLATE[500] }}
               aria-label="Open navigation"
             >
               <Menu className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-2">
               <div
-                className="h-6 w-6 rounded-md flex items-center justify-center shrink-0"
-                style={{ background: "linear-gradient(135deg, #8b5cf6, #6366f1)" }}
+                className="h-6 w-6 rounded-md flex items-center justify-center"
+                style={{ background: `linear-gradient(135deg, ${INDIGO[500]}, ${INDIGO[600]})` }}
               >
                 <SlackIcon className="h-3.5 w-3.5" />
               </div>
-              <span className="text-sm font-bold text-foreground">Slack Autom8</span>
+              <span
+                className="text-[14px] font-extrabold"
+                style={{ color: SLATE[900], letterSpacing: "-0.02em" }}
+              >
+                Slack Autom8
+              </span>
             </div>
           </div>
           <Link
             to="/profile"
             className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-            style={{ background: "linear-gradient(135deg, #8b5cf6, #6366f1)" }}
+            style={{ background: `linear-gradient(135deg, ${INDIGO[500]}, ${INDIGO[600]})` }}
             aria-label="Profile"
           >
             {initial}
           </Link>
         </header>
 
-        {/* Main content */}
+        {/* Page content */}
         <main className="flex-1 min-w-0">
-          <div className={`mx-auto ${maxWidth} px-4 sm:px-6 lg:px-8 py-8 sm:py-10`}>
+          <div className={`mx-auto ${maxWidth} px-5 sm:px-8 py-8 sm:py-10`}>
             {(title || subtitle) && (
               <div className="mb-8">
                 {title && (
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                  <h1
+                    className="text-[26px] sm:text-[30px] font-extrabold tracking-tight"
+                    style={{ color: SLATE[900], letterSpacing: "-0.025em" }}
+                  >
                     {title}
                   </h1>
                 )}
                 {subtitle && (
-                  <p className="mt-1.5 text-sm sm:text-base text-muted-foreground">{subtitle}</p>
+                  <p className="mt-1.5 text-[14px]" style={{ color: SLATE[500] }}>
+                    {subtitle}
+                  </p>
                 )}
               </div>
             )}
