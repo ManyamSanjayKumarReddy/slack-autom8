@@ -1027,40 +1027,62 @@ function EditMemberRoleDialog({
 
 function SummariesSection({
   projectId,
+  hasPersonalSummaries,
   canGenerateProjectSummary,
 }: {
   projectId: string;
+  hasPersonalSummaries: boolean;
   canGenerateProjectSummary: boolean;
 }) {
-  const [scope, setScope] = useState<"personal" | "project">("personal");
+  // Default scope: personal if user has it, otherwise project.
+  const initialScope: "personal" | "project" = hasPersonalSummaries
+    ? "personal"
+    : "project";
+  const [scope, setScope] = useState<"personal" | "project">(initialScope);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [polling, setPolling] = useState(false);
+
+  // If a user can't access the current scope (e.g. admin landing on personal),
+  // snap to the allowed one.
+  useEffect(() => {
+    if (scope === "personal" && !hasPersonalSummaries) setScope("project");
+    if (scope === "project" && !canGenerateProjectSummary && hasPersonalSummaries) {
+      setScope("personal");
+    }
+  }, [scope, hasPersonalSummaries, canGenerateProjectSummary]);
+
+  const showTabs = hasPersonalSummaries && canGenerateProjectSummary;
+  const canGenerateCurrent =
+    scope === "personal" ? hasPersonalSummaries : canGenerateProjectSummary;
 
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-[var(--shadow-card)] flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <Tabs value={scope} onValueChange={(v) => setScope(v as "personal" | "project")}>
-            <TabsList>
-              <TabsTrigger value="personal">My Summaries</TabsTrigger>
-              {canGenerateProjectSummary && (
+          {showTabs ? (
+            <Tabs value={scope} onValueChange={(v) => setScope(v as "personal" | "project")}>
+              <TabsList>
+                <TabsTrigger value="personal">My Summaries</TabsTrigger>
                 <TabsTrigger value="project">Project Summaries</TabsTrigger>
-              )}
-            </TabsList>
-          </Tabs>
-        </div>
-        <Button
-          onClick={() => setGenerateOpen(true)}
-          disabled={polling}
-        >
-          {polling ? (
-            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              </TabsList>
+            </Tabs>
           ) : (
-            <Sparkles className="h-4 w-4 mr-1.5" />
+            <h3 className="text-sm font-semibold text-foreground">
+              {scope === "personal" ? "My Summaries" : "Project Summaries"}
+            </h3>
           )}
-          {scope === "personal" ? "Generate My Summary" : "Generate Project Summary"}
-        </Button>
+        </div>
+        {canGenerateCurrent && (
+          <Button onClick={() => setGenerateOpen(true)} disabled={polling}>
+            {polling ? (
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4 mr-1.5" />
+            )}
+            {scope === "personal" ? "Generate My Summary" : "Generate Project Summary"}
+          </Button>
+        )}
       </div>
 
       <GroupedSummariesView
