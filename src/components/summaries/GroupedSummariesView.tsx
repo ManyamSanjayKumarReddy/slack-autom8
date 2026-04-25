@@ -279,11 +279,13 @@ export function GroupedSummariesView({
 
 function SummaryCard({
   summary,
+  structured,
   canDelete,
   deleting,
   onDelete,
 }: {
   summary: ProjectSummary;
+  structured?: boolean;
   canDelete: boolean;
   deleting: boolean;
   onDelete: () => void;
@@ -326,16 +328,22 @@ function SummaryCard({
           </button>
         )}
       </div>
-      <div className="text-sm text-foreground leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-2 [&_p]:mt-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-semibold [&_a]:text-primary [&_a]:underline">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{display}</ReactMarkdown>
-      </div>
-      {isLong && (
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="text-xs font-medium text-primary hover:underline"
-        >
-          {expanded ? "Show less" : "Show more"}
-        </button>
+      {structured ? (
+        <StructuredProjectSummary text={text} />
+      ) : (
+        <>
+          <div className="text-sm text-foreground leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-2 [&_p]:mt-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-semibold [&_a]:text-primary [&_a]:underline">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{display}</ReactMarkdown>
+          </div>
+          {isLong && (
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              {expanded ? "Show less" : "Show more"}
+            </button>
+          )}
+        </>
       )}
     </div>
   );
