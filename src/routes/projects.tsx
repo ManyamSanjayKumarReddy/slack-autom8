@@ -36,6 +36,16 @@ export const Route = createFileRoute("/projects")({
 });
 
 function ProjectsPage() {
+  const location = useLocation();
+
+  if (location.pathname !== "/projects") {
+    return <Outlet />;
+  }
+
+  return <ProjectsListPage />;
+}
+
+function ProjectsListPage() {
   const { user } = useCurrentUser();
   const isAdmin = user?.role === "admin";
 
