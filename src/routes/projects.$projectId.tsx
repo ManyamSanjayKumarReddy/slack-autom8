@@ -486,8 +486,13 @@ function ChannelsTab({
         setChannels([]);
         return;
       }
-      const data = (await res.json()) as { results?: ProjectChannel[] } | ProjectChannel[];
-      setChannels(Array.isArray(data) ? data : (data.results ?? []));
+      const data = (await res.json()) as
+        | { channels?: ProjectChannel[]; results?: ProjectChannel[] }
+        | ProjectChannel[];
+      const list = Array.isArray(data)
+        ? data
+        : (data.channels ?? data.results ?? []);
+      setChannels(list);
     } finally {
       setLoading(false);
     }
