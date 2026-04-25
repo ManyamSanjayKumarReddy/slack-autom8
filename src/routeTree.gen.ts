@@ -16,6 +16,7 @@ import { Route as SummariesRouteImport } from './routes/summaries'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as HierarchyRouteImport } from './routes/hierarchy'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
@@ -56,6 +57,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HierarchyRoute = HierarchyRouteImport.update({
+  id: '/hierarchy',
+  path: '/hierarchy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -80,6 +86,7 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/hierarchy': typeof HierarchyRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/hierarchy': typeof HierarchyRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/hierarchy': typeof HierarchyRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/hierarchy'
     | '/onboarding'
     | '/profile'
     | '/projects'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/dashboard'
+    | '/hierarchy'
     | '/onboarding'
     | '/profile'
     | '/projects'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/dashboard'
+    | '/hierarchy'
     | '/onboarding'
     | '/profile'
     | '/projects'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
+  HierarchyRoute: typeof HierarchyRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
@@ -223,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hierarchy': {
+      id: '/hierarchy'
+      path: '/hierarchy'
+      fullPath: '/hierarchy'
+      preLoaderRoute: typeof HierarchyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -269,6 +289,7 @@ const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
+  HierarchyRoute: HierarchyRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
