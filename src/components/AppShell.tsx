@@ -2,12 +2,9 @@ import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   LayoutDashboard,
-  FileText,
-  Users,
-  Building2,
-  Globe,
+  FolderKanban,
+  GitBranch,
   UserCog,
-  Hash,
   Menu,
   X,
   LogOut,
@@ -29,11 +26,8 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, allowed: ["employee", "team_lead", "manager", "admin"] },
-  { to: "/onboarding", label: "Manage Channels", icon: Hash, allowed: ["employee", "team_lead"] },
-  { to: "/summaries", label: "My Summaries", icon: FileText, allowed: ["employee", "team_lead"] },
-  { to: "/team-summaries", label: "Team Summaries", icon: Users, allowed: ["team_lead", "manager", "admin"] },
-  { to: "/workspace-summaries", label: "Workspace Summaries", icon: Globe, allowed: ["admin"] },
-  { to: "/teams", label: "Teams Management", icon: Building2, allowed: ["manager", "admin"] },
+  { to: "/projects", label: "Projects", icon: FolderKanban, allowed: ["employee", "team_lead", "manager", "admin"] },
+  { to: "/hierarchy", label: "Summary Report", icon: GitBranch, allowed: ["manager", "admin"] },
   { to: "/admin/users", label: "User Management", icon: UserCog, allowed: ["admin"] },
 ];
 
