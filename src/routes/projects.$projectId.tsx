@@ -235,20 +235,22 @@ function ProjectDetailPage() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">
-              <LayoutGrid className="h-3.5 w-3.5 mr-1.5" /> Overview
-            </TabsTrigger>
-            <TabsTrigger value="channels">
-              <Hash className="h-3.5 w-3.5 mr-1.5" /> Channels
-            </TabsTrigger>
-            <TabsTrigger value="members">
-              <UsersIcon className="h-3.5 w-3.5 mr-1.5" /> Members
-            </TabsTrigger>
-            <TabsTrigger value="summaries">
-              <FileText className="h-3.5 w-3.5 mr-1.5" /> Summaries
-            </TabsTrigger>
-          </TabsList>
+          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
+            <TabsList className="inline-flex w-max">
+              <TabsTrigger value="overview">
+                <LayoutGrid className="h-3.5 w-3.5 mr-1.5" /> Overview
+              </TabsTrigger>
+              <TabsTrigger value="channels">
+                <Hash className="h-3.5 w-3.5 mr-1.5" /> Channels
+              </TabsTrigger>
+              <TabsTrigger value="members">
+                <UsersIcon className="h-3.5 w-3.5 mr-1.5" /> Members
+              </TabsTrigger>
+              <TabsTrigger value="summaries">
+                <FileText className="h-3.5 w-3.5 mr-1.5" /> Summaries
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview">
             <OverviewTab project={project} isAdmin={isAdmin} onChanged={fetchProject} />
