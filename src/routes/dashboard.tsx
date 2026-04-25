@@ -79,29 +79,36 @@ function DashboardPage() {
   return (
     <AppShell>
       <div className="space-y-8">
-        {/* Welcome banner */}
+        {/* Welcome banner — light indigo gradient */}
         <div
-          className="rounded-2xl p-7 relative overflow-hidden"
+          className="rounded-2xl px-7 py-6 relative overflow-hidden border"
           style={{
-            background: "linear-gradient(135deg, #0f0e1a 0%, #1a1035 60%, #0d1b3e 100%)",
+            background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 60%, #f6f8fc 100%)",
+            borderColor: "#e0e7ff",
           }}
         >
-          {/* Glow */}
+          {/* Subtle decorative ring */}
           <div
-            className="absolute top-[-60px] right-[-40px] h-[280px] w-[280px] rounded-full pointer-events-none"
+            className="absolute right-[-60px] top-[-60px] h-[220px] w-[220px] rounded-full pointer-events-none"
             style={{
               background:
-                "radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)",
+                "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)",
             }}
           />
           <div className="relative">
-            <p className="text-xs font-semibold text-violet-400 uppercase tracking-widest mb-2">
+            <p
+              className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2"
+              style={{ color: "#6366f1" }}
+            >
               Dashboard
             </p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-1.5">
+            <h1
+              className="text-[22px] sm:text-[26px] font-extrabold mb-1.5"
+              style={{ color: "#0f172a", letterSpacing: "-0.025em" }}
+            >
               Good to see you, {displayName}!
             </h1>
-            <p className="text-[#94a3b8] text-sm">{subtitle}</p>
+            <p className="text-[14px]" style={{ color: "#64748b" }}>{subtitle}</p>
           </div>
         </div>
 
@@ -111,12 +118,20 @@ function DashboardPage() {
         <section>
           <div className="flex items-center justify-between gap-3 mb-5">
             <div>
-              <h2 className="text-lg font-bold text-foreground">Your projects</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Jump into any project below</p>
+              <h2
+                className="font-bold"
+                style={{ fontSize: "17px", color: "#0f172a", letterSpacing: "-0.02em" }}
+              >
+                Your projects
+              </h2>
+              <p style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
+                Jump into any project below
+              </p>
             </div>
             <Link
               to="/projects"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:opacity-80 transition-opacity"
+              className="inline-flex items-center gap-1.5 font-semibold hover:opacity-75 transition-opacity no-underline"
+              style={{ fontSize: "13px", color: "#6366f1" }}
             >
               View all
               <ArrowRight className="h-3.5 w-3.5" />
@@ -131,15 +146,14 @@ function DashboardPage() {
             </div>
           ) : !projects || projects.length === 0 ? (
             <div
-              className="rounded-2xl p-14 text-center"
-              style={{
-                border: "2px dashed oklch(0.912 0.01 280)",
-                background: "oklch(1 0 0)",
-              }}
+              className="rounded-2xl p-14 text-center bg-white"
+              style={{ border: "2px dashed #e2e8f0" }}
             >
-              <FolderKanban className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-40" />
-              <p className="text-sm font-medium text-foreground mb-1">No projects yet</p>
-              <p className="text-xs text-muted-foreground">
+              <FolderKanban className="h-10 w-10 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
+              <p className="font-semibold mb-1" style={{ fontSize: "14px", color: "#334155" }}>
+                No projects yet
+              </p>
+              <p style={{ fontSize: "13px", color: "#94a3b8" }}>
                 {role === "admin"
                   ? 'Head to "Projects" to create your first one.'
                   : "You haven't been added to any projects yet."}
@@ -202,22 +216,22 @@ function ProjectCard({ project }: { project: Project }) {
       )}
 
       <div
-        className="flex items-center gap-4 text-xs text-muted-foreground pt-3 mt-auto"
-        style={{ borderTop: "1px solid oklch(0.912 0.01 280)" }}
+        className="flex items-center gap-4 pt-3 mt-auto"
+        style={{ borderTop: "1px solid #e2e8f0", color: "#94a3b8", fontSize: "12px" }}
       >
         <span className="inline-flex items-center gap-1.5">
           <UsersIcon className="h-3.5 w-3.5" />
-          <span className="font-semibold text-foreground">{project.member_count ?? 0}</span>
+          <span className="font-semibold" style={{ color: "#334155" }}>{project.member_count ?? 0}</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
           <Hash className="h-3.5 w-3.5" />
-          <span className="font-semibold text-foreground">{project.channel_count ?? 0}</span>
+          <span className="font-semibold" style={{ color: "#334155" }}>{project.channel_count ?? 0}</span>
         </span>
-        <span className="ml-auto truncate text-[11px]">
+        <span className="ml-auto truncate" style={{ fontSize: "11px" }}>
           {project.manager_name ? (
-            <span className="text-foreground font-medium">{project.manager_name}</span>
+            <span className="font-medium" style={{ color: "#334155" }}>{project.manager_name}</span>
           ) : (
-            <span className="italic text-muted-foreground">Unassigned</span>
+            <span className="italic" style={{ color: "#94a3b8" }}>Unassigned</span>
           )}
         </span>
       </div>
@@ -256,30 +270,35 @@ function StatCard({ card, loading }: { card: StatCard; loading: boolean }) {
   const Icon = card.icon;
   return (
     <div
-      className="rounded-2xl bg-card border border-border p-5 flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg"
-      style={{ boxShadow: "var(--shadow-card)" }}
+      className="rounded-2xl bg-white border p-5 flex flex-col gap-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
+      style={{
+        borderColor: "#e2e8f0",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 3px 12px rgba(0,0,0,0.05)",
+      }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div
-          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-          style={{
-            background: `linear-gradient(135deg, ${card.from}22 0%, ${card.to}15 100%)`,
-            border: `1px solid ${card.from}30`,
-          }}
-        >
-          <Icon className="h-5 w-5" style={{ color: card.iconColor }} />
-        </div>
-        <TrendingUp className="h-4 w-4 text-muted-foreground opacity-30" />
+      <div
+        className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
+        style={{
+          background: `${card.from}18`,
+          border: `1px solid ${card.from}28`,
+        }}
+      >
+        <Icon className="h-4.5 w-4.5" style={{ color: card.iconColor, width: 18, height: 18 }} />
       </div>
       <div>
-        <div className="text-3xl font-extrabold tracking-tight text-foreground leading-none">
+        <div
+          className="font-extrabold leading-none"
+          style={{ fontSize: "26px", color: "#0f172a", letterSpacing: "-0.03em" }}
+        >
           {loading ? (
-            <span className="inline-block h-8 w-12 rounded-lg bg-muted animate-pulse" />
+            <span className="inline-block h-7 w-10 rounded-lg animate-pulse" style={{ background: "#f1f5f9" }} />
           ) : (
             (card.value ?? 0).toLocaleString()
           )}
         </div>
-        <div className="mt-1.5 text-xs font-medium text-muted-foreground">{card.label}</div>
+        <div className="mt-1.5 font-medium" style={{ fontSize: "12px", color: "#64748b" }}>
+          {card.label}
+        </div>
       </div>
     </div>
   );
@@ -377,7 +396,12 @@ function DashboardStats({ role }: { role: "admin" | "manager" }) {
 
   return (
     <section>
-      <h2 className="text-lg font-bold text-foreground mb-5">Workspace stats</h2>
+      <h2
+        className="font-bold mb-5"
+        style={{ fontSize: "17px", color: "#0f172a", letterSpacing: "-0.02em" }}
+      >
+        Workspace stats
+      </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4">
         {cards.map((c) => (
           <StatCard key={c.label} card={c} loading={loading} />
