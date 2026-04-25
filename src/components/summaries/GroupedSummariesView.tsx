@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { StructuredProjectSummary } from "@/components/summaries/StructuredProjectSummary";
 
 export interface ProjectSummary {
   id: string;
