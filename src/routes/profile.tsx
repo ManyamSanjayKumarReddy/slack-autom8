@@ -4,6 +4,7 @@ import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { RoleBadge } from "@/components/RoleBadge";
 import { useCurrentUser } from "@/lib/user-store";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/profile")({
   beforeLoad: () => {
@@ -14,11 +15,15 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
-interface TrackedChannel {
-  channel_id: string;
-  channel_name: string;
-  is_active: boolean;
-  created_at: string;
+interface ProjectMembership {
+  project_id: string;
+  project_name: string;
+  project_role: "employee" | "team_lead";
+}
+
+interface MeWithProjects {
+  id: string;
+  projects?: ProjectMembership[];
 }
 
 function initials(name?: string, email?: string): string {
@@ -30,23 +35,28 @@ function initials(name?: string, email?: string): string {
 
 function ProfilePage() {
   const { user, loading: userLoading } = useCurrentUser();
-  const [channels, setChannels] = useState<TrackedChannel[] | null>(null);
+  const [memberships, setMemberships] = useState<ProjectMembership[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = "Profile — Slack Summarizer";
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
     let cancelled = false;
     (async () => {
       try {
-        const chRes = await apiFetch("/users/me/channels?page=1&page_size=200");
-        if (!cancelled && chRes.ok) {
-          const data = (await chRes.json()) as
-            | { total: number; results: TrackedChannel[] }
-            | { total: number; channels: TrackedChannel[] };
-          const list =
-            "results" in data ? data.results : "channels" in data ? data.channels : [];
-          setChannels(list ?? []);
+        // Project memberships are returned via /admin/users/{id}
+        const res = await apiFetch(`/admin/users/${user.id}`);
+        if (!cancelled && res.ok) {
+          const data = (await res.json()) as MeWithProjects;
+          setMemberships(data.projects ?? []);
+        } else if (!cancelled) {
+          setMemberships([]);
         }
+      } catch {
+        if (!cancelled) setMemberships([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -54,11 +64,15 @@ function ProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
 
   return (
-    <AppShell title="Profile" subtitle="Your account and workspace details." maxWidth="max-w-4xl">
-      {userLoading || loading ? (
+    <AppShell
+      title="Profile"
+      subtitle="Your account and project memberships."
+      maxWidth="max-w-4xl"
+    >
+      {userLoading ? (
         <section className="rounded-2xl border border-border bg-card p-16 text-center text-muted-foreground shadow-[var(--shadow-card)]">
           Loading…
         </section>
@@ -73,7 +87,9 @@ function ProfilePage() {
                 <div className="text-xl font-semibold text-foreground truncate">
                   {user.name || "Unnamed user"}
                 </div>
-                <div className="text-sm text-muted-foreground truncate">{user.email}</div>
+                <div className="text-sm text-muted-foreground truncate">
+                  {user.email}
+                </div>
                 <div className="mt-2">
                   <RoleBadge role={user.role} />
                 </div>
@@ -83,7 +99,9 @@ function ProfilePage() {
 
           <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
             <div className="px-4 sm:px-6 py-4 border-b border-border">
-              <h2 className="text-sm font-semibold text-foreground">Account details</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                Account details
+              </h2>
             </div>
             <dl className="divide-y divide-border">
               <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
@@ -116,25 +134,40 @@ function ProfilePage() {
           <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
             <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-foreground">
-                Tracked channels ({channels?.length ?? 0})
+                Project memberships ({memberships?.length ?? 0})
               </h2>
               <Link
-                to="/onboarding"
+                to="/projects"
                 className="text-sm font-medium text-primary hover:underline shrink-0"
               >
-                Manage
+                Browse projects
               </Link>
             </div>
-            {!channels || channels.length === 0 ? (
+            {loading ? (
               <div className="p-10 text-center text-sm text-muted-foreground">
-                No channels tracked yet.
+                Loading…
+              </div>
+            ) : !memberships || memberships.length === 0 ? (
+              <div className="p-10 text-center text-sm text-muted-foreground">
+                You're not a member of any projects yet.
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {channels.map((c) => (
-                  <li key={c.channel_id} className="px-4 sm:px-6 py-3 flex items-center gap-3">
-                    <span className="text-muted-foreground shrink-0">#</span>
-                    <span className="text-sm text-foreground truncate">{c.channel_name}</span>
+                {memberships.map((m) => (
+                  <li
+                    key={m.project_id}
+                    className="px-4 sm:px-6 py-3 flex items-center justify-between gap-3"
+                  >
+                    <Link
+                      to="/projects/$projectId"
+                      params={{ projectId: m.project_id }}
+                      className="text-sm font-medium text-foreground truncate hover:text-primary transition-colors"
+                    >
+                      {m.project_name}
+                    </Link>
+                    <Badge variant="outline" className="shrink-0 text-[10px]">
+                      {m.project_role === "team_lead" ? "Team Lead" : "Member"}
+                    </Badge>
                   </li>
                 ))}
               </ul>

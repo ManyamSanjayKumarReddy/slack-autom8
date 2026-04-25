@@ -261,6 +261,12 @@ function Inner() {
   );
 }
 
+interface ProjectMembership {
+  project_id: string;
+  project_name: string;
+  project_role: "employee" | "team_lead";
+}
+
 function ChangeRoleDialog({
   user,
   onOpenChange,
@@ -270,8 +276,32 @@ function ChangeRoleDialog({
   onOpenChange: (o: boolean) => void;
   onSaved: () => void;
 }) {
-  const [role, setRole] = useState<Role>(user.role);
+  const [role, setRole] = useState<Role>(
+    // team_lead is project-scoped now — fall back to employee in the picker
+    user.role === "team_lead" ? "employee" : user.role,
+  );
   const [submitting, setSubmitting] = useState(false);
+  const [memberships, setMemberships] = useState<ProjectMembership[] | null>(
+    null,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch(`/admin/users/${user.id}`);
+        if (!cancelled && res.ok) {
+          const data = (await res.json()) as { projects?: ProjectMembership[] };
+          setMemberships(data.projects ?? []);
+        }
+      } catch {
+        if (!cancelled) setMemberships([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user.id]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -298,23 +328,61 @@ function ChangeRoleDialog({
         <DialogHeader>
           <DialogTitle>Change role</DialogTitle>
           <DialogDescription>
-            Update the role for <span className="font-medium text-foreground">{user.name || user.email}</span>.
+            Update the workspace role for{" "}
+            <span className="font-medium text-foreground">
+              {user.name || user.email}
+            </span>
+            . Team-lead is now a project-scoped role and is managed from each
+            project's Members tab.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
-          <label className="block text-xs font-medium text-muted-foreground">Role</label>
-          <Select value={role} onValueChange={(v) => setRole(v as Role)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ROLE_OPTIONS.map((r) => (
-                <SelectItem key={r} value={r}>
-                  {ROLE_LABEL[r]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-muted-foreground">
+              Workspace role
+            </label>
+            <Select value={role} onValueChange={(v) => setRole(v as Role)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {ROLE_LABEL[r]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-muted-foreground">
+              Project memberships
+            </label>
+            {memberships === null ? (
+              <div className="text-xs text-muted-foreground">Loading…</div>
+            ) : memberships.length === 0 ? (
+              <div className="text-xs text-muted-foreground italic">
+                No project memberships.
+              </div>
+            ) : (
+              <ul className="rounded-md border border-border divide-y divide-border max-h-40 overflow-y-auto">
+                {memberships.map((m) => (
+                  <li
+                    key={m.project_id}
+                    className="px-3 py-2 flex items-center justify-between gap-2 text-xs"
+                  >
+                    <span className="font-medium text-foreground truncate">
+                      {m.project_name}
+                    </span>
+                    <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
+                      {m.project_role === "team_lead" ? "Team Lead" : "Member"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
         <DialogFooter>
           <button
