@@ -234,6 +234,7 @@ export function GroupedSummariesView({
                   <SummaryCard
                     key={s.id}
                     summary={s}
+                    structured={scope === "project"}
                     canDelete={canDelete}
                     deleting={deletingId === s.id}
                     onDelete={() => setConfirmDelete(s)}
