@@ -8,6 +8,7 @@ import {
   PenLine,
   Hash,
   Users as UsersIcon,
+  User as UserIcon,
 } from "lucide-react";
 import { apiFetch, isAuthenticated, setToken } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
