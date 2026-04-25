@@ -262,6 +262,7 @@ function ProjectDetailPage() {
           <TabsContent value="summaries" className="space-y-4">
             <SummariesSection
               projectId={projectId}
+              hasPersonalSummaries={hasPersonalSummaries}
               canGenerateProjectSummary={canGenerateProjectSummary}
             />
           </TabsContent>
