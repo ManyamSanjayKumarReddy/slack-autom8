@@ -24,4 +24,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   admin: "Admin",
 };
 
-export const ROLE_OPTIONS: Role[] = ["employee", "team_lead", "manager", "admin"];
+/** Workspace-level roles assignable in the admin panel.
+ *  Note: `team_lead` is now a project-scoped role (see ProjectRole) and is
+ *  no longer assignable as a workspace role. */
+export const ROLE_OPTIONS: Role[] = ["employee", "manager", "admin"];
