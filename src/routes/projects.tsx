@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, Users as UsersIcon, Hash } from "lucide-react";
 import { toast } from "sonner";
@@ -36,6 +36,16 @@ export const Route = createFileRoute("/projects")({
 });
 
 function ProjectsPage() {
+  const location = useLocation();
+
+  if (location.pathname !== "/projects") {
+    return <Outlet />;
+  }
+
+  return <ProjectsListPage />;
+}
+
+function ProjectsListPage() {
   const { user } = useCurrentUser();
   const isAdmin = user?.role === "admin";
 
