@@ -13,10 +13,13 @@ import { Route as WorkspaceSummariesRouteImport } from './routes/workspace-summa
 import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as TeamSummariesRouteImport } from './routes/team-summaries'
 import { Route as SummariesRouteImport } from './routes/summaries'
+import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as HierarchyRouteImport } from './routes/hierarchy'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 
 const WorkspaceSummariesRoute = WorkspaceSummariesRouteImport.update({
@@ -39,6 +42,11 @@ const SummariesRoute = SummariesRouteImport.update({
   path: '/summaries',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -47,6 +55,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HierarchyRoute = HierarchyRouteImport.update({
+  id: '/hierarchy',
+  path: '/hierarchy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -59,6 +72,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
+  id: '/$projectId',
+  path: '/$projectId',
+  getParentRoute: () => ProjectsRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
@@ -68,78 +86,98 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/hierarchy': typeof HierarchyRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/projects': typeof ProjectsRouteWithChildren
   '/summaries': typeof SummariesRoute
   '/team-summaries': typeof TeamSummariesRoute
   '/teams': typeof TeamsRoute
   '/workspace-summaries': typeof WorkspaceSummariesRoute
   '/admin/users': typeof AdminUsersRoute
+  '/projects/$projectId': typeof ProjectsProjectIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/hierarchy': typeof HierarchyRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/projects': typeof ProjectsRouteWithChildren
   '/summaries': typeof SummariesRoute
   '/team-summaries': typeof TeamSummariesRoute
   '/teams': typeof TeamsRoute
   '/workspace-summaries': typeof WorkspaceSummariesRoute
   '/admin/users': typeof AdminUsersRoute
+  '/projects/$projectId': typeof ProjectsProjectIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/hierarchy': typeof HierarchyRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/projects': typeof ProjectsRouteWithChildren
   '/summaries': typeof SummariesRoute
   '/team-summaries': typeof TeamSummariesRoute
   '/teams': typeof TeamsRoute
   '/workspace-summaries': typeof WorkspaceSummariesRoute
   '/admin/users': typeof AdminUsersRoute
+  '/projects/$projectId': typeof ProjectsProjectIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/hierarchy'
     | '/onboarding'
     | '/profile'
+    | '/projects'
     | '/summaries'
     | '/team-summaries'
     | '/teams'
     | '/workspace-summaries'
     | '/admin/users'
+    | '/projects/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard'
+    | '/hierarchy'
     | '/onboarding'
     | '/profile'
+    | '/projects'
     | '/summaries'
     | '/team-summaries'
     | '/teams'
     | '/workspace-summaries'
     | '/admin/users'
+    | '/projects/$projectId'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
+    | '/hierarchy'
     | '/onboarding'
     | '/profile'
+    | '/projects'
     | '/summaries'
     | '/team-summaries'
     | '/teams'
     | '/workspace-summaries'
     | '/admin/users'
+    | '/projects/$projectId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
+  HierarchyRoute: typeof HierarchyRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
+  ProjectsRoute: typeof ProjectsRouteWithChildren
   SummariesRoute: typeof SummariesRoute
   TeamSummariesRoute: typeof TeamSummariesRoute
   TeamsRoute: typeof TeamsRoute
@@ -177,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SummariesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -189,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hierarchy': {
+      id: '/hierarchy'
+      path: '/hierarchy'
+      fullPath: '/hierarchy'
+      preLoaderRoute: typeof HierarchyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -205,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/$projectId': {
+      id: '/projects/$projectId'
+      path: '/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof ProjectsProjectIdRouteImport
+      parentRoute: typeof ProjectsRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/admin/users'
@@ -215,11 +274,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ProjectsRouteChildren {
+  ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
+}
+
+const ProjectsRouteChildren: ProjectsRouteChildren = {
+  ProjectsProjectIdRoute: ProjectsProjectIdRoute,
+}
+
+const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
+  ProjectsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
+  HierarchyRoute: HierarchyRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
+  ProjectsRoute: ProjectsRouteWithChildren,
   SummariesRoute: SummariesRoute,
   TeamSummariesRoute: TeamSummariesRoute,
   TeamsRoute: TeamsRoute,
