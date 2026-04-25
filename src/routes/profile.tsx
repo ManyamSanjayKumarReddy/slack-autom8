@@ -19,10 +19,10 @@ interface ProjectMembership {
   project_id: string;
   project_name: string;
   project_role: "employee" | "team_lead";
+  joined_at?: string;
 }
 
-interface MeWithProjects {
-  id: string;
+interface MyProjectsResponse {
   projects?: ProjectMembership[];
 }
 
@@ -47,10 +47,10 @@ function ProfilePage() {
     let cancelled = false;
     (async () => {
       try {
-        // Project memberships are returned via /admin/users/{id}
-        const res = await apiFetch(`/admin/users/${user.id}`);
+        // Use the public "me" endpoint — works for any authenticated user.
+        const res = await apiFetch(`/users/me/projects`);
         if (!cancelled && res.ok) {
-          const data = (await res.json()) as MeWithProjects;
+          const data = (await res.json()) as MyProjectsResponse;
           setMemberships(data.projects ?? []);
         } else if (!cancelled) {
           setMemberships([]);
