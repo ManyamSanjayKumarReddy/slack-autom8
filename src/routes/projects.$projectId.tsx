@@ -136,8 +136,10 @@ function ProjectDetailPage() {
   const isManagerOrAdmin = isOneOf(user?.role, ["manager", "admin"]);
   const isTeamLead = project?.my_role === "team_lead";
   const canManage = isManagerOrAdmin;
-  const canGenerateProjectSummary =
-    isOneOf(user?.role, ["manager", "admin"]) || isTeamLead;
+  // Admins and managers do NOT have personal summaries — only employees do.
+  const hasPersonalSummaries = user?.role === "employee";
+  // Project summaries: admin, manager, and project team_leads.
+  const canGenerateProjectSummary = isManagerOrAdmin || isTeamLead;
 
   const handleDelete = async () => {
     try {
