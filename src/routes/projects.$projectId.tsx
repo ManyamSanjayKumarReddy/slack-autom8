@@ -136,8 +136,10 @@ function ProjectDetailPage() {
   const isManagerOrAdmin = isOneOf(user?.role, ["manager", "admin"]);
   const isTeamLead = project?.my_role === "team_lead";
   const canManage = isManagerOrAdmin;
-  const canGenerateProjectSummary =
-    isOneOf(user?.role, ["manager", "admin"]) || isTeamLead;
+  // Admins and managers do NOT have personal summaries — only employees do.
+  const hasPersonalSummaries = user?.role === "employee";
+  // Project summaries: admin, manager, and project team_leads.
+  const canGenerateProjectSummary = isManagerOrAdmin || isTeamLead;
 
   const handleDelete = async () => {
     try {
@@ -233,20 +235,22 @@ function ProjectDetailPage() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">
-              <LayoutGrid className="h-3.5 w-3.5 mr-1.5" /> Overview
-            </TabsTrigger>
-            <TabsTrigger value="channels">
-              <Hash className="h-3.5 w-3.5 mr-1.5" /> Channels
-            </TabsTrigger>
-            <TabsTrigger value="members">
-              <UsersIcon className="h-3.5 w-3.5 mr-1.5" /> Members
-            </TabsTrigger>
-            <TabsTrigger value="summaries">
-              <FileText className="h-3.5 w-3.5 mr-1.5" /> Summaries
-            </TabsTrigger>
-          </TabsList>
+          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
+            <TabsList className="inline-flex w-max">
+              <TabsTrigger value="overview">
+                <LayoutGrid className="h-3.5 w-3.5 mr-1.5" /> Overview
+              </TabsTrigger>
+              <TabsTrigger value="channels">
+                <Hash className="h-3.5 w-3.5 mr-1.5" /> Channels
+              </TabsTrigger>
+              <TabsTrigger value="members">
+                <UsersIcon className="h-3.5 w-3.5 mr-1.5" /> Members
+              </TabsTrigger>
+              <TabsTrigger value="summaries">
+                <FileText className="h-3.5 w-3.5 mr-1.5" /> Summaries
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview">
             <OverviewTab project={project} isAdmin={isAdmin} onChanged={fetchProject} />
@@ -260,6 +264,7 @@ function ProjectDetailPage() {
           <TabsContent value="summaries" className="space-y-4">
             <SummariesSection
               projectId={projectId}
+              hasPersonalSummaries={hasPersonalSummaries}
               canGenerateProjectSummary={canGenerateProjectSummary}
             />
           </TabsContent>
@@ -483,8 +488,13 @@ function ChannelsTab({
         setChannels([]);
         return;
       }
-      const data = (await res.json()) as { results?: ProjectChannel[] } | ProjectChannel[];
-      setChannels(Array.isArray(data) ? data : (data.results ?? []));
+      const data = (await res.json()) as
+        | { channels?: ProjectChannel[]; results?: ProjectChannel[] }
+        | ProjectChannel[];
+      const list = Array.isArray(data)
+        ? data
+        : (data.channels ?? data.results ?? []);
+      setChannels(list);
     } finally {
       setLoading(false);
     }
@@ -549,6 +559,11 @@ function ChannelsTab({
                 <span className="text-sm font-medium text-foreground truncate">
                   {c.channel_name}
                 </span>
+                {c.added_at && (
+                  <span className="text-xs text-muted-foreground hidden sm:inline">
+                    · added {new Date(c.added_at).toLocaleDateString()}
+                  </span>
+                )}
               </div>
               {canManage && (
                 <button
@@ -1024,40 +1039,62 @@ function EditMemberRoleDialog({
 
 function SummariesSection({
   projectId,
+  hasPersonalSummaries,
   canGenerateProjectSummary,
 }: {
   projectId: string;
+  hasPersonalSummaries: boolean;
   canGenerateProjectSummary: boolean;
 }) {
-  const [scope, setScope] = useState<"personal" | "project">("personal");
+  // Default scope: personal if user has it, otherwise project.
+  const initialScope: "personal" | "project" = hasPersonalSummaries
+    ? "personal"
+    : "project";
+  const [scope, setScope] = useState<"personal" | "project">(initialScope);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [polling, setPolling] = useState(false);
+
+  // If a user can't access the current scope (e.g. admin landing on personal),
+  // snap to the allowed one.
+  useEffect(() => {
+    if (scope === "personal" && !hasPersonalSummaries) setScope("project");
+    if (scope === "project" && !canGenerateProjectSummary && hasPersonalSummaries) {
+      setScope("personal");
+    }
+  }, [scope, hasPersonalSummaries, canGenerateProjectSummary]);
+
+  const showTabs = hasPersonalSummaries && canGenerateProjectSummary;
+  const canGenerateCurrent =
+    scope === "personal" ? hasPersonalSummaries : canGenerateProjectSummary;
 
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-[var(--shadow-card)] flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <Tabs value={scope} onValueChange={(v) => setScope(v as "personal" | "project")}>
-            <TabsList>
-              <TabsTrigger value="personal">My Summaries</TabsTrigger>
-              {canGenerateProjectSummary && (
+          {showTabs ? (
+            <Tabs value={scope} onValueChange={(v) => setScope(v as "personal" | "project")}>
+              <TabsList>
+                <TabsTrigger value="personal">My Summaries</TabsTrigger>
                 <TabsTrigger value="project">Project Summaries</TabsTrigger>
-              )}
-            </TabsList>
-          </Tabs>
-        </div>
-        <Button
-          onClick={() => setGenerateOpen(true)}
-          disabled={polling}
-        >
-          {polling ? (
-            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              </TabsList>
+            </Tabs>
           ) : (
-            <Sparkles className="h-4 w-4 mr-1.5" />
+            <h3 className="text-sm font-semibold text-foreground">
+              {scope === "personal" ? "My Summaries" : "Project Summaries"}
+            </h3>
           )}
-          {scope === "personal" ? "Generate My Summary" : "Generate Project Summary"}
-        </Button>
+        </div>
+        {canGenerateCurrent && (
+          <Button onClick={() => setGenerateOpen(true)} disabled={polling}>
+            {polling ? (
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4 mr-1.5" />
+            )}
+            {scope === "personal" ? "Generate My Summary" : "Generate Project Summary"}
+          </Button>
+        )}
       </div>
 
       <GroupedSummariesView

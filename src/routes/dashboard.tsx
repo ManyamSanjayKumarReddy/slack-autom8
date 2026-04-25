@@ -8,6 +8,7 @@ import {
   PenLine,
   Hash,
   Users as UsersIcon,
+  User as UserIcon,
 } from "lucide-react";
 import { apiFetch, isAuthenticated, setToken } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
@@ -57,7 +58,7 @@ function DashboardPage() {
   return (
     <AppShell title={`Welcome back, ${displayName}`} subtitle={subtitle}>
       <div className="space-y-6">
-        {showStats && <DashboardStats />}
+        {showStats && <DashboardStats role={role} />}
 
         <section>
           <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
@@ -148,16 +149,24 @@ function ProjectCard({ project }: { project: Project }) {
 
 interface AdminStats {
   total_users?: number;
+  total_members?: number;
   total_projects?: number;
   total_teams?: number; // legacy fallback
   total_summaries?: number;
+  total_personal_summaries?: number;
+  total_project_summaries?: number;
+  // legacy field names (server may still use these in some envs)
   personal_summaries?: number;
   project_summaries?: number;
+  auto_generated_personal?: number;
+  auto_generated_project?: number;
+  manual_personal?: number;
+  manual_project?: number;
   auto_summaries?: number;
   manual_summaries?: number;
 }
 
-function DashboardStats() {
+function DashboardStats({ role }: { role: "admin" | "manager" }) {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -180,14 +189,35 @@ function DashboardStats() {
     };
   }, []);
 
+  const personal = stats?.total_personal_summaries ?? stats?.personal_summaries ?? 0;
+  const projectS = stats?.total_project_summaries ?? stats?.project_summaries ?? 0;
+  const totalSummaries = stats?.total_summaries ?? personal + projectS;
+  const autoTotal =
+    stats?.auto_summaries ??
+    (stats?.auto_generated_personal ?? 0) + (stats?.auto_generated_project ?? 0);
+  const manualTotal =
+    stats?.manual_summaries ??
+    (stats?.manual_personal ?? 0) + (stats?.manual_project ?? 0);
+
+  const usersCard =
+    role === "admin"
+      ? {
+          label: "Total Users",
+          value: stats?.total_users,
+          icon: Users,
+          gradient: "from-violet-500/15 via-fuchsia-500/10 to-transparent",
+          iconBg: "bg-violet-500/15 text-violet-600 dark:text-violet-300",
+        }
+      : {
+          label: "Total Members",
+          value: stats?.total_members ?? stats?.total_users,
+          icon: Users,
+          gradient: "from-violet-500/15 via-fuchsia-500/10 to-transparent",
+          iconBg: "bg-violet-500/15 text-violet-600 dark:text-violet-300",
+        };
+
   const cards = [
-    {
-      label: "Total Users",
-      value: stats?.total_users,
-      icon: Users,
-      gradient: "from-violet-500/15 via-fuchsia-500/10 to-transparent",
-      iconBg: "bg-violet-500/15 text-violet-600 dark:text-violet-300",
-    },
+    usersCard,
     {
       label: "Total Projects",
       value: stats?.total_projects ?? stats?.total_teams,
@@ -197,21 +227,35 @@ function DashboardStats() {
     },
     {
       label: "Total Summaries",
-      value: stats?.total_summaries,
+      value: totalSummaries,
       icon: FileText,
       gradient: "from-amber-500/15 via-orange-500/10 to-transparent",
       iconBg: "bg-amber-500/15 text-amber-600 dark:text-amber-300",
     },
     {
+      label: "Personal Summaries",
+      value: personal,
+      icon: UserIcon,
+      gradient: "from-indigo-500/15 via-blue-500/10 to-transparent",
+      iconBg: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-300",
+    },
+    {
+      label: "Project Summaries",
+      value: projectS,
+      icon: FolderKanban,
+      gradient: "from-teal-500/15 via-cyan-500/10 to-transparent",
+      iconBg: "bg-teal-500/15 text-teal-600 dark:text-teal-300",
+    },
+    {
       label: "Auto Generated",
-      value: stats?.auto_summaries,
+      value: autoTotal,
       icon: Sparkles,
       gradient: "from-emerald-500/15 via-teal-500/10 to-transparent",
       iconBg: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
     },
     {
       label: "Manual",
-      value: stats?.manual_summaries,
+      value: manualTotal,
       icon: PenLine,
       gradient: "from-rose-500/15 via-pink-500/10 to-transparent",
       iconBg: "bg-rose-500/15 text-rose-600 dark:text-rose-300",
@@ -219,7 +263,7 @@ function DashboardStats() {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4">
       {cards.map((c) => {
         const Icon = c.icon;
         return (
@@ -234,7 +278,7 @@ function DashboardStats() {
             <div className="relative flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div
-                  className="text-3xl sm:text-4xl font-bold leading-none tracking-tight"
+                  className="text-2xl sm:text-3xl font-bold leading-none tracking-tight"
                   style={{ color: "#4A154B" }}
                 >
                   {loading ? (
