@@ -557,6 +557,11 @@ function ChannelsTab({
                 <span className="text-sm font-medium text-foreground truncate">
                   {c.channel_name}
                 </span>
+                {c.added_at && (
+                  <span className="text-xs text-muted-foreground hidden sm:inline">
+                    · added {new Date(c.added_at).toLocaleDateString()}
+                  </span>
+                )}
               </div>
               {canManage && (
                 <button
