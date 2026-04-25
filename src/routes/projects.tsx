@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Users as UsersIcon, Hash } from "lucide-react";
+import { Plus, Users as UsersIcon, Hash, FolderKanban } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
@@ -113,11 +113,18 @@ function ProjectsListPage() {
             ))}
           </div>
         ) : !projects || projects.length === 0 ? (
-          <section className="rounded-2xl border border-dashed border-border bg-card p-16 text-center text-sm text-muted-foreground shadow-[var(--shadow-card)]">
-            {isAdmin
-              ? "No projects yet. Click \"New Project\" to create one."
-              : "You haven't been added to any projects yet."}
-          </section>
+          <div
+            className="rounded-2xl p-16 text-center"
+            style={{ border: "2px dashed oklch(0.912 0.01 280)", background: "oklch(1 0 0)" }}
+          >
+            <FolderKanban className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-40" />
+            <p className="text-sm font-medium text-foreground mb-1">No projects yet</p>
+            <p className="text-xs text-muted-foreground">
+              {isAdmin
+                ? 'Click "New Project" to create your first one.'
+                : "You haven't been added to any projects yet."}
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map((p) => (
@@ -163,42 +170,86 @@ function ProjectsListPage() {
   );
 }
 
+const PROJECT_GRADIENTS = [
+  ["#8b5cf6", "#6366f1"],
+  ["#3b82f6", "#2563eb"],
+  ["#10b981", "#0d9488"],
+  ["#f59e0b", "#d97706"],
+  ["#ec4899", "#db2777"],
+  ["#14b8a6", "#0891b2"],
+  ["#f97316", "#ea580c"],
+  ["#84cc16", "#16a34a"],
+];
+
+function projectColor(name: string): [string, string] {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  }
+  return PROJECT_GRADIENTS[hash % PROJECT_GRADIENTS.length] as [string, string];
+}
+
 function ProjectCard({ project }: { project: Project }) {
+  const [from, to] = projectColor(project.name);
+  const initials = project.name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+
   return (
     <Link
       to="/projects/$projectId"
       params={{ projectId: project.id }}
-      className="group rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] hover:shadow-lg hover:-translate-y-0.5 transition-all flex flex-col gap-3"
+      className="group rounded-2xl bg-card border border-border p-5 flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg no-underline"
+      style={{ boxShadow: "var(--shadow-card)" }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-base font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-          {project.name}
-        </h3>
-        {project.my_role && (
-          <Badge variant="outline" className="shrink-0 text-[10px]">
-            {project.my_role === "team_lead" ? "Team Lead" : "Member"}
-          </Badge>
-        )}
+      <div className="flex items-start gap-3">
+        <div
+          className="h-10 w-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0"
+          style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+        >
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+            {project.name}
+          </h3>
+          {project.my_role && (
+            <Badge variant="outline" className="mt-1 text-[10px] px-1.5 py-0.5">
+              {project.my_role === "team_lead" ? "Team Lead" : "Member"}
+            </Badge>
+          )}
+        </div>
       </div>
+
       {project.description ? (
-        <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+          {project.description}
+        </p>
       ) : (
-        <p className="text-sm text-muted-foreground italic">No description</p>
+        <p className="text-xs text-muted-foreground italic">No description provided.</p>
       )}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground mt-auto pt-2 border-t border-border">
-        <span className="inline-flex items-center gap-1">
+
+      <div
+        className="flex items-center gap-4 text-xs text-muted-foreground pt-3 mt-auto"
+        style={{ borderTop: "1px solid oklch(0.912 0.01 280)" }}
+      >
+        <span className="inline-flex items-center gap-1.5">
           <UsersIcon className="h-3.5 w-3.5" />
-          <span className="text-foreground font-medium">{project.member_count ?? 0}</span>
+          <span className="font-semibold text-foreground">{project.member_count ?? 0}</span>
         </span>
-        <span className="inline-flex items-center gap-1">
+        <span className="inline-flex items-center gap-1.5">
           <Hash className="h-3.5 w-3.5" />
-          <span className="text-foreground font-medium">{project.channel_count ?? 0}</span>
+          <span className="font-semibold text-foreground">{project.channel_count ?? 0}</span>
         </span>
-        <span className="ml-auto truncate">
-          Manager:{" "}
-          <span className={project.manager_name ? "text-foreground" : "italic"}>
-            {project.manager_name || "Unassigned"}
-          </span>
+        <span className="ml-auto truncate text-[11px]">
+          {project.manager_name ? (
+            <span className="font-medium text-foreground">{project.manager_name}</span>
+          ) : (
+            <span className="italic">Unassigned</span>
+          )}
         </span>
       </div>
     </Link>
