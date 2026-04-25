@@ -57,7 +57,7 @@ function DashboardPage() {
   return (
     <AppShell title={`Welcome back, ${displayName}`} subtitle={subtitle}>
       <div className="space-y-6">
-        {showStats && <DashboardStats />}
+        {showStats && <DashboardStats role={role} />}
 
         <section>
           <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
