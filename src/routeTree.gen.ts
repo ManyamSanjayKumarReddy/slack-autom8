@@ -15,6 +15,7 @@ import { Route as HierarchyRouteImport } from './routes/hierarchy'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
+import { Route as HierarchyProjectIdRouteImport } from './routes/hierarchy.$projectId'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 
 const ProjectsRoute = ProjectsRouteImport.update({
@@ -47,6 +48,11 @@ const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
   path: '/$projectId',
   getParentRoute: () => ProjectsRoute,
 } as any)
+const HierarchyProjectIdRoute = HierarchyProjectIdRouteImport.update({
+  id: '/$projectId',
+  path: '/$projectId',
+  getParentRoute: () => HierarchyRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
@@ -56,29 +62,32 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/hierarchy': typeof HierarchyRoute
+  '/hierarchy': typeof HierarchyRouteWithChildren
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
+  '/hierarchy/$projectId': typeof HierarchyProjectIdRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/hierarchy': typeof HierarchyRoute
+  '/hierarchy': typeof HierarchyRouteWithChildren
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
+  '/hierarchy/$projectId': typeof HierarchyProjectIdRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/hierarchy': typeof HierarchyRoute
+  '/hierarchy': typeof HierarchyRouteWithChildren
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/admin/users': typeof AdminUsersRoute
+  '/hierarchy/$projectId': typeof HierarchyProjectIdRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/projects'
     | '/admin/users'
+    | '/hierarchy/$projectId'
     | '/projects/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/projects'
     | '/admin/users'
+    | '/hierarchy/$projectId'
     | '/projects/$projectId'
   id:
     | '__root__'
@@ -108,13 +119,14 @@ export interface FileRouteTypes {
     | '/profile'
     | '/projects'
     | '/admin/users'
+    | '/hierarchy/$projectId'
     | '/projects/$projectId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
-  HierarchyRoute: typeof HierarchyRoute
+  HierarchyRoute: typeof HierarchyRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
   AdminUsersRoute: typeof AdminUsersRoute
@@ -164,6 +176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdRouteImport
       parentRoute: typeof ProjectsRoute
     }
+    '/hierarchy/$projectId': {
+      id: '/hierarchy/$projectId'
+      path: '/$projectId'
+      fullPath: '/hierarchy/$projectId'
+      preLoaderRoute: typeof HierarchyProjectIdRouteImport
+      parentRoute: typeof HierarchyRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/admin/users'
@@ -173,6 +192,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface HierarchyRouteChildren {
+  HierarchyProjectIdRoute: typeof HierarchyProjectIdRoute
+}
+
+const HierarchyRouteChildren: HierarchyRouteChildren = {
+  HierarchyProjectIdRoute: HierarchyProjectIdRoute,
+}
+
+const HierarchyRouteWithChildren = HierarchyRoute._addFileChildren(
+  HierarchyRouteChildren,
+)
 
 interface ProjectsRouteChildren {
   ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
@@ -189,7 +220,7 @@ const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
-  HierarchyRoute: HierarchyRoute,
+  HierarchyRoute: HierarchyRouteWithChildren,
   ProfileRoute: ProfileRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
   AdminUsersRoute: AdminUsersRoute,
