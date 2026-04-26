@@ -250,9 +250,6 @@ function LandingPage() {
             Role-based permissions
           </span>
         </div>
-
-        {/* Hero mock card with floating animation */}
-        <HeroMockCard />
       </section>
 
       {/* ── Features ── */}
