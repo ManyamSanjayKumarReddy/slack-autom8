@@ -109,7 +109,7 @@ const MD =
 /* ── Page ── */
 function HierarchyPage() {
   return (
-    <AppShell maxWidth="max-w-5xl">
+    <AppShell maxWidth="max-w-6xl">
       <RoleGate allowed={["manager", "admin"]}>
         <Inner />
       </RoleGate>
@@ -169,18 +169,22 @@ function Inner() {
     }, 0) ?? 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Page header */}
       <div
-        className="rounded-2xl px-7 py-6 relative overflow-hidden border"
+        className="rounded-2xl px-8 py-7 relative overflow-hidden border"
         style={{
-          background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 60%, #f6f8fc 100%)",
+          background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)",
           borderColor: "#e0e7ff",
         }}
       >
         <div
-          className="absolute right-[-30px] top-[-30px] h-[160px] w-[160px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)" }}
+          className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute right-[60px] bottom-[-30px] h-[120px] w-[120px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)" }}
         />
         <div className="relative flex items-start justify-between gap-4 flex-wrap">
           <div>

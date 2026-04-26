@@ -91,7 +91,7 @@ function ProfilePage() {
           Loading…
         </div>
       ) : user ? (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Profile banner — matches dashboard/projects indigo style */}
           <div
             className="rounded-2xl px-8 py-7 relative overflow-hidden border"
