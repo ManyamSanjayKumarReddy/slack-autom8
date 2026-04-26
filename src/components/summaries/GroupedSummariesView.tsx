@@ -219,8 +219,14 @@ export function GroupedSummariesView({
           ))}
         </div>
       ) : !data || data.total === 0 ? (
-        <div className="p-12 text-center text-sm text-muted-foreground">
-          No summaries yet. Generate one to get started.
+        <div className="p-12 text-center space-y-2">
+          <div className="text-2xl mb-3">📄</div>
+          <p className="text-sm font-medium text-foreground">No summaries yet</p>
+          <p className="text-xs text-muted-foreground">
+            {scope === "personal"
+              ? "Generate your personal summary to see your activity digest here."
+              : "Generate a project summary to see team-wide digests here."}
+          </p>
         </div>
       ) : (
         <div className="divide-y divide-border">
@@ -296,7 +302,7 @@ function SummaryCard({
   const display = expanded || !isLong ? text : text.slice(0, 280) + "…";
 
   return (
-    <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-2.5">
+    <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-2.5 transition-shadow hover:shadow-sm">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           {summary.user_name && (
@@ -321,7 +327,7 @@ function SummaryCard({
           <button
             onClick={onDelete}
             disabled={deleting}
-            className="text-xs text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50 inline-flex items-center gap-1"
+            className="text-xs text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50 inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive rounded"
           >
             <Trash2 className="h-3 w-3" />
             {deleting ? "Deleting…" : "Delete"}
@@ -338,9 +344,9 @@ function SummaryCard({
           {isLong && (
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="text-xs font-medium text-primary hover:underline"
+              className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded transition-colors"
             >
-              {expanded ? "Show less" : "Show more"}
+              {expanded ? "↑ Show less" : "↓ Show more"}
             </button>
           )}
         </>
