@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Users as UsersIcon, Hash, FolderKanban } from "lucide-react";
+import { Plus, Users as UsersIcon, Hash, FolderKanban, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
@@ -45,6 +45,25 @@ function ProjectsPage() {
   return <ProjectsListPage />;
 }
 
+const PROJECT_GRADIENTS = [
+  ["#8b5cf6", "#6366f1"],
+  ["#3b82f6", "#2563eb"],
+  ["#10b981", "#0d9488"],
+  ["#f59e0b", "#d97706"],
+  ["#ec4899", "#db2777"],
+  ["#14b8a6", "#0891b2"],
+  ["#f97316", "#ea580c"],
+  ["#84cc16", "#16a34a"],
+];
+
+function projectColor(name: string): [string, string] {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  }
+  return PROJECT_GRADIENTS[hash % PROJECT_GRADIENTS.length] as [string, string];
+}
+
 function ProjectsListPage() {
   const { user } = useCurrentUser();
   const isAdmin = user?.role === "admin";
@@ -52,7 +71,7 @@ function ProjectsListPage() {
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(12);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [hasNext, setHasNext] = useState(false);
@@ -60,7 +79,7 @@ function ProjectsListPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    document.title = "Projects — Slack Summarizer";
+    document.title = "Projects — Slack Autom8";
   }, []);
 
   const fetchProjects = async (p = page, s = pageSize) => {
@@ -92,41 +111,80 @@ function ProjectsListPage() {
   }, [page, pageSize]);
 
   return (
-    <AppShell title="Projects" subtitle="Workspaces you belong to and their summaries.">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-sm text-muted-foreground">
-            {total > 0 ? `${total} project${total === 1 ? "" : "s"}` : ""}
-          </p>
-          {isAdmin && (
-            <Button onClick={() => setCreating(true)}>
-              <Plus className="h-4 w-4 mr-1.5" />
-              New Project
-            </Button>
-          )}
+    <AppShell maxWidth="max-w-7xl">
+      <div className="space-y-8">
+        {/* Page banner */}
+        <div
+          className="rounded-2xl px-8 py-7 relative overflow-hidden border"
+          style={{
+            background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)",
+            borderColor: "#e0e7ff",
+          }}
+        >
+          <div
+            className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
+          />
+          <div
+            className="absolute right-[60px] bottom-[-30px] h-[120px] w-[120px] rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)" }}
+          />
+          <div className="relative flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <h1
+                className="font-extrabold mb-1.5"
+                style={{ fontSize: "24px", color: "#0f172a", letterSpacing: "-0.025em" }}
+              >
+                Projects
+              </h1>
+              <p style={{ fontSize: "14px", color: "#64748b" }}>
+                {total > 0
+                  ? `${total} project${total === 1 ? "" : "s"} in your workspace`
+                  : "Workspaces you belong to and their summaries"}
+              </p>
+            </div>
+            {isAdmin && (
+              <Button
+                onClick={() => setCreating(true)}
+                className="shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+                  boxShadow: "0 4px 14px rgba(99,102,241,0.35)",
+                  border: "none",
+                  color: "#fff",
+                }}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                New Project
+              </Button>
+            )}
+          </div>
         </div>
 
+        {/* Project grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[0, 1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-40 w-full rounded-2xl" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-44 w-full rounded-2xl" />
             ))}
           </div>
         ) : !projects || projects.length === 0 ? (
           <div
-            className="rounded-2xl p-16 text-center"
-            style={{ border: "2px dashed oklch(0.912 0.01 280)", background: "oklch(1 0 0)" }}
+            className="rounded-2xl p-16 text-center bg-white"
+            style={{ border: "2px dashed #e2e8f0" }}
           >
-            <FolderKanban className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-40" />
-            <p className="text-sm font-medium text-foreground mb-1">No projects yet</p>
-            <p className="text-xs text-muted-foreground">
+            <FolderKanban className="h-10 w-10 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
+            <p className="font-semibold mb-1" style={{ fontSize: "15px", color: "#334155" }}>
+              No projects yet
+            </p>
+            <p style={{ fontSize: "13px", color: "#94a3b8" }}>
               {isAdmin
-                ? 'Click "New Project" to create your first one.'
+                ? 'Click "New Project" above to create your first one.'
                 : "You haven't been added to any projects yet."}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {projects.map((p) => (
               <ProjectCard key={p.id} project={p} />
             ))}
@@ -134,7 +192,7 @@ function ProjectsListPage() {
         )}
 
         {projects && projects.length > 0 && totalPages > 1 && (
-          <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="rounded-2xl border bg-white overflow-hidden" style={{ borderColor: "#e2e8f0" }}>
             <PaginationControls
               page={page}
               total_pages={totalPages}
@@ -170,25 +228,6 @@ function ProjectsListPage() {
   );
 }
 
-const PROJECT_GRADIENTS = [
-  ["#8b5cf6", "#6366f1"],
-  ["#3b82f6", "#2563eb"],
-  ["#10b981", "#0d9488"],
-  ["#f59e0b", "#d97706"],
-  ["#ec4899", "#db2777"],
-  ["#14b8a6", "#0891b2"],
-  ["#f97316", "#ea580c"],
-  ["#84cc16", "#16a34a"],
-];
-
-function projectColor(name: string): [string, string] {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-  }
-  return PROJECT_GRADIENTS[hash % PROJECT_GRADIENTS.length] as [string, string];
-}
-
 function ProjectCard({ project }: { project: Project }) {
   const [from, to] = projectColor(project.name);
   const initials = project.name
@@ -202,55 +241,86 @@ function ProjectCard({ project }: { project: Project }) {
     <Link
       to="/projects/$projectId"
       params={{ projectId: project.id }}
-      className="group rounded-2xl bg-card border border-border p-5 flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg no-underline"
-      style={{ boxShadow: "var(--shadow-card)" }}
+      className="group rounded-2xl bg-white flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg no-underline overflow-hidden"
+      style={{
+        border: "1px solid #e2e8f0",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)",
+      }}
     >
-      <div className="flex items-start gap-3">
+      {/* Coloured top strip */}
+      <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${from}, ${to})` }} />
+
+      <div className="px-5 pb-5 flex flex-col gap-4 flex-1">
+        <div className="flex items-start gap-3.5">
+          <div
+            className="h-11 w-11 rounded-xl flex items-center justify-center text-white text-sm font-extrabold shrink-0"
+            style={{
+              background: `linear-gradient(135deg, ${from}, ${to})`,
+              boxShadow: `0 4px 10px ${from}40`,
+            }}
+          >
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h3
+              className="font-bold truncate transition-colors"
+              style={{ fontSize: "15px", color: "#0f172a" }}
+            >
+              {project.name}
+            </h3>
+            {project.my_role && (
+              <Badge variant="outline" className="mt-1 text-[10px] px-1.5 py-0.5">
+                {project.my_role === "team_lead" ? "Team Lead" : "Member"}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {project.description ? (
+          <p
+            className="line-clamp-2 leading-relaxed flex-1"
+            style={{ fontSize: "13px", color: "#64748b" }}
+          >
+            {project.description}
+          </p>
+        ) : (
+          <p className="italic flex-1" style={{ fontSize: "13px", color: "#94a3b8" }}>
+            No description provided.
+          </p>
+        )}
+
         <div
-          className="h-10 w-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0"
-          style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+          className="flex items-center gap-4 pt-3"
+          style={{ borderTop: "1px solid #f1f5f9", fontSize: "12px", color: "#94a3b8" }}
         >
-          {initials}
+          <span className="inline-flex items-center gap-1.5">
+            <UsersIcon className="h-3.5 w-3.5" />
+            <span className="font-semibold" style={{ color: "#334155" }}>
+              {project.member_count ?? 0}
+            </span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Hash className="h-3.5 w-3.5" />
+            <span className="font-semibold" style={{ color: "#334155" }}>
+              {project.channel_count ?? 0}
+            </span>
+          </span>
+          <span className="ml-auto inline-flex items-center gap-1 truncate" style={{ fontSize: "11px" }}>
+            {project.manager_name ? (
+              <span className="font-medium" style={{ color: "#475569" }}>
+                {project.manager_name}
+              </span>
+            ) : (
+              <span className="italic" style={{ color: "#94a3b8" }}>
+                Unassigned
+              </span>
+            )}
+            <ArrowRight
+              className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+              style={{ color: "#6366f1" }}
+            />
+          </span>
         </div>
-        <div className="min-w-0 flex-1 pt-0.5">
-          <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-            {project.name}
-          </h3>
-          {project.my_role && (
-            <Badge variant="outline" className="mt-1 text-[10px] px-1.5 py-0.5">
-              {project.my_role === "team_lead" ? "Team Lead" : "Member"}
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {project.description ? (
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-          {project.description}
-        </p>
-      ) : (
-        <p className="text-xs text-muted-foreground italic">No description provided.</p>
-      )}
-
-      <div
-        className="flex items-center gap-4 text-xs text-muted-foreground pt-3 mt-auto"
-        style={{ borderTop: "1px solid oklch(0.912 0.01 280)" }}
-      >
-        <span className="inline-flex items-center gap-1.5">
-          <UsersIcon className="h-3.5 w-3.5" />
-          <span className="font-semibold text-foreground">{project.member_count ?? 0}</span>
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <Hash className="h-3.5 w-3.5" />
-          <span className="font-semibold text-foreground">{project.channel_count ?? 0}</span>
-        </span>
-        <span className="ml-auto truncate text-[11px]">
-          {project.manager_name ? (
-            <span className="font-medium text-foreground">{project.manager_name}</span>
-          ) : (
-            <span className="italic">Unassigned</span>
-          )}
-        </span>
       </div>
     </Link>
   );
