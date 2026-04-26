@@ -4,6 +4,7 @@ import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { RoleBadge } from "@/components/RoleBadge";
 import { useCurrentUser } from "@/lib/user-store";
+import { projectColor, projectInitials } from "@/lib/project-colors";
 import { Badge } from "@/components/ui/badge";
 import { FolderKanban, ArrowRight, Calendar } from "lucide-react";
 
@@ -34,22 +35,6 @@ function initials(name?: string, email?: string): string {
   return letters.toUpperCase() || source[0].toUpperCase();
 }
 
-const PROJECT_GRADIENTS = [
-  ["#8b5cf6", "#6366f1"],
-  ["#3b82f6", "#2563eb"],
-  ["#10b981", "#0d9488"],
-  ["#f59e0b", "#d97706"],
-  ["#ec4899", "#db2777"],
-  ["#14b8a6", "#0891b2"],
-];
-
-function projectColor(name: string): [string, string] {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-  }
-  return PROJECT_GRADIENTS[hash % PROJECT_GRADIENTS.length] as [string, string];
-}
 
 function ProfilePage() {
   const { user, loading: userLoading } = useCurrentUser();
@@ -182,18 +167,21 @@ function ProfilePage() {
             ) : !memberships || memberships.length === 0 ? (
               <div className="p-12 text-center">
                 <FolderKanban className="h-8 w-8 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
-                <p style={{ fontSize: "13.5px", color: "#94a3b8" }}>Not a member of any projects yet.</p>
+                <p className="mb-4" style={{ fontSize: "13.5px", color: "#94a3b8" }}>Not a member of any projects yet.</p>
+                <Link
+                  to="/projects"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[13px] font-semibold no-underline transition-opacity hover:opacity-80"
+                  style={{ background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}
+                >
+                  Browse projects
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
             ) : (
               <ul className="divide-y" style={{ borderColor: "#f1f5f9" }}>
                 {memberships.map((m) => {
                   const [from, to] = projectColor(m.project_name);
-                  const initials2 = m.project_name
-                    .split(/\s+/)
-                    .slice(0, 2)
-                    .map((w) => w[0])
-                    .join("")
-                    .toUpperCase();
+                  const initials2 = projectInitials(m.project_name);
                   return (
                     <li key={m.project_id} className="px-6 py-3.5 flex items-center gap-4">
                       <div

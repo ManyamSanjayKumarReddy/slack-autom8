@@ -12,6 +12,7 @@ import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 import { RoleGate } from "@/components/RoleGate";
+import { projectColor, projectInitials } from "@/lib/project-colors";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Project } from "@/lib/projects-store";
 import type { PaginatedResponse } from "@/components/PaginationControls";
@@ -39,24 +40,6 @@ function HierarchyRoot() {
   );
 }
 
-const PROJECT_GRADIENTS = [
-  ["#8b5cf6", "#6366f1"],
-  ["#3b82f6", "#2563eb"],
-  ["#10b981", "#0d9488"],
-  ["#f59e0b", "#d97706"],
-  ["#ec4899", "#db2777"],
-  ["#14b8a6", "#0891b2"],
-  ["#f97316", "#ea580c"],
-  ["#84cc16", "#16a34a"],
-];
-function projectColor(name: string): [string, string] {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return PROJECT_GRADIENTS[h % PROJECT_GRADIENTS.length] as [string, string];
-}
-function initials(name: string) {
-  return name.split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-}
 
 function ProjectPickerPage() {
   const [projects, setProjects] = useState<Project[] | null>(null);
@@ -138,7 +121,7 @@ function ProjectPickerPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search projects…"
-            className="w-full rounded-xl bg-white pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="w-full rounded-xl bg-white pl-10 pr-4 py-2.5 text-sm transition-shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-300"
             style={{ border: "1px solid #e2e8f0" }}
           />
         </div>
@@ -174,6 +157,7 @@ function ProjectPickerPage() {
 
 function ProjectReportCard({ project }: { project: Project }) {
   const [from, to] = projectColor(project.name);
+  const init = projectInitials(project.name);
 
   return (
     <Link
@@ -192,7 +176,7 @@ function ProjectReportCard({ project }: { project: Project }) {
             className="h-11 w-11 rounded-xl flex items-center justify-center text-white text-sm font-extrabold shrink-0"
             style={{ background: `linear-gradient(135deg, ${from}, ${to})`, boxShadow: `0 4px 10px ${from}40` }}
           >
-            {initials(project.name)}
+            {init}
           </div>
           <div className="min-w-0 flex-1 pt-0.5">
             <h3 className="font-bold truncate" style={{ fontSize: "15px", color: "#0f172a" }}>

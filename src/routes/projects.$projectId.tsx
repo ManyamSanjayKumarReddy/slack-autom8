@@ -53,25 +53,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { isOneOf } from "@/lib/roles";
+import { projectColor, projectInitials } from "@/lib/project-colors";
 import { GenerateProjectSummaryDialog } from "@/components/summaries/GenerateProjectSummaryDialog";
 import { GroupedSummariesView } from "@/components/summaries/GroupedSummariesView";
 import { UserSearchPicker, type SearchUser } from "@/components/UserSearchPicker";
-
-const PROJECT_GRADIENTS = [
-  ["#8b5cf6", "#6366f1"],
-  ["#3b82f6", "#2563eb"],
-  ["#10b981", "#0d9488"],
-  ["#f59e0b", "#d97706"],
-  ["#ec4899", "#db2777"],
-  ["#14b8a6", "#0891b2"],
-  ["#f97316", "#ea580c"],
-  ["#84cc16", "#16a34a"],
-];
-function projectColor(name: string): [string, string] {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return PROJECT_GRADIENTS[h % PROJECT_GRADIENTS.length] as [string, string];
-}
 
 interface ProjectDetail {
   id: string;
@@ -191,12 +176,7 @@ function ProjectDetailPage() {
   }
 
   const [projFrom, projTo] = projectColor(project.name);
-  const projInitials = project.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w: string) => w[0])
-    .join("")
-    .toUpperCase();
+  const projInitials = projectInitials(project.name);
 
   return (
     <AppShell maxWidth="max-w-5xl">
