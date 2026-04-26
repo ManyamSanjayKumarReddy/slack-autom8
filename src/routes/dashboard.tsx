@@ -5,12 +5,10 @@ import {
   FolderKanban,
   FileText,
   Sparkles,
-  PenLine,
   Hash,
   Users as UsersIcon,
   User as UserIcon,
   ArrowRight,
-  TrendingUp,
 } from "lucide-react";
 import { apiFetch, isAuthenticated, setToken } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
@@ -43,7 +41,6 @@ const ROLE_GREETINGS: Record<string, string> = {
   admin: "Here's your full workspace at a glance.",
 };
 
-/* Deterministic color for project avatar based on name */
 const PROJECT_GRADIENTS = [
   ["#8b5cf6", "#6366f1"],
   ["#3b82f6", "#2563eb"],
@@ -60,7 +57,7 @@ function projectColor(name: string): [string, string] {
   for (let i = 0; i < name.length; i++) {
     hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
   }
-  return PROJECT_GRADIENTS[hash % PROJECT_GRADIENTS.length];
+  return PROJECT_GRADIENTS[hash % PROJECT_GRADIENTS.length] as [string, string];
 }
 
 function DashboardPage() {
@@ -77,38 +74,31 @@ function DashboardPage() {
   const subtitle = role ? (ROLE_GREETINGS[role] ?? "Welcome back.") : "Welcome back.";
 
   return (
-    <AppShell>
+    <AppShell maxWidth="max-w-7xl">
       <div className="space-y-8">
-        {/* Welcome banner — light indigo gradient */}
+        {/* Welcome banner */}
         <div
-          className="rounded-2xl px-7 py-6 relative overflow-hidden border"
+          className="rounded-2xl px-8 py-7 relative overflow-hidden border"
           style={{
-            background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 60%, #f6f8fc 100%)",
+            background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)",
             borderColor: "#e0e7ff",
           }}
         >
-          {/* Subtle decorative ring */}
           <div
-            className="absolute right-[-60px] top-[-60px] h-[220px] w-[220px] rounded-full pointer-events-none"
-            style={{
-              background:
-                "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)",
-            }}
+            className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
+          />
+          <div className="absolute right-[60px] bottom-[-30px] h-[120px] w-[120px] rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)" }}
           />
           <div className="relative">
-            <p
-              className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2"
-              style={{ color: "#6366f1" }}
-            >
-              Dashboard
-            </p>
             <h1
-              className="text-[22px] sm:text-[26px] font-extrabold mb-1.5"
+              className="text-[24px] sm:text-[28px] font-extrabold mb-1.5"
               style={{ color: "#0f172a", letterSpacing: "-0.025em" }}
             >
-              Good to see you, {displayName}!
+              Good to see you, {displayName}! 👋
             </h1>
-            <p className="text-[14px]" style={{ color: "#64748b" }}>{subtitle}</p>
+            <p style={{ fontSize: "15px", color: "#64748b" }}>{subtitle}</p>
           </div>
         </div>
 
@@ -120,11 +110,11 @@ function DashboardPage() {
             <div>
               <h2
                 className="font-bold"
-                style={{ fontSize: "17px", color: "#0f172a", letterSpacing: "-0.02em" }}
+                style={{ fontSize: "18px", color: "#0f172a", letterSpacing: "-0.02em" }}
               >
                 Your projects
               </h2>
-              <p style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
+              <p style={{ fontSize: "13px", color: "#64748b", marginTop: "3px" }}>
                 Jump into any project below
               </p>
             </div>
@@ -139,18 +129,18 @@ function DashboardPage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {[0, 1, 2].map((i) => (
-                <Skeleton key={i} className="h-40 w-full rounded-2xl" />
+                <Skeleton key={i} className="h-44 w-full rounded-2xl" />
               ))}
             </div>
           ) : !projects || projects.length === 0 ? (
             <div
-              className="rounded-2xl p-14 text-center bg-white"
+              className="rounded-2xl p-16 text-center bg-white"
               style={{ border: "2px dashed #e2e8f0" }}
             >
               <FolderKanban className="h-10 w-10 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
-              <p className="font-semibold mb-1" style={{ fontSize: "14px", color: "#334155" }}>
+              <p className="font-semibold mb-1" style={{ fontSize: "15px", color: "#334155" }}>
                 No projects yet
               </p>
               <p style={{ fontSize: "13px", color: "#94a3b8" }}>
@@ -160,7 +150,7 @@ function DashboardPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {projects.slice(0, 6).map((p) => (
                 <ProjectCard key={p.id} project={p} />
               ))}
@@ -185,55 +175,79 @@ function ProjectCard({ project }: { project: Project }) {
     <Link
       to="/projects/$projectId"
       params={{ projectId: project.id }}
-      className="group rounded-2xl bg-card border border-border p-5 flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg no-underline"
-      style={{ boxShadow: "var(--shadow-card)" }}
+      className="group rounded-2xl bg-white flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg no-underline overflow-hidden"
+      style={{
+        border: "1px solid #e2e8f0",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)",
+      }}
     >
-      <div className="flex items-start gap-3">
+      {/* Coloured top strip */}
+      <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${from}, ${to})` }} />
+
+      <div className="px-5 pb-5 flex flex-col gap-4 flex-1">
+        <div className="flex items-start gap-3.5">
+          <div
+            className="h-11 w-11 rounded-xl flex items-center justify-center text-white text-sm font-extrabold shrink-0"
+            style={{ background: `linear-gradient(135deg, ${from}, ${to})`, boxShadow: `0 4px 10px ${from}40` }}
+          >
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h3
+              className="font-bold truncate transition-colors"
+              style={{ fontSize: "15px", color: "#0f172a" }}
+            >
+              {project.name}
+            </h3>
+            {project.my_role && (
+              <Badge variant="outline" className="mt-1 text-[10px] px-1.5 py-0.5">
+                {project.my_role === "team_lead" ? "Team Lead" : "Member"}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {project.description ? (
+          <p
+            className="line-clamp-2 leading-relaxed flex-1"
+            style={{ fontSize: "13px", color: "#64748b" }}
+          >
+            {project.description}
+          </p>
+        ) : (
+          <p className="italic flex-1" style={{ fontSize: "13px", color: "#94a3b8" }}>
+            No description provided.
+          </p>
+        )}
+
         <div
-          className="h-10 w-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0"
-          style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+          className="flex items-center gap-4 pt-3"
+          style={{ borderTop: "1px solid #f1f5f9", fontSize: "12px", color: "#94a3b8" }}
         >
-          {initials}
+          <span className="inline-flex items-center gap-1.5">
+            <UsersIcon className="h-3.5 w-3.5" />
+            <span className="font-semibold" style={{ color: "#334155" }}>
+              {project.member_count ?? 0}
+            </span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Hash className="h-3.5 w-3.5" />
+            <span className="font-semibold" style={{ color: "#334155" }}>
+              {project.channel_count ?? 0}
+            </span>
+          </span>
+          <span className="ml-auto truncate" style={{ fontSize: "11px" }}>
+            {project.manager_name ? (
+              <span className="font-medium" style={{ color: "#475569" }}>
+                {project.manager_name}
+              </span>
+            ) : (
+              <span className="italic" style={{ color: "#94a3b8" }}>
+                Unassigned
+              </span>
+            )}
+          </span>
         </div>
-        <div className="min-w-0 flex-1 pt-0.5">
-          <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-            {project.name}
-          </h3>
-          {project.my_role && (
-            <Badge variant="outline" className="mt-1 text-[10px] px-1.5 py-0.5">
-              {project.my_role === "team_lead" ? "Team Lead" : "Member"}
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {project.description ? (
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-          {project.description}
-        </p>
-      ) : (
-        <p className="text-xs text-muted-foreground italic">No description provided.</p>
-      )}
-
-      <div
-        className="flex items-center gap-4 pt-3 mt-auto"
-        style={{ borderTop: "1px solid #e2e8f0", color: "#94a3b8", fontSize: "12px" }}
-      >
-        <span className="inline-flex items-center gap-1.5">
-          <UsersIcon className="h-3.5 w-3.5" />
-          <span className="font-semibold" style={{ color: "#334155" }}>{project.member_count ?? 0}</span>
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <Hash className="h-3.5 w-3.5" />
-          <span className="font-semibold" style={{ color: "#334155" }}>{project.channel_count ?? 0}</span>
-        </span>
-        <span className="ml-auto truncate" style={{ fontSize: "11px" }}>
-          {project.manager_name ? (
-            <span className="font-medium" style={{ color: "#334155" }}>{project.manager_name}</span>
-          ) : (
-            <span className="italic" style={{ color: "#94a3b8" }}>Unassigned</span>
-          )}
-        </span>
       </div>
     </Link>
   );
@@ -251,47 +265,53 @@ interface AdminStats {
   project_summaries?: number;
   auto_generated_personal?: number;
   auto_generated_project?: number;
-  manual_personal?: number;
-  manual_project?: number;
   auto_summaries?: number;
-  manual_summaries?: number;
 }
 
-interface StatCard {
+interface StatCardData {
   label: string;
   value: number | undefined;
   icon: typeof Users;
-  from: string;
-  to: string;
-  iconColor: string;
+  color: string;
+  gradientFrom: string;
+  gradientTo: string;
 }
 
-function StatCard({ card, loading }: { card: StatCard; loading: boolean }) {
+function StatCard({ card, loading }: { card: StatCardData; loading: boolean }) {
   const Icon = card.icon;
   return (
     <div
-      className="rounded-2xl bg-white border p-5 flex flex-col gap-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className="rounded-2xl flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-md overflow-hidden relative"
       style={{
-        borderColor: "#e2e8f0",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 3px 12px rgba(0,0,0,0.05)",
+        background: `linear-gradient(145deg, ${card.gradientFrom}20 0%, ${card.gradientFrom}08 50%, #ffffff 100%)`,
+        border: `1px solid ${card.gradientFrom}28`,
+        boxShadow: `0 1px 3px rgba(0,0,0,0.04), 0 4px 16px ${card.gradientFrom}12`,
       }}
     >
+      {/* Decorative gradient orb */}
       <div
-        className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
+        className="absolute top-[-20px] right-[-20px] h-[80px] w-[80px] rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${card.gradientFrom}22 0%, transparent 70%)` }}
+      />
+      <div
+        className="h-10 w-10 rounded-xl flex items-center justify-center relative"
         style={{
-          background: `${card.from}18`,
-          border: `1px solid ${card.from}28`,
+          background: `linear-gradient(135deg, ${card.gradientFrom}28, ${card.gradientTo}18)`,
+          border: `1px solid ${card.gradientFrom}30`,
         }}
       >
-        <Icon className="h-4.5 w-4.5" style={{ color: card.iconColor, width: 18, height: 18 }} />
+        <Icon style={{ color: card.color, width: 18, height: 18 }} />
       </div>
-      <div>
+      <div className="relative">
         <div
           className="font-extrabold leading-none"
-          style={{ fontSize: "26px", color: "#0f172a", letterSpacing: "-0.03em" }}
+          style={{ fontSize: "28px", color: "#0f172a", letterSpacing: "-0.03em" }}
         >
           {loading ? (
-            <span className="inline-block h-7 w-10 rounded-lg animate-pulse" style={{ background: "#f1f5f9" }} />
+            <span
+              className="inline-block h-7 w-10 rounded-lg animate-pulse"
+              style={{ background: "#f1f5f9" }}
+            />
           ) : (
             (card.value ?? 0).toLocaleString()
           )}
@@ -331,66 +351,55 @@ function DashboardStats({ role }: { role: "admin" | "manager" }) {
   const autoTotal =
     stats?.auto_summaries ??
     (stats?.auto_generated_personal ?? 0) + (stats?.auto_generated_project ?? 0);
-  const manualTotal =
-    stats?.manual_summaries ??
-    (stats?.manual_personal ?? 0) + (stats?.manual_project ?? 0);
 
-  const cards: StatCard[] = [
+  const cards: StatCardData[] = [
     {
       label: role === "admin" ? "Total Users" : "Total Members",
       value: role === "admin" ? stats?.total_users : (stats?.total_members ?? stats?.total_users),
       icon: Users,
-      from: "#8b5cf6",
-      to: "#6366f1",
-      iconColor: "#8b5cf6",
+      color: "#8b5cf6",
+      gradientFrom: "#8b5cf6",
+      gradientTo: "#6366f1",
     },
     {
       label: "Total Projects",
       value: stats?.total_projects ?? stats?.total_teams,
       icon: FolderKanban,
-      from: "#3b82f6",
-      to: "#2563eb",
-      iconColor: "#3b82f6",
+      color: "#3b82f6",
+      gradientFrom: "#3b82f6",
+      gradientTo: "#2563eb",
     },
     {
       label: "Total Summaries",
       value: totalSummaries,
       icon: FileText,
-      from: "#f59e0b",
-      to: "#d97706",
-      iconColor: "#f59e0b",
+      color: "#f59e0b",
+      gradientFrom: "#f59e0b",
+      gradientTo: "#d97706",
     },
     {
-      label: "Personal Summaries",
+      label: "Personal",
       value: personal,
       icon: UserIcon,
-      from: "#10b981",
-      to: "#0d9488",
-      iconColor: "#10b981",
+      color: "#10b981",
+      gradientFrom: "#10b981",
+      gradientTo: "#0d9488",
     },
     {
-      label: "Project Summaries",
+      label: "Project",
       value: projectS,
       icon: FolderKanban,
-      from: "#14b8a6",
-      to: "#0891b2",
-      iconColor: "#14b8a6",
+      color: "#14b8a6",
+      gradientFrom: "#14b8a6",
+      gradientTo: "#0891b2",
     },
     {
       label: "Auto Generated",
       value: autoTotal,
       icon: Sparkles,
-      from: "#a855f7",
-      to: "#9333ea",
-      iconColor: "#a855f7",
-    },
-    {
-      label: "Manual",
-      value: manualTotal,
-      icon: PenLine,
-      from: "#ec4899",
-      to: "#db2777",
-      iconColor: "#ec4899",
+      color: "#a855f7",
+      gradientFrom: "#a855f7",
+      gradientTo: "#9333ea",
     },
   ];
 
@@ -398,11 +407,11 @@ function DashboardStats({ role }: { role: "admin" | "manager" }) {
     <section>
       <h2
         className="font-bold mb-5"
-        style={{ fontSize: "17px", color: "#0f172a", letterSpacing: "-0.02em" }}
+        style={{ fontSize: "18px", color: "#0f172a", letterSpacing: "-0.02em" }}
       >
         Workspace stats
       </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {cards.map((c) => (
           <StatCard key={c.label} card={c} loading={loading} />
         ))}
