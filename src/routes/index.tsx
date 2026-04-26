@@ -514,8 +514,3 @@ function CTASection({ onLogin }: { onLogin: () => void }) {
     </section>
   );
 }
-
-/** Tiny helper so children of a reveal block can themselves stagger if needed. */
-function RevealOnScroll({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
