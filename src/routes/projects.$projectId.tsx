@@ -57,6 +57,22 @@ import { GenerateProjectSummaryDialog } from "@/components/summaries/GeneratePro
 import { GroupedSummariesView } from "@/components/summaries/GroupedSummariesView";
 import { UserSearchPicker, type SearchUser } from "@/components/UserSearchPicker";
 
+const PROJECT_GRADIENTS = [
+  ["#8b5cf6", "#6366f1"],
+  ["#3b82f6", "#2563eb"],
+  ["#10b981", "#0d9488"],
+  ["#f59e0b", "#d97706"],
+  ["#ec4899", "#db2777"],
+  ["#14b8a6", "#0891b2"],
+  ["#f97316", "#ea580c"],
+  ["#84cc16", "#16a34a"],
+];
+function projectColor(name: string): [string, string] {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return PROJECT_GRADIENTS[h % PROJECT_GRADIENTS.length] as [string, string];
+}
+
 interface ProjectDetail {
   id: string;
   name: string;
@@ -109,7 +125,7 @@ function ProjectDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
-    document.title = "Project — Slack Summarizer";
+    document.title = "Project — Slack Autom8";
   }, []);
 
   const fetchProject = async () => {
@@ -158,7 +174,7 @@ function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <AppShell>
+      <AppShell maxWidth="max-w-5xl">
         <Skeleton className="h-32 w-full rounded-2xl" />
       </AppShell>
     );
@@ -166,71 +182,111 @@ function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <AppShell title="Project not found">
-        <Link to="/projects" className="text-sm text-primary hover:underline">
+      <AppShell maxWidth="max-w-5xl">
+        <Link to="/projects" className="text-sm hover:underline" style={{ color: "#6366f1" }}>
           ← Back to projects
         </Link>
       </AppShell>
     );
   }
 
+  const [projFrom, projTo] = projectColor(project.name);
+  const projInitials = project.name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w: string) => w[0])
+    .join("")
+    .toUpperCase();
+
   return (
-    <AppShell>
+    <AppShell maxWidth="max-w-5xl">
       <div className="space-y-6">
         <Link
           to="/projects"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1.5 transition-colors hover:opacity-75"
+          style={{ fontSize: "13.5px", color: "#64748b" }}
         >
           <ArrowLeft className="h-4 w-4" /> Back to projects
         </Link>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-card)]">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="min-w-0">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                {project.name}
-              </h1>
-              {project.description && (
-                <p className="mt-1.5 text-sm text-muted-foreground">{project.description}</p>
-              )}
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                <Badge variant="outline">
-                  <UsersIcon className="h-3 w-3 mr-1" />
-                  {project.member_count ?? 0} members
-                </Badge>
-                <Badge variant="outline">
-                  <Hash className="h-3 w-3 mr-1" />
-                  {project.channel_count ?? 0} channels
-                </Badge>
-                {project.manager_name && (
-                  <Badge variant="outline">Manager: {project.manager_name}</Badge>
-                )}
-                {project.my_role && (
-                  <Badge>
-                    {project.my_role === "team_lead" ? "Team Lead" : "Member"}
-                  </Badge>
-                )}
-              </div>
-            </div>
-            {canManage && (
-              <div className="flex items-center gap-2 shrink-0">
-                <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                  Edit
-                </Button>
-                {isAdmin && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => setConfirmDelete(true)}
+        {/* Project header banner */}
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ border: "1px solid #e0e7ff", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)" }}
+        >
+          {/* Colored top strip */}
+          <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${projFrom}, ${projTo})` }} />
+
+          <div
+            className="px-7 py-6 relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 60%, #f6f8fc 100%)" }}
+          >
+            <div
+              className="absolute right-[-30px] top-[-40px] h-[180px] w-[180px] rounded-full pointer-events-none"
+              style={{ background: "radial-gradient(circle, rgba(99,102,241,0.13) 0%, transparent 70%)" }}
+            />
+            <div className="relative flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-4 min-w-0">
+                {/* Avatar */}
+                <div
+                  className="h-12 w-12 rounded-xl flex items-center justify-center text-white text-sm font-extrabold shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${projFrom}, ${projTo})`,
+                    boxShadow: `0 4px 10px ${projFrom}40`,
+                  }}
+                >
+                  {projInitials}
+                </div>
+                <div className="min-w-0">
+                  <h1
+                    className="font-extrabold mb-1"
+                    style={{ fontSize: "22px", color: "#0f172a", letterSpacing: "-0.025em" }}
                   >
-                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                    Delete
-                  </Button>
-                )}
+                    {project.name}
+                  </h1>
+                  {project.description && (
+                    <p style={{ fontSize: "13.5px", color: "#64748b" }}>{project.description}</p>
+                  )}
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">
+                      <UsersIcon className="h-3 w-3 mr-1" />
+                      {project.member_count ?? 0} members
+                    </Badge>
+                    <Badge variant="outline">
+                      <Hash className="h-3 w-3 mr-1" />
+                      {project.channel_count ?? 0} channels
+                    </Badge>
+                    {project.manager_name && (
+                      <Badge variant="outline">Manager: {project.manager_name}</Badge>
+                    )}
+                    {project.my_role && (
+                      <Badge>
+                        {project.my_role === "team_lead" ? "Team Lead" : "Member"}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
               </div>
-            )}
+              {canManage && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                    <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                    Edit
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setConfirmDelete(true)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

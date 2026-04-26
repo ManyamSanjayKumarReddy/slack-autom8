@@ -84,59 +84,59 @@ function ProfilePage() {
   return (
     <AppShell maxWidth="max-w-3xl">
       {userLoading ? (
-        <div className="rounded-2xl border border-border bg-card p-16 text-center text-muted-foreground" style={{ boxShadow: "var(--shadow-card)" }}>
+        <div
+          className="rounded-2xl p-16 text-center"
+          style={{ background: "#fff", border: "1px solid #e2e8f0", color: "#64748b" }}
+        >
           Loading…
         </div>
       ) : user ? (
         <div className="space-y-6">
-          {/* Profile hero */}
+          {/* Profile banner — matches dashboard/projects indigo style */}
           <div
-            className="rounded-2xl overflow-hidden"
-            style={{ boxShadow: "var(--shadow-card)" }}
+            className="rounded-2xl px-8 py-7 relative overflow-hidden border"
+            style={{
+              background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)",
+              borderColor: "#e0e7ff",
+            }}
           >
-            {/* Gradient header strip */}
             <div
-              className="h-28 relative"
-              style={{
-                background: "linear-gradient(135deg, #0f0e1a 0%, #1a1035 50%, #0d1b3e 100%)",
-              }}
-            >
+              className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
+              style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
+            />
+            <div className="relative flex items-center gap-5 flex-wrap">
+              {/* Avatar */}
               <div
-                className="absolute top-[-40px] right-[-20px] h-[200px] w-[200px] rounded-full pointer-events-none"
+                className="h-16 w-16 rounded-2xl flex items-center justify-center text-xl font-extrabold text-white shrink-0"
                 style={{
-                  background: "radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)",
+                  background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                  boxShadow: "0 4px 14px rgba(99,102,241,0.4)",
                 }}
-              />
-            </div>
-            {/* Avatar + info */}
-            <div className="bg-card px-6 pb-6 relative">
-              <div
-                className="h-20 w-20 rounded-2xl flex items-center justify-center text-2xl font-extrabold text-white shrink-0 -mt-10 mb-4 ring-4 ring-card"
-                style={{ background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)" }}
               >
                 {initials(user.name, user.email)}
               </div>
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">
-                    {user.name || "Unnamed user"}
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">{user.email}</p>
-                </div>
-                <RoleBadge role={user.role} />
+              <div className="flex-1 min-w-0">
+                <h1
+                  className="font-extrabold mb-0.5"
+                  style={{ fontSize: "22px", color: "#0f172a", letterSpacing: "-0.025em" }}
+                >
+                  {user.name || "Unnamed user"}
+                </h1>
+                <p style={{ fontSize: "14px", color: "#64748b" }}>{user.email}</p>
               </div>
+              <RoleBadge role={user.role} />
             </div>
           </div>
 
           {/* Account details */}
           <div
-            className="rounded-2xl bg-card border border-border overflow-hidden"
-            style={{ boxShadow: "var(--shadow-card)" }}
+            className="rounded-2xl bg-white overflow-hidden"
+            style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
           >
-            <div className="px-6 py-4 border-b border-border">
-              <h2 className="text-sm font-bold text-foreground">Account details</h2>
+            <div className="px-6 py-4" style={{ borderBottom: "1px solid #f1f5f9" }}>
+              <h2 className="font-bold" style={{ fontSize: "13.5px", color: "#0f172a" }}>Account details</h2>
             </div>
-            <dl className="divide-y divide-border">
+            <dl className="divide-y" style={{ borderColor: "#f1f5f9" }}>
               {[
                 { label: "User ID", value: <span className="font-mono text-xs break-all">{user.id}</span> },
                 { label: "Display name", value: user.name || "—" },
@@ -144,8 +144,8 @@ function ProfilePage() {
                 { label: "Workspace role", value: <RoleBadge role={user.role} size="xs" /> },
               ].map(({ label, value }) => (
                 <div key={label} className="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 items-start">
-                  <dt className="text-sm text-muted-foreground font-medium">{label}</dt>
-                  <dd className="sm:col-span-2 text-sm text-foreground">{value}</dd>
+                  <dt style={{ fontSize: "13.5px", color: "#64748b", fontWeight: 500 }}>{label}</dt>
+                  <dd className="sm:col-span-2" style={{ fontSize: "13.5px", color: "#0f172a" }}>{value}</dd>
                 </div>
               ))}
             </dl>
@@ -153,15 +153,15 @@ function ProfilePage() {
 
           {/* Project memberships */}
           <div
-            className="rounded-2xl bg-card border border-border overflow-hidden"
-            style={{ boxShadow: "var(--shadow-card)" }}
+            className="rounded-2xl bg-white overflow-hidden"
+            style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
           >
-            <div className="px-6 py-4 border-b border-border flex items-center justify-between gap-3">
+            <div className="px-6 py-4 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid #f1f5f9" }}>
               <div>
-                <h2 className="text-sm font-bold text-foreground">
+                <h2 className="font-bold" style={{ fontSize: "13.5px", color: "#0f172a" }}>
                   Project memberships
                   {memberships && (
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    <span className="ml-2 font-normal" style={{ fontSize: "12px", color: "#94a3b8" }}>
                       ({memberships.length})
                     </span>
                   )}
@@ -169,7 +169,8 @@ function ProfilePage() {
               </div>
               <Link
                 to="/projects"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:opacity-80 transition-opacity no-underline shrink-0"
+                className="inline-flex items-center gap-1 no-underline shrink-0 hover:opacity-80 transition-opacity"
+                style={{ fontSize: "12px", fontWeight: 600, color: "#6366f1" }}
               >
                 Browse projects
                 <ArrowRight className="h-3 w-3" />
@@ -177,14 +178,14 @@ function ProfilePage() {
             </div>
 
             {loading ? (
-              <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>
+              <div className="p-10 text-center" style={{ fontSize: "14px", color: "#64748b" }}>Loading…</div>
             ) : !memberships || memberships.length === 0 ? (
               <div className="p-12 text-center">
-                <FolderKanban className="h-8 w-8 mx-auto mb-3 text-muted-foreground opacity-30" />
-                <p className="text-sm text-muted-foreground">Not a member of any projects yet.</p>
+                <FolderKanban className="h-8 w-8 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
+                <p style={{ fontSize: "13.5px", color: "#94a3b8" }}>Not a member of any projects yet.</p>
               </div>
             ) : (
-              <ul className="divide-y divide-border">
+              <ul className="divide-y" style={{ borderColor: "#f1f5f9" }}>
                 {memberships.map((m) => {
                   const [from, to] = projectColor(m.project_name);
                   const initials2 = m.project_name
@@ -197,19 +198,20 @@ function ProfilePage() {
                     <li key={m.project_id} className="px-6 py-3.5 flex items-center gap-4">
                       <div
                         className="h-8 w-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-                        style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+                        style={{ background: `linear-gradient(135deg, ${from}, ${to})`, boxShadow: `0 2px 6px ${from}40` }}
                       >
                         {initials2}
                       </div>
                       <Link
                         to="/projects/$projectId"
                         params={{ projectId: m.project_id }}
-                        className="text-sm font-medium text-foreground hover:text-primary transition-colors truncate flex-1 no-underline"
+                        className="truncate flex-1 no-underline transition-colors hover:text-indigo-600"
+                        style={{ fontSize: "13.5px", fontWeight: 500, color: "#0f172a" }}
                       >
                         {m.project_name}
                       </Link>
                       {m.joined_at && (
-                        <span className="hidden sm:inline-flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                        <span className="hidden sm:inline-flex items-center gap-1 shrink-0" style={{ fontSize: "12px", color: "#94a3b8" }}>
                           <Calendar className="h-3 w-3" />
                           {new Date(m.joined_at).toLocaleDateString()}
                         </span>
@@ -225,7 +227,10 @@ function ProfilePage() {
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-card p-16 text-center text-muted-foreground" style={{ boxShadow: "var(--shadow-card)" }}>
+        <div
+          className="rounded-2xl p-16 text-center"
+          style={{ background: "#fff", border: "1px solid #e2e8f0", color: "#64748b" }}
+        >
           Could not load profile.
         </div>
       )}
