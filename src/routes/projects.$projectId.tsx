@@ -200,7 +200,7 @@ function ProjectDetailPage() {
 
   return (
     <AppShell maxWidth="max-w-5xl">
-      <div className="space-y-6">
+      <div className="space-y-8">
         <Link
           to="/projects"
           className="inline-flex items-center gap-1.5 transition-colors hover:opacity-75"
@@ -218,12 +218,16 @@ function ProjectDetailPage() {
           <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${projFrom}, ${projTo})` }} />
 
           <div
-            className="px-7 py-6 relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 60%, #f6f8fc 100%)" }}
+            className="px-8 py-7 relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)" }}
           >
             <div
-              className="absolute right-[-30px] top-[-40px] h-[180px] w-[180px] rounded-full pointer-events-none"
-              style={{ background: "radial-gradient(circle, rgba(99,102,241,0.13) 0%, transparent 70%)" }}
+              className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
+              style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
+            />
+            <div
+              className="absolute right-[60px] bottom-[-30px] h-[120px] w-[120px] rounded-full pointer-events-none"
+              style={{ background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)" }}
             />
             <div className="relative flex items-start justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4 min-w-0">
