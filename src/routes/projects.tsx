@@ -7,6 +7,7 @@ import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 import { useCurrentUser } from "@/lib/user-store";
 import { invalidateProjectsCache, type Project } from "@/lib/projects-store";
+import { projectColor, projectInitials } from "@/lib/project-colors";
 import {
   PaginationControls,
   type PaginatedResponse,
@@ -45,24 +46,6 @@ function ProjectsPage() {
   return <ProjectsListPage />;
 }
 
-const PROJECT_GRADIENTS = [
-  ["#8b5cf6", "#6366f1"],
-  ["#3b82f6", "#2563eb"],
-  ["#10b981", "#0d9488"],
-  ["#f59e0b", "#d97706"],
-  ["#ec4899", "#db2777"],
-  ["#14b8a6", "#0891b2"],
-  ["#f97316", "#ea580c"],
-  ["#84cc16", "#16a34a"],
-];
-
-function projectColor(name: string): [string, string] {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-  }
-  return PROJECT_GRADIENTS[hash % PROJECT_GRADIENTS.length] as [string, string];
-}
 
 function ProjectsListPage() {
   const { user } = useCurrentUser();
@@ -230,12 +213,7 @@ function ProjectsListPage() {
 
 function ProjectCard({ project }: { project: Project }) {
   const [from, to] = projectColor(project.name);
-  const initials = project.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+  const initials = projectInitials(project.name);
 
   return (
     <Link

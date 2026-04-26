@@ -21,6 +21,7 @@ import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 import { RoleGate } from "@/components/RoleGate";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { projectColor, projectInitials } from "@/lib/project-colors";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ReactMarkdown from "react-markdown";
@@ -73,24 +74,7 @@ interface FlatRow {
   member_role?: "employee" | "team_lead";
 }
 
-const PROJECT_GRADIENTS = [
-  ["#8b5cf6", "#6366f1"],
-  ["#3b82f6", "#2563eb"],
-  ["#10b981", "#0d9488"],
-  ["#f59e0b", "#d97706"],
-  ["#ec4899", "#db2777"],
-  ["#14b8a6", "#0891b2"],
-  ["#f97316", "#ea580c"],
-  ["#84cc16", "#16a34a"],
-];
-function projectColor(name: string): [string, string] {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return PROJECT_GRADIENTS[h % PROJECT_GRADIENTS.length] as [string, string];
-}
-function initials(name: string) {
-  return name.split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-}
+
 function stripMd(text: string): string {
   return text
     .replace(/#{1,6}\s+/g, "")
@@ -254,7 +238,7 @@ function Inner() {
                 fontSize: "16px",
               }}
             >
-              {initials(project?.project_name ?? "??")}
+              {projectInitials(project?.project_name ?? "??")}
             </div>
             <div className="min-w-0">
               <h1 className="font-extrabold mb-1 truncate"
@@ -467,15 +451,28 @@ function RowItem({
   hasMore: boolean;
   onToggle: (id: string) => void;
 }) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (hasMore && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      onToggle(row.id);
+    }
+  };
+
   return (
     <>
       <tr
+        role={hasMore ? "button" : undefined}
+        tabIndex={hasMore ? 0 : undefined}
+        aria-expanded={hasMore ? isExpanded : undefined}
         style={{
           borderBottom: isExpanded ? "none" : isLast ? "none" : "1px solid #f1f5f9",
           background: isExpanded ? "#f8f9ff" : idx % 2 === 0 ? "#fff" : "#fafbfc",
           cursor: hasMore ? "pointer" : "default",
+          outline: "none",
         }}
+        className={hasMore ? "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400" : ""}
         onClick={() => hasMore && onToggle(row.id)}
+        onKeyDown={handleKeyDown}
       >
         <td className="px-5 py-3.5 align-top">
           {row.type === "project" ? (
@@ -488,7 +485,7 @@ function RowItem({
             <div className="flex items-center gap-2 min-w-0">
               <div className="h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
                 style={{ background: "linear-gradient(135deg, #64748b, #475569)" }}>
-                {initials(row.member_name ?? "?")}
+                {projectInitials(row.member_name ?? "?")}
               </div>
               <div className="min-w-0">
                 <div className="font-semibold truncate" style={{ fontSize: "12.5px", color: "#0f172a" }}>
@@ -536,7 +533,8 @@ function RowItem({
           onClick={(e) => { e.stopPropagation(); if (hasMore) onToggle(row.id); }}>
           {hasMore && (
             <button
-              className="inline-flex items-center justify-center h-7 w-7 rounded-full transition-colors"
+              aria-label={isExpanded ? "Collapse summary" : "Expand summary"}
+              className="inline-flex items-center justify-center h-7 w-7 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
               style={{ background: isExpanded ? "#eef2ff" : "#f1f5f9" }}
             >
               {isExpanded
@@ -548,8 +546,9 @@ function RowItem({
       </tr>
 
       {isExpanded && (
-        <tr style={{ borderBottom: isLast ? "none" : "1px solid #e0e7ff" }}>
-          <td colSpan={6} className="px-6 pb-5 pt-0" style={{ background: "#f8f9ff" }}>
+        <tr style={{ borderBottom: isLast ? "none" : "1px solid #e0e7ff" }}
+          className="animate-in fade-in slide-in-from-top-1 duration-200">
+          <td colSpan={6} className="px-6 pb-5 pt-2" style={{ background: "#f8f9ff" }}>
             <div className="rounded-xl p-4" style={{ background: "#fff", border: "1px solid #e0e7ff" }}>
               <div className={MD}>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{row.summary_text}</ReactMarkdown>

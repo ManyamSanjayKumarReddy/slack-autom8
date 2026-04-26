@@ -14,6 +14,7 @@ import { apiFetch, isAuthenticated, setToken } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { useCurrentUser } from "@/lib/user-store";
 import { useProjects, type Project } from "@/lib/projects-store";
+import { projectColor, projectInitials } from "@/lib/project-colors";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
@@ -41,24 +42,6 @@ const ROLE_GREETINGS: Record<string, string> = {
   admin: "Here's your full workspace at a glance.",
 };
 
-const PROJECT_GRADIENTS = [
-  ["#8b5cf6", "#6366f1"],
-  ["#3b82f6", "#2563eb"],
-  ["#10b981", "#0d9488"],
-  ["#f59e0b", "#d97706"],
-  ["#ec4899", "#db2777"],
-  ["#14b8a6", "#0891b2"],
-  ["#f97316", "#ea580c"],
-  ["#84cc16", "#16a34a"],
-];
-
-function projectColor(name: string): [string, string] {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-  }
-  return PROJECT_GRADIENTS[hash % PROJECT_GRADIENTS.length] as [string, string];
-}
 
 function DashboardPage() {
   const { user } = useCurrentUser();
@@ -136,18 +119,28 @@ function DashboardPage() {
             </div>
           ) : !projects || projects.length === 0 ? (
             <div
-              className="rounded-2xl p-16 text-center bg-white"
+              className="rounded-2xl p-12 text-center bg-white"
               style={{ border: "2px dashed #e2e8f0" }}
             >
               <FolderKanban className="h-10 w-10 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
               <p className="font-semibold mb-1" style={{ fontSize: "15px", color: "#334155" }}>
                 No projects yet
               </p>
-              <p style={{ fontSize: "13px", color: "#94a3b8" }}>
+              <p className="mb-5" style={{ fontSize: "13px", color: "#94a3b8" }}>
                 {role === "admin"
-                  ? 'Head to "Projects" to create your first one.'
-                  : "You haven't been added to any projects yet."}
+                  ? "Create your first project to start tracking Slack summaries."
+                  : "You haven't been added to any projects yet. Ask your admin to add you."}
               </p>
+              {role === "admin" && (
+                <Link
+                  to="/projects"
+                  className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold no-underline transition-opacity hover:opacity-80"
+                  style={{ background: "#6366f1", color: "#fff" }}
+                >
+                  <FolderKanban className="h-4 w-4" />
+                  Go to Projects
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -164,12 +157,7 @@ function DashboardPage() {
 
 function ProjectCard({ project }: { project: Project }) {
   const [from, to] = projectColor(project.name);
-  const initials = project.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+  const initials = projectInitials(project.name);
 
   return (
     <Link
