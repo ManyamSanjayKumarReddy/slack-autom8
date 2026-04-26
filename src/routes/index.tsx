@@ -82,18 +82,18 @@ function LandingPage() {
     >
       {/* Decorative animated blobs */}
       <div
-        className="absolute top-[-200px] left-[-150px] h-[600px] w-[600px] rounded-full pointer-events-none lp-blob"
+        className="absolute top-[-150px] left-[-100px] h-[400px] w-[400px] sm:h-[600px] sm:w-[600px] rounded-full pointer-events-none lp-blob"
         style={{ background: "radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 65%)" }}
       />
       <div
-        className="absolute top-[100px] right-[-200px] h-[500px] w-[500px] rounded-full pointer-events-none lp-blob"
+        className="absolute top-[100px] right-[-100px] h-[300px] w-[300px] sm:h-[500px] sm:w-[500px] rounded-full pointer-events-none lp-blob"
         style={{
           background: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 65%)",
           animationDelay: "-6s",
         }}
       />
       <div
-        className="absolute bottom-[-100px] left-[30%] h-[400px] w-[400px] rounded-full pointer-events-none lp-blob"
+        className="absolute bottom-[-60px] left-[20%] h-[280px] w-[280px] sm:h-[400px] sm:w-[400px] rounded-full pointer-events-none lp-blob"
         style={{
           background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)",
           animationDelay: "-12s",
@@ -132,7 +132,7 @@ function LandingPage() {
           </div>
           <button
             onClick={handleLogin}
-            className="hidden sm:inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold lp-cta lp-fade-in"
+            className="inline-flex items-center gap-2 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-semibold lp-cta lp-fade-in"
             style={{
               background: "#0f172a",
               color: "#fff",
@@ -141,7 +141,8 @@ function LandingPage() {
             }}
           >
             <SlackIcon className="h-4 w-4" />
-            Sign in
+            <span className="hidden sm:inline">Sign in with Slack</span>
+            <span className="sm:hidden">Sign in</span>
           </button>
         </div>
       </nav>
@@ -433,7 +434,7 @@ function StepCard({
 function StatsStrip() {
   const ref = useReveal<HTMLDivElement>();
   return (
-    <div ref={ref} className="mt-16 grid grid-cols-3 gap-4 max-w-3xl mx-auto lp-reveal">
+    <div ref={ref} className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto lp-reveal">
       {[
         { icon: Hash, label: "Channels supported", value: "Unlimited" },
         { icon: MessageSquare, label: "Daily digests", value: "Automatic" },

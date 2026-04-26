@@ -20,6 +20,7 @@ import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 import { RoleGate } from "@/components/RoleGate";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ReactMarkdown from "react-markdown";
@@ -150,6 +151,7 @@ type QuickKey = "today" | "yesterday" | "last7" | "last30" | "custom";
 function Inner() {
   const { projectId } = Route.useParams();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const today = new Date();
   const [range, setRange] = useState<DateRange | undefined>({ from: today, to: today });
   const [activeQuick, setActiveQuick] = useState<QuickKey>("today");
@@ -236,7 +238,7 @@ function Inner() {
 
       {/* Project header banner */}
       <div
-        className="rounded-2xl px-6 sm:px-8 py-7 relative overflow-hidden border"
+        className="rounded-2xl px-5 sm:px-8 py-5 sm:py-7 relative overflow-hidden border"
         style={{
           background: `linear-gradient(135deg, ${from}15 0%, ${to}10 55%, #f6f8fc 100%)`,
           borderColor: "#e0e7ff",
@@ -287,54 +289,56 @@ function Inner() {
 
       {/* Date filter bar */}
       <div
-        className="rounded-2xl bg-white px-5 py-4 flex items-center gap-2 flex-wrap"
+        className="rounded-2xl bg-white px-4 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-2 sm:flex-wrap"
         style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
       >
-        {QUICK_PICKS.map(({ label, key }) => {
-          const active = activeQuick === key;
-          return (
-            <button key={key} type="button" onClick={() => applyQuick(key)}
-              className="rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[36px]"
-              style={active
-                ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
-                : { background: "#f1f5f9", color: "#475569" }}>
-              {label}
-            </button>
-          );
-        })}
+        <div className="flex items-center gap-2 flex-wrap">
+          {QUICK_PICKS.map(({ label, key }) => {
+            const active = activeQuick === key;
+            return (
+              <button key={key} type="button" onClick={() => applyQuick(key)}
+                className="rounded-full px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[34px]"
+                style={active
+                  ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
+                  : { background: "#f1f5f9", color: "#475569" }}>
+                {label}
+              </button>
+            );
+          })}
 
-        <div className="w-px h-5 mx-1 shrink-0" style={{ background: "#e2e8f0" }} />
+          <div className="hidden sm:block w-px h-5 mx-1 shrink-0" style={{ background: "#e2e8f0" }} />
 
-        <Popover open={calOpen} onOpenChange={setCalOpen}>
-          <PopoverTrigger asChild>
-            <button type="button"
-              className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[36px]"
-              style={activeQuick === "custom"
-                ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
-                : { background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}>
-              <CalendarIcon className="h-3.5 w-3.5" />
-              {formatRange(range)}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="range"
-              selected={range}
-              onSelect={(r) => {
-                setRange(r);
-                setActiveQuick("custom");
-                if (r?.from && r?.to) setCalOpen(false);
-              }}
-              numberOfMonths={2}
-              disabled={{ after: today }}
-              initialFocus
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
+          <Popover open={calOpen} onOpenChange={setCalOpen}>
+            <PopoverTrigger asChild>
+              <button type="button"
+                className="inline-flex items-center gap-2 rounded-full px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[34px]"
+                style={activeQuick === "custom"
+                  ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
+                  : { background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}>
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {formatRange(range)}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 max-w-[calc(100vw-2rem)]" align="start">
+              <Calendar
+                mode="range"
+                selected={range}
+                onSelect={(r) => {
+                  setRange(r);
+                  setActiveQuick("custom");
+                  if (r?.from && r?.to) setCalOpen(false);
+                }}
+                numberOfMonths={isMobile ? 1 : 2}
+                disabled={{ after: today }}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
 
         <button type="button" onClick={() => fetchData()} disabled={loading || !range?.from}
-          className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-all disabled:opacity-50 min-h-[36px]"
+          className="sm:ml-auto w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-all disabled:opacity-50 min-h-[34px]"
           style={{ background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}>
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
           {loading ? "Loading…" : "Apply"}

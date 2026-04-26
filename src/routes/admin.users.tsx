@@ -62,7 +62,7 @@ function AdminUsersPage() {
       <div className="space-y-8">
         {/* Page banner */}
         <div
-          className="rounded-2xl px-8 py-7 relative overflow-hidden border"
+          className="rounded-2xl px-5 sm:px-8 py-5 sm:py-7 relative overflow-hidden border"
           style={{
             background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)",
             borderColor: "#e0e7ff",
