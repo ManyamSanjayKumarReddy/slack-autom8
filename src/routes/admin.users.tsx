@@ -58,10 +58,37 @@ export const Route = createFileRoute("/admin/users")({
 
 function AdminUsersPage() {
   return (
-    <AppShell title="User Management" subtitle="Change roles and review every user in the workspace.">
-      <RoleGate allowed={["admin"]}>
-        <Inner />
-      </RoleGate>
+    <AppShell maxWidth="max-w-6xl">
+      <div className="space-y-8">
+        {/* Page banner */}
+        <div
+          className="rounded-2xl px-8 py-7 relative overflow-hidden border"
+          style={{
+            background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)",
+            borderColor: "#e0e7ff",
+          }}
+        >
+          <div
+            className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
+          />
+          <div className="relative">
+            <h1
+              className="font-extrabold mb-1.5"
+              style={{ fontSize: "24px", color: "#0f172a", letterSpacing: "-0.025em" }}
+            >
+              User Management
+            </h1>
+            <p style={{ fontSize: "14px", color: "#64748b" }}>
+              Change roles and review every user in the workspace.
+            </p>
+          </div>
+        </div>
+
+        <RoleGate allowed={["admin"]}>
+          <Inner />
+        </RoleGate>
+      </div>
     </AppShell>
   );
 }
@@ -122,9 +149,12 @@ function Inner() {
 
   return (
     <>
-      <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
-        <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold text-foreground">
+      <section
+        className="rounded-2xl bg-white overflow-hidden"
+        style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+      >
+        <div className="px-4 sm:px-6 py-4 flex items-center justify-between gap-3 flex-wrap" style={{ borderBottom: "1px solid #f1f5f9" }}>
+          <h2 className="font-semibold" style={{ fontSize: "13.5px", color: "#0f172a" }}>
             {total > 0 ? `${total} user${total === 1 ? "" : "s"}` : "Users"}
           </h2>
         </div>
