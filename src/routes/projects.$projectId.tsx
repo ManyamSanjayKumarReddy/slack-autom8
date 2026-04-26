@@ -218,7 +218,7 @@ function ProjectDetailPage() {
           <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${projFrom}, ${projTo})` }} />
 
           <div
-            className="px-8 py-7 relative overflow-hidden"
+            className="px-5 sm:px-8 py-5 sm:py-7 relative overflow-hidden"
             style={{ background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)" }}
           >
             <div
