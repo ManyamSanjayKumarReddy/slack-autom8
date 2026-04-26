@@ -36,170 +36,160 @@ function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex">
-      {/* Left panel — branding */}
+    <main
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{ background: "linear-gradient(145deg, #f0f4ff 0%, #f6f8fc 50%, #eef2ff 100%)" }}
+    >
+      {/* Background decorative orbs */}
       <div
-        className="hidden lg:flex flex-col justify-between w-[52%] shrink-0 p-12 relative overflow-hidden"
-        style={{
-          background: "linear-gradient(145deg, #1e1b4b 0%, #312e81 35%, #1d4ed8 75%, #1e40af 100%)",
-        }}
-      >
-        {/* Decorative blobs */}
-        <div
-          className="absolute top-[-100px] right-[-60px] h-[420px] w-[420px] rounded-full pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(165,180,252,0.2) 0%, rgba(99,102,241,0.08) 50%, transparent 70%)",
-          }}
-        />
-        <div
-          className="absolute bottom-[-60px] left-[-40px] h-[320px] w-[320px] rounded-full pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(96,165,250,0.18) 0%, rgba(59,130,246,0.06) 50%, transparent 70%)",
-          }}
-        />
+        className="absolute top-[-120px] left-[-80px] h-[500px] w-[500px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 65%)" }}
+      />
+      <div
+        className="absolute bottom-[-80px] right-[-60px] h-[400px] w-[400px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 65%)" }}
+      />
+      <div
+        className="absolute top-[40%] right-[15%] h-[200px] w-[200px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%)" }}
+      />
 
-        {/* Logo */}
-        <div className="relative flex items-center gap-3">
-          <div
-            className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{
-              background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-              boxShadow: "0 6px 20px rgba(99,102,241,0.4)",
-            }}
-          >
-            <SlackIcon className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-[15px] font-bold text-white leading-tight">Slack Autom8</div>
-            <div className="text-[11px] text-[#64748b]">AI Summarizer</div>
-          </div>
-        </div>
+      <div className="relative w-full max-w-[960px] flex flex-col lg:flex-row gap-8 items-center">
 
-        {/* Hero content */}
-        <div className="relative">
-          <div
-            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold mb-6"
-            style={{
-              background: "rgba(165,180,252,0.18)",
-              border: "1px solid rgba(165,180,252,0.35)",
-              color: "#c7d2fe",
-            }}
-          >
-            <Sparkles className="h-3 w-3" />
-            Powered by AI
-          </div>
-
-          <h1
-            className="text-4xl xl:text-5xl font-extrabold leading-tight tracking-tight text-white mb-5"
-          >
-            Turn Slack noise
-            <br />
-            into{" "}
-            <span
+        {/* Left — branding panel */}
+        <div className="flex-1 flex flex-col gap-8 px-2 lg:px-0 text-center lg:text-left">
+          {/* Logo */}
+          <div className="flex items-center gap-3 justify-center lg:justify-start">
+            <div
+              className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
               style={{
-                background: "linear-gradient(90deg, #93c5fd 0%, #c7d2fe 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+                boxShadow: "0 6px 20px rgba(99,102,241,0.4)",
               }}
             >
-              clear insights
-            </span>
-          </h1>
+              <SlackIcon className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="text-[16px] font-bold leading-tight" style={{ color: "#0f172a" }}>
+                Slack Autom8
+              </div>
+              <div className="text-[11px] font-medium" style={{ color: "#94a3b8" }}>
+                AI Summarizer
+              </div>
+            </div>
+          </div>
 
-          <p className="text-[#bfdbfe] text-base leading-relaxed mb-10 max-w-sm">
-            Automatically summarise your team's Slack conversations and
-            deliver concise digests straight to your dashboard.
-          </p>
+          {/* Headline */}
+          <div>
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold mb-5"
+              style={{
+                background: "rgba(99,102,241,0.08)",
+                border: "1px solid rgba(99,102,241,0.2)",
+                color: "#6366f1",
+              }}
+            >
+              <Sparkles className="h-3 w-3" />
+              Powered by AI
+            </div>
+            <h1
+              className="font-extrabold leading-tight tracking-tight mb-4"
+              style={{ fontSize: "clamp(28px, 4vw, 40px)", color: "#0f172a", letterSpacing: "-0.03em" }}
+            >
+              Turn Slack noise into{" "}
+              <span
+                style={{
+                  background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                clear insights
+              </span>
+            </h1>
+            <p style={{ fontSize: "15px", color: "#64748b", lineHeight: "1.6", maxWidth: "380px" }}
+              className="mx-auto lg:mx-0">
+              Automatically summarise your team's Slack conversations and
+              deliver concise digests straight to your dashboard.
+            </p>
+          </div>
 
-          <ul className="space-y-3.5">
+          {/* Feature pills */}
+          <ul className="flex flex-col gap-3 max-w-sm mx-auto lg:mx-0">
             {FEATURES.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-center gap-3">
                 <div
-                  className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
+                  className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
                   style={{
-                    background: "rgba(165,180,252,0.15)",
-                    border: "1px solid rgba(165,180,252,0.3)",
+                    background: "rgba(99,102,241,0.08)",
+                    border: "1px solid rgba(99,102,241,0.18)",
                   }}
                 >
-                  <Icon className="h-3.5 w-3.5 text-blue-300" />
+                  <Icon className="h-3.5 w-3.5" style={{ color: "#6366f1" }} />
                 </div>
-                <span className="text-sm text-[#dbeafe]">{text}</span>
+                <span style={{ fontSize: "13.5px", color: "#475569", fontWeight: 500 }}>{text}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Footer */}
-        <div className="relative text-xs text-[#93c5fd] opacity-60">
-          © {new Date().getFullYear()} Slack Autom8. All rights reserved.
-        </div>
-      </div>
-
-      {/* Right panel — login form */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-background">
-        {/* Mobile logo */}
-        <div className="lg:hidden flex items-center gap-3 mb-10">
-          <div
-            className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{
-              background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-              boxShadow: "0 6px 20px rgba(99,102,241,0.4)",
-            }}
-          >
-            <SlackIcon className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-[15px] font-bold text-foreground leading-tight">Slack Autom8</div>
-            <div className="text-[11px] text-muted-foreground">AI Summarizer</div>
-          </div>
-        </div>
-
-        <div className="w-full max-w-[400px]">
-          <div className="mb-8 text-center lg:text-left">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-2">
-              Welcome back
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Sign in with your Slack account to continue.
-            </p>
-          </div>
-
+        {/* Right — login card */}
+        <div className="w-full lg:w-[400px] shrink-0">
           <div
             className="rounded-2xl p-8"
             style={{
-              background: "oklch(1 0 0)",
-              border: "1px solid oklch(0.912 0.01 280)",
-              boxShadow: "0 4px 24px oklch(0 0 0 / 0.07), 0 1px 3px oklch(0 0 0 / 0.05)",
+              background: "#ffffff",
+              border: "1px solid #e0e7ff",
+              boxShadow: "0 8px 40px rgba(99,102,241,0.1), 0 2px 8px rgba(0,0,0,0.06)",
             }}
           >
+            {/* Card header */}
+            <div className="mb-7">
+              <h2
+                className="font-bold mb-2"
+                style={{ fontSize: "22px", color: "#0f172a", letterSpacing: "-0.02em" }}
+              >
+                Welcome back
+              </h2>
+              <p style={{ fontSize: "14px", color: "#64748b" }}>
+                Sign in with your Slack account to continue.
+              </p>
+            </div>
+
+            {/* CTA button */}
             <button
               onClick={handleLogin}
-              className="w-full flex items-center justify-center gap-3 rounded-xl py-3.5 px-5 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+              className="w-full flex items-center justify-center gap-3 rounded-xl py-3.5 px-5 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
               style={{
                 background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-                boxShadow: "0 4px 14px rgba(99,102,241,0.45)",
+                boxShadow: "0 4px 14px rgba(99,102,241,0.4)",
               }}
             >
               <SlackIcon className="h-5 w-5" />
               Continue with Slack
             </button>
 
-            <div className="mt-5 flex items-center gap-3">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground">secure OAuth 2.0</span>
-              <div className="flex-1 h-px bg-border" />
+            {/* Divider */}
+            <div className="mt-6 flex items-center gap-3">
+              <div className="flex-1 h-px" style={{ background: "#e2e8f0" }} />
+              <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500 }}>
+                Secure OAuth 2.0
+              </span>
+              <div className="flex-1 h-px" style={{ background: "#e2e8f0" }} />
             </div>
 
-            <p className="mt-5 text-xs text-muted-foreground text-center leading-relaxed">
+            {/* Trust note */}
+            <p
+              className="mt-5 text-center leading-relaxed"
+              style={{ fontSize: "12px", color: "#94a3b8" }}
+            >
               By continuing, you authorise Slack Autom8 to read messages from your
               workspace on your behalf.
             </p>
           </div>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Slack Autom8
+          <p className="mt-5 text-center" style={{ fontSize: "12px", color: "#94a3b8" }}>
+            © {new Date().getFullYear()} Slack Autom8. All rights reserved.
           </p>
         </div>
       </div>
