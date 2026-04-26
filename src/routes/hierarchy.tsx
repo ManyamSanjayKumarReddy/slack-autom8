@@ -20,11 +20,7 @@ import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 import { RoleGate } from "@/components/RoleGate";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -43,7 +39,6 @@ interface PersonalSummary {
   summary_text: string;
   message_count: number;
   is_auto_generated?: boolean;
-  user_name?: string;
   created_at: string;
 }
 interface HierarchyMember {
@@ -62,9 +57,18 @@ interface HierarchyProject {
   dates: Record<string, HierarchyDate>;
 }
 interface HierarchyResponse {
-  from_date?: string;
-  to_date?: string;
   projects: HierarchyProject[];
+}
+interface FlatRow {
+  id: string;
+  date: string;
+  created_at: string;
+  summary_text: string;
+  message_count: number;
+  is_auto_generated?: boolean;
+  type: "project" | "personal";
+  member_name?: string;
+  member_role?: "employee" | "team_lead";
 }
 
 /* ── Helpers ── */
@@ -83,7 +87,7 @@ function projectColor(name: string): [string, string] {
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
   return PROJECT_GRADIENTS[h % PROJECT_GRADIENTS.length] as [string, string];
 }
-function nameInitials(name: string) {
+function initials(name: string) {
   return name.split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }
 function stripMd(text: string): string {
@@ -95,13 +99,29 @@ function stripMd(text: string): string {
     .replace(/\n+/g, " ")
     .trim();
 }
+function flattenProject(project: HierarchyProject): FlatRow[] {
+  const rows: FlatRow[] = [];
+  for (const [date, d] of Object.entries(project.dates)) {
+    for (const s of d.project_summaries) {
+      rows.push({ ...s, date, type: "project" });
+    }
+    for (const m of d.members) {
+      for (const s of m.personal_summaries) {
+        rows.push({ ...s, date, type: "personal", member_name: m.user_name, member_role: m.project_role });
+      }
+    }
+  }
+  return rows.sort((a, b) => {
+    if (a.date !== b.date) return a.date > b.date ? -1 : 1;
+    if (a.type !== b.type) return a.type === "project" ? -1 : 1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+}
 function formatRange(r: DateRange | undefined): string {
   if (!r?.from) return "Pick dates";
   if (!r.to || r.from.toDateString() === r.to.toDateString())
     return format(r.from, "MMM d, yyyy");
-  if (r.from.getFullYear() === r.to.getFullYear())
-    return `${format(r.from, "MMM d")} – ${format(r.to, "MMM d, yyyy")}`;
-  return `${format(r.from, "MMM d, yyyy")} – ${format(r.to, "MMM d, yyyy")}`;
+  return `${format(r.from, "MMM d")} – ${format(r.to, "MMM d, yyyy")}`;
 }
 
 const MD =
@@ -163,8 +183,8 @@ function Inner() {
 
   const applyQuick = (key: QuickKey) => {
     setActiveQuick(key);
-    let r: DateRange;
     const end = new Date();
+    let r: DateRange;
     if (key === "today") {
       r = { from: new Date(), to: new Date() };
     } else if (key === "yesterday") {
@@ -181,23 +201,8 @@ function Inner() {
     fetchData(r);
   };
 
-  const totalSummaries =
-    data?.projects.reduce((acc, p) => {
-      let c = 0;
-      for (const d of Object.values(p.dates)) {
-        c += d.project_summaries.length;
-        for (const m of d.members) c += m.personal_summaries.length;
-      }
-      return acc + c;
-    }, 0) ?? 0;
-
-  const totalProjects = data?.projects.filter((p) => {
-    for (const d of Object.values(p.dates)) {
-      if (d.project_summaries.length > 0) return true;
-      if (d.members.some((m) => m.personal_summaries.length > 0)) return true;
-    }
-    return false;
-  }).length ?? 0;
+  const projectsWithData = data?.projects.filter((p) => flattenProject(p).length > 0) ?? [];
+  const totalSummaries = projectsWithData.reduce((a, p) => a + flattenProject(p).length, 0);
 
   const QUICK_PICKS: { label: string; key: QuickKey }[] = [
     { label: "Today", key: "today" },
@@ -208,7 +213,7 @@ function Inner() {
 
   return (
     <div className="space-y-8">
-      {/* Page header */}
+      {/* Page header banner */}
       <div
         className="rounded-2xl px-8 py-7 relative overflow-hidden border"
         style={{
@@ -216,44 +221,33 @@ function Inner() {
           borderColor: "#e0e7ff",
         }}
       >
-        <div
-          className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
-        />
-        <div
-          className="absolute right-[60px] bottom-[-30px] h-[120px] w-[120px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)" }}
-        />
+        <div className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }} />
+        <div className="absolute right-[60px] bottom-[-30px] h-[120px] w-[120px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)" }} />
         <div className="relative flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1
-              className="font-extrabold mb-1.5"
-              style={{ fontSize: "24px", color: "#0f172a", letterSpacing: "-0.025em" }}
-            >
+            <h1 className="font-extrabold mb-1.5" style={{ fontSize: "24px", color: "#0f172a", letterSpacing: "-0.025em" }}>
               Summary Report
             </h1>
             <p style={{ fontSize: "14px", color: "#64748b" }}>
-              Project and personal summaries grouped by team and date.
+              Project and personal summaries grouped by project.
             </p>
           </div>
-          {data && totalSummaries > 0 && (
+          {totalSummaries > 0 && (
             <div className="flex items-center gap-3 flex-wrap">
-              <div
-                className="rounded-xl px-3.5 py-2 flex items-center gap-2"
-                style={{ background: "#fff", border: "1px solid #e0e7ff" }}
-              >
+              <div className="rounded-xl px-3.5 py-2 flex items-center gap-2"
+                style={{ background: "#fff", border: "1px solid #e0e7ff" }}>
                 <BarChart3 className="h-3.5 w-3.5" style={{ color: "#6366f1" }} />
                 <span className="font-semibold" style={{ fontSize: "13px", color: "#4338ca" }}>
                   {totalSummaries} {totalSummaries === 1 ? "summary" : "summaries"}
                 </span>
               </div>
-              <div
-                className="rounded-xl px-3.5 py-2 flex items-center gap-2"
-                style={{ background: "#fff", border: "1px solid #e0e7ff" }}
-              >
+              <div className="rounded-xl px-3.5 py-2 flex items-center gap-2"
+                style={{ background: "#fff", border: "1px solid #e0e7ff" }}>
                 <Users className="h-3.5 w-3.5" style={{ color: "#8b5cf6" }} />
                 <span className="font-semibold" style={{ fontSize: "13px", color: "#6d28d9" }}>
-                  {totalProjects} {totalProjects === 1 ? "project" : "projects"}
+                  {projectsWithData.length} {projectsWithData.length === 1 ? "project" : "projects"}
                 </span>
               </div>
             </div>
@@ -261,46 +255,33 @@ function Inner() {
         </div>
       </div>
 
-      {/* ── Compact date filter bar ── */}
+      {/* Compact date filter bar */}
       <div
         className="rounded-2xl bg-white px-5 py-4 flex items-center gap-2 flex-wrap"
         style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
       >
-        {/* Quick picks */}
         {QUICK_PICKS.map(({ label, key }) => {
           const active = activeQuick === key;
           return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => applyQuick(key)}
+            <button key={key} type="button" onClick={() => applyQuick(key)}
               className="rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
-              style={
-                active
-                  ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
-                  : { background: "#f1f5f9", color: "#475569" }
-              }
-            >
+              style={active
+                ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
+                : { background: "#f1f5f9", color: "#475569" }}>
               {label}
             </button>
           );
         })}
 
-        {/* Divider */}
         <div className="w-px h-5 mx-1 shrink-0" style={{ background: "#e2e8f0" }} />
 
-        {/* Calendar date picker */}
         <Popover open={calOpen} onOpenChange={setCalOpen}>
           <PopoverTrigger asChild>
-            <button
-              type="button"
+            <button type="button"
               className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
-              style={
-                activeQuick === "custom"
-                  ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
-                  : { background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }
-              }
-            >
+              style={activeQuick === "custom"
+                ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
+                : { background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}>
               <CalendarIcon className="h-3.5 w-3.5" />
               {formatRange(range)}
             </button>
@@ -322,49 +303,32 @@ function Inner() {
           </PopoverContent>
         </Popover>
 
-        {/* Apply — only visible for custom, or as a manual refresh */}
-        <button
-          type="button"
-          onClick={() => fetchData()}
-          disabled={loading || !range?.from}
+        <button type="button" onClick={() => fetchData()} disabled={loading || !range?.from}
           className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-all disabled:opacity-50"
-          style={{ background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}
-        >
-          {loading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <RefreshCw className="h-3.5 w-3.5" />
-          )}
+          style={{ background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}>
+          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
           {loading ? "Loading…" : "Apply"}
         </button>
       </div>
 
       {/* Results */}
       {loading && !data ? (
-        <div
-          className="rounded-2xl bg-white p-16 text-center"
-          style={{ border: "1px solid #e2e8f0" }}
-        >
+        <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "1px solid #e2e8f0" }}>
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" style={{ color: "#6366f1" }} />
           <p style={{ fontSize: "14px", color: "#64748b" }}>Loading summaries…</p>
         </div>
-      ) : !data || data.projects.length === 0 || totalSummaries === 0 ? (
-        <div
-          className="rounded-2xl bg-white p-16 text-center"
-          style={{ border: "2px dashed #e2e8f0" }}
-        >
+      ) : projectsWithData.length === 0 ? (
+        <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "2px dashed #e2e8f0" }}>
           <FileSearch className="h-10 w-10 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
-          <p className="font-semibold mb-1" style={{ fontSize: "15px", color: "#334155" }}>
-            No summaries found
-          </p>
+          <p className="font-semibold mb-1" style={{ fontSize: "15px", color: "#334155" }}>No summaries found</p>
           <p style={{ fontSize: "13px", color: "#94a3b8" }}>
             Try a different date range, or generate summaries from a project page.
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {data.projects.map((p) => (
-            <ProjectNode key={p.project_id} project={p} loading={loading} />
+        <div className="space-y-5">
+          {projectsWithData.map((p) => (
+            <ProjectBlock key={p.project_id} project={p} />
           ))}
         </div>
       )}
@@ -372,319 +336,207 @@ function Inner() {
   );
 }
 
-/* ── Project accordion ── */
-function ProjectNode({ project, loading }: { project: HierarchyProject; loading: boolean }) {
-  const [open, setOpen] = useState(true);
+/* ── Project block with summary table ── */
+function ProjectBlock({ project }: { project: HierarchyProject }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [from, to] = projectColor(project.project_name);
-  const dates = Object.keys(project.dates).sort((a, b) => (a < b ? 1 : -1));
+  const rows = flattenProject(project);
 
-  let total = 0;
-  let personalCount = 0;
-  let projectCount = 0;
-  for (const d of Object.values(project.dates)) {
-    projectCount += d.project_summaries.length;
-    for (const m of d.members) personalCount += m.personal_summaries.length;
-  }
-  total = projectCount + personalCount;
+  const projectCount = rows.filter((r) => r.type === "project").length;
+  const personalCount = rows.filter((r) => r.type === "personal").length;
 
-  if (total === 0) return null;
+  const toggleRow = (id: string) =>
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   return (
     <div
       className="rounded-2xl bg-white overflow-hidden"
-      style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.05)" }}
+      style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.05)" }}
     >
-      {/* Colored top strip */}
+      {/* Coloured top strip */}
       <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${from}, ${to})` }} />
 
-      {/* Accordion header */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-4 px-5 py-4 transition-colors"
-        style={{ background: open ? "#fafbff" : "#fff" }}
-      >
-        <div className="flex items-center gap-3.5 min-w-0">
-          <div
-            className="h-10 w-10 rounded-xl flex items-center justify-center text-white text-sm font-extrabold shrink-0"
-            style={{ background: `linear-gradient(135deg, ${from}, ${to})`, boxShadow: `0 3px 8px ${from}40` }}
-          >
-            {nameInitials(project.project_name)}
-          </div>
-          <div className="min-w-0 text-left">
-            <div
-              className="font-bold truncate"
-              style={{ fontSize: "15px", color: "#0f172a", letterSpacing: "-0.01em" }}
-            >
-              {project.project_name}
-            </div>
-            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              {projectCount > 0 && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  style={{ background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}
-                >
-                  <BarChart3 className="h-2.5 w-2.5" />
-                  {projectCount} project
-                </span>
-              )}
-              {personalCount > 0 && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}
-                >
-                  <Users className="h-2.5 w-2.5" />
-                  {personalCount} personal
-                </span>
-              )}
-              {dates.length > 0 && (
-                <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-                  {dates.length === 1
-                    ? format(new Date(dates[0]), "MMM d, yyyy")
-                    : `${format(new Date(dates[dates.length - 1]), "MMM d")} – ${format(new Date(dates[0]), "MMM d, yyyy")}`}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div
-          className="flex items-center justify-center h-7 w-7 rounded-lg shrink-0 transition-colors"
-          style={{ background: open ? "#eef2ff" : "#f1f5f9", border: "1px solid #e2e8f0" }}
-        >
-          {open ? (
-            <ChevronDown className="h-4 w-4" style={{ color: "#6366f1" }} />
-          ) : (
-            <ChevronRight className="h-4 w-4" style={{ color: "#94a3b8" }} />
-          )}
-        </div>
-      </button>
-
-      {/* Content */}
-      {open && (
-        <div style={{ borderTop: "1px solid #f1f5f9" }}>
-          {dates.map((d, i) => (
-            <DateSection
-              key={d}
-              date={d}
-              data={project.dates[d]}
-              isLast={i === dates.length - 1}
-              loading={loading}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Date section ── */
-function DateSection({
-  date,
-  data,
-  isLast,
-  loading,
-}: {
-  date: string;
-  data: HierarchyDate;
-  isLast: boolean;
-  loading: boolean;
-}) {
-  const sortedMembers = [...data.members]
-    .filter((m) => m.personal_summaries.length > 0)
-    .sort((a, b) => {
-      if (a.project_role !== b.project_role) return a.project_role === "team_lead" ? -1 : 1;
-      return a.user_name.localeCompare(b.user_name);
-    });
-
-  const totalInDate =
-    data.project_summaries.length +
-    sortedMembers.reduce((s, m) => s + m.personal_summaries.length, 0);
-
-  if (totalInDate === 0) return null;
-
-  return (
-    <div
-      className="px-5 py-5"
-      style={{ borderBottom: isLast ? "none" : "1px solid #f1f5f9" }}
-    >
-      {/* Date label */}
-      <div className="flex items-center gap-3 mb-4">
-        <span
-          className="font-bold uppercase tracking-wider shrink-0"
-          style={{ fontSize: "10.5px", color: "#6366f1" }}
-        >
-          {format(new Date(date), "EEE, MMM d, yyyy")}
-        </span>
-        <div className="flex-1 h-px" style={{ background: "#e0e7ff" }} />
-        <span
-          className="rounded-full px-2 py-0.5 shrink-0"
-          style={{ fontSize: "10px", background: "#eef2ff", color: "#6366f1", fontWeight: 600 }}
-        >
-          {totalInDate}
-        </span>
-      </div>
-
-      <div className="space-y-2">
-        {/* Project-level summaries */}
-        {data.project_summaries.map((s) => (
-          <SummaryItem key={s.id} summary={s} type="project" />
-        ))}
-
-        {/* Member summaries — grouped by member */}
-        {sortedMembers.map((m) => (
-          <MemberGroup key={m.user_id} member={m} loading={loading} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── Member group (compact, collapsible) ── */
-function MemberGroup({ member, loading: _loading }: { member: HierarchyMember; loading: boolean }) {
-  const [open, setOpen] = useState(true);
-  const count = member.personal_summaries.length;
-
-  return (
-    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #e2e8f0" }}>
-      {/* Member header row */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left"
-        style={{ background: open ? "#f8fafc" : "#fff" }}
-      >
-        <div
-          className="h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-          style={{ background: "linear-gradient(135deg, #64748b, #475569)" }}
-        >
-          {nameInitials(member.user_name)}
-        </div>
-        <span className="font-semibold flex-1 truncate" style={{ fontSize: "13px", color: "#0f172a" }}>
-          {member.user_name}
-        </span>
-        {member.project_role === "team_lead" && (
-          <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-semibold shrink-0"
-            style={{ background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}
-          >
-            Team Lead
-          </span>
-        )}
-        <span
-          className="rounded-full px-2 py-0.5 text-[10px] font-semibold shrink-0"
-          style={{ background: "#f1f5f9", color: "#64748b" }}
-        >
-          {count} {count === 1 ? "summary" : "summaries"}
-        </span>
-        {open ? (
-          <ChevronUp className="h-3.5 w-3.5 shrink-0" style={{ color: "#94a3b8" }} />
-        ) : (
-          <ChevronDown className="h-3.5 w-3.5 shrink-0" style={{ color: "#94a3b8" }} />
-        )}
-      </button>
-
-      {open && (
-        <div className="divide-y" style={{ borderTop: "1px solid #f1f5f9", borderColor: "#f1f5f9" }}>
-          {member.personal_summaries.map((s) => (
-            <SummaryItem key={s.id} summary={s} type="personal" />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Summary item (compact, expand on click) ── */
-function SummaryItem({
-  summary,
-  type,
-}: {
-  summary: PersonalSummary;
-  type: "project" | "personal";
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const text = summary.summary_text || "";
-  const preview = stripMd(text).slice(0, 180);
-  const isLong = text.length > 0;
-
-  const isProject = type === "project";
-
-  return (
-    <div
-      className="rounded-xl overflow-hidden"
-      style={{
-        border: isProject ? "1px solid #e0e7ff" : undefined,
-        background: isProject ? "#f8f9ff" : undefined,
-      }}
-    >
-      {/* Compact header */}
+      {/* Project header */}
       <div
-        className="flex items-center gap-2.5 px-4 py-3 flex-wrap"
-        style={!isProject ? { borderBottom: expanded ? "1px solid #f1f5f9" : "none" } : {}}
+        className="flex items-center gap-4 px-6 py-4 cursor-pointer select-none"
+        style={{ background: "#fafbff", borderBottom: "1px solid #f1f5f9" }}
+        onClick={() => setCollapsed((v) => !v)}
       >
-        {isProject && (
-          <span
-            className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold shrink-0"
-            style={{ background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}
-          >
-            <BarChart3 className="h-3 w-3" />
-            Project
-          </span>
-        )}
-
-        {/* Auto/Manual badge */}
-        <span
-          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shrink-0"
-          style={
-            summary.is_auto_generated
-              ? { background: "#ecfdf5", color: "#059669", border: "1px solid #a7f3d0" }
-              : { background: "#faf5ff", color: "#7c3aed", border: "1px solid #ddd6fe" }
-          }
+        <div
+          className="h-11 w-11 rounded-xl flex items-center justify-center text-white text-sm font-extrabold shrink-0"
+          style={{ background: `linear-gradient(135deg, ${from}, ${to})`, boxShadow: `0 4px 10px ${from}40` }}
         >
-          {summary.is_auto_generated ? (
-            <><Sparkles className="h-2.5 w-2.5" /> Auto</>
-          ) : (
-            <><PenLine className="h-2.5 w-2.5" /> Manual</>
-          )}
-        </span>
-
-        <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-          {format(new Date(summary.created_at), "h:mm a")}
-        </span>
-        <span style={{ fontSize: "11px", color: "#cbd5e1" }}>·</span>
-        <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-          {summary.message_count} {summary.message_count === 1 ? "msg" : "msgs"}
-        </span>
-
-        {isLong && (
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-all shrink-0"
-            style={{ background: "#f1f5f9", color: "#475569" }}
-          >
-            {expanded ? (
-              <><ChevronUp className="h-3 w-3" /> Less</>
-            ) : (
-              <><ChevronDown className="h-3 w-3" /> More</>
+          {initials(project.project_name)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-bold truncate" style={{ fontSize: "15px", color: "#0f172a", letterSpacing: "-0.01em" }}>
+            {project.project_name}
+          </h2>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            {projectCount > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                style={{ background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}>
+                <BarChart3 className="h-2.5 w-2.5" /> {projectCount} project {projectCount === 1 ? "summary" : "summaries"}
+              </span>
             )}
-          </button>
-        )}
+            {personalCount > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
+                <Users className="h-2.5 w-2.5" /> {personalCount} personal {personalCount === 1 ? "summary" : "summaries"}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-7 w-7 rounded-lg shrink-0"
+          style={{ background: "#f1f5f9", border: "1px solid #e2e8f0" }}>
+          {collapsed
+            ? <ChevronRight className="h-4 w-4" style={{ color: "#94a3b8" }} />
+            : <ChevronDown className="h-4 w-4" style={{ color: "#6366f1" }} />}
+        </div>
       </div>
 
-      {/* Preview (collapsed) */}
-      {!expanded && preview && (
-        <div
-          className="px-4 pb-3"
-          style={{ fontSize: "13px", color: "#475569", lineHeight: "1.6" }}
-        >
-          {preview}{text.length > 180 ? "…" : ""}
-        </div>
-      )}
+      {/* Summary table */}
+      {!collapsed && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                <th className="text-left px-5 py-3 font-semibold whitespace-nowrap" style={{ fontSize: "11px", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase", width: "220px" }}>
+                  Who / Type
+                </th>
+                <th className="text-left px-4 py-3 font-semibold whitespace-nowrap" style={{ fontSize: "11px", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase", width: "110px" }}>
+                  Date
+                </th>
+                <th className="text-left px-4 py-3 font-semibold whitespace-nowrap" style={{ fontSize: "11px", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase", width: "90px" }}>
+                  Time
+                </th>
+                <th className="text-left px-4 py-3 font-semibold whitespace-nowrap" style={{ fontSize: "11px", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase", width: "130px" }}>
+                  Source
+                </th>
+                <th className="text-left px-4 py-3 font-semibold" style={{ fontSize: "11px", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                  Summary Preview
+                </th>
+                <th className="px-4 py-3" style={{ width: "60px" }} />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, idx) => {
+                const isExpanded = expandedRows.has(row.id);
+                const isLast = idx === rows.length - 1;
+                const preview = stripMd(row.summary_text).slice(0, 120);
+                const hasMore = row.summary_text.length > 0;
 
-      {/* Full content (expanded) */}
-      {expanded && (
-        <div className="px-4 pb-4">
-          <div className={MD}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
-          </div>
+                return (
+                  <>
+                    <tr
+                      key={row.id}
+                      style={{
+                        borderBottom: isExpanded ? "none" : isLast ? "none" : "1px solid #f1f5f9",
+                        background: isExpanded ? "#f8f9ff" : idx % 2 === 0 ? "#fff" : "#fafbfc",
+                        cursor: hasMore ? "pointer" : "default",
+                      }}
+                      onClick={() => hasMore && toggleRow(row.id)}
+                    >
+                      {/* Who / Type */}
+                      <td className="px-5 py-3.5 align-top">
+                        {row.type === "project" ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold whitespace-nowrap"
+                            style={{ background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}>
+                            <BarChart3 className="h-3 w-3 shrink-0" />
+                            Project Summary
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
+                              style={{ background: "linear-gradient(135deg, #64748b, #475569)" }}>
+                              {initials(row.member_name ?? "?")}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold truncate" style={{ fontSize: "12.5px", color: "#0f172a" }}>
+                                {row.member_name}
+                              </div>
+                              {row.member_role === "team_lead" && (
+                                <span className="text-[10px] font-semibold" style={{ color: "#6366f1" }}>Team Lead</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Date */}
+                      <td className="px-4 py-3.5 align-top whitespace-nowrap" style={{ fontSize: "12.5px", color: "#475569" }}>
+                        {format(new Date(row.date), "MMM d, yyyy")}
+                      </td>
+
+                      {/* Time */}
+                      <td className="px-4 py-3.5 align-top whitespace-nowrap" style={{ fontSize: "12.5px", color: "#475569" }}>
+                        {format(new Date(row.created_at), "h:mm a")}
+                      </td>
+
+                      {/* Source */}
+                      <td className="px-4 py-3.5 align-top">
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold w-fit"
+                            style={row.is_auto_generated
+                              ? { background: "#ecfdf5", color: "#059669", border: "1px solid #a7f3d0" }
+                              : { background: "#faf5ff", color: "#7c3aed", border: "1px solid #ddd6fe" }}>
+                            {row.is_auto_generated
+                              ? <><Sparkles className="h-2.5 w-2.5" /> Auto</>
+                              : <><PenLine className="h-2.5 w-2.5" /> Manual</>}
+                          </span>
+                          <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                            {row.message_count} {row.message_count === 1 ? "msg" : "msgs"}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Preview */}
+                      <td className="px-4 py-3.5 align-top">
+                        <p style={{ fontSize: "12.5px", color: "#475569", lineHeight: "1.6" }}>
+                          {preview}{row.summary_text.length > 120 ? "…" : ""}
+                        </p>
+                      </td>
+
+                      {/* Toggle */}
+                      <td className="px-4 py-3.5 align-top text-center" onClick={(e) => { e.stopPropagation(); hasMore && toggleRow(row.id); }}>
+                        {hasMore && (
+                          <button
+                            className="inline-flex items-center justify-center h-6 w-6 rounded-full transition-colors"
+                            style={{ background: isExpanded ? "#eef2ff" : "#f1f5f9" }}
+                          >
+                            {isExpanded
+                              ? <ChevronUp className="h-3.5 w-3.5" style={{ color: "#6366f1" }} />
+                              : <ChevronDown className="h-3.5 w-3.5" style={{ color: "#94a3b8" }} />}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+
+                    {/* Expanded content row */}
+                    {isExpanded && (
+                      <tr key={`${row.id}-expanded`} style={{ borderBottom: isLast ? "none" : "1px solid #e0e7ff" }}>
+                        <td colSpan={6} className="px-6 pb-5 pt-0" style={{ background: "#f8f9ff" }}>
+                          <div
+                            className="rounded-xl p-4"
+                            style={{ background: "#fff", border: "1px solid #e0e7ff" }}
+                          >
+                            <div className={MD}>
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>{row.summary_text}</ReactMarkdown>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
