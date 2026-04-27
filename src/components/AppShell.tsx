@@ -240,7 +240,7 @@ export function AppShell({
       )}
 
       {/* Main content area */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col lg:ml-[240px]">
         {/* Mobile top bar */}
         <header
           className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 h-[56px] border-b border-slate-200"
