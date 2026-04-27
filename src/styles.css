@@ -43,6 +43,19 @@
   --shadow-elevated: 0 2px 8px oklch(0 0 0 / 0.06), 0 16px 48px oklch(0 0 0 / 0.1);
   --shadow-button: 0 1px 2px oklch(0 0 0 / 0.08), 0 3px 10px oklch(0 0 0 / 0.08);
   --shadow-sidebar: 2px 0 16px oklch(0 0 0 / 0.06);
+
+  /* ── Slack-style workspace chrome ── */
+  --slack-rail: #3f0e40;          /* aubergine */
+  --slack-rail-hover: #522653;
+  --slack-rail-active: #1164a3;
+  --slack-rail-text: #d1c5d2;
+  --slack-rail-text-strong: #ffffff;
+  --slack-channels: #481349;      /* slightly lighter aubergine */
+  --slack-channels-hover: #5a1c5b;
+  --slack-channels-active: #1164a3;
+  --slack-channels-text: #bcabbc;
+  --slack-channels-text-strong: #ffffff;
+  --slack-divider: rgba(255,255,255,0.08);
 }
 
 /* ─────────────────────────────────────────────────────────
