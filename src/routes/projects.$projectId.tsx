@@ -233,7 +233,7 @@ function ProjectDetailPage() {
 
 /* ----------------------- Slack-style Tab Bar ----------------------- */
 
-type ProjectTabKey = "overview" | "members" | "summaries";
+type ProjectTabKey = "overview" | "summaries";
 
 function ProjectTabs({
   project,
@@ -260,7 +260,6 @@ function ProjectTabs({
 
   const tabs: { key: ProjectTabKey; label: string; icon: typeof LayoutGrid }[] = [
     { key: "overview", label: "Overview", icon: LayoutGrid },
-    { key: "members", label: "Members & Channels", icon: UsersIcon },
     { key: "summaries", label: "Summaries", icon: FileText },
   ];
 
@@ -290,31 +289,31 @@ function ProjectTabs({
       </div>
 
       {activeTab === "overview" && (
-        <OverviewTab
-          project={project}
-          isAdmin={isAdmin}
-          canManage={canManage}
-          onChanged={fetchProject}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
-      )}
+        <>
+          <OverviewTab
+            project={project}
+            isAdmin={isAdmin}
+            canManage={canManage}
+            onChanged={fetchProject}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
 
-      {activeTab === "members" && (
-        <div className="py-5">
-          <div className="mb-8">
-            <h3 className="text-base font-semibold text-slate-800 flex items-center gap-1.5 mb-3">
-              <Hash className="h-4 w-4" /> Channels
-            </h3>
-            <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
+          <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-10 pb-10">
+            <div>
+              <h3 className="text-base font-semibold text-slate-800 flex items-center gap-1.5 mb-3">
+                <Hash className="h-4 w-4" /> Channels
+              </h3>
+              <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-slate-800 flex items-center gap-1.5 mb-3">
+                <UsersIcon className="h-4 w-4" /> Members
+              </h3>
+              <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
+            </div>
           </div>
-          <div>
-            <h3 className="text-base font-semibold text-slate-800 flex items-center gap-1.5 mb-3">
-              <UsersIcon className="h-4 w-4" /> Members
-            </h3>
-            <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
-          </div>
-        </div>
+        </>
       )}
 
       {activeTab === "summaries" && (
