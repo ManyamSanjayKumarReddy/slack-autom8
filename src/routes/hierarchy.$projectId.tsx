@@ -56,19 +56,7 @@ interface HierarchyProject {
 interface HierarchyResponse {
   projects: HierarchyProject[];
 }
-interface FlatRow {
-  id: string;
-  rowKey: string;
-  date: string;
-  created_at: string;
-  summary_text: string;
-  message_count: number;
-  is_auto_generated?: boolean;
-  type: "project" | "personal";
-  member_name?: string;
-  member_role?: "employee" | "team_lead";
-}
-
+type FlatRow = FeedRow;
 
 function stripMd(text: string): string {
   return text
