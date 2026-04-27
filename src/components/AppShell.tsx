@@ -536,9 +536,11 @@ export function AppShell({
         {/* Slack-style workspace pane: full-width left-aligned content area */}
         <main className="flex-1 min-w-0" style={{ background: "var(--background)" }}>
           <div className="w-full px-5 sm:px-8 py-6 sm:py-7">
-            <div className={`mx-auto ${maxWidth}`}>
-              {children}
-            </div>
+            {maxWidth ? (
+              <div className={`mx-auto ${maxWidth}`}>{children}</div>
+            ) : (
+              children
+            )}
           </div>
         </main>
       </div>
