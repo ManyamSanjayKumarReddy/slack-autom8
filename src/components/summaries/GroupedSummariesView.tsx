@@ -50,6 +50,8 @@ interface Props {
   /** When true, polls every 5s for up to 60s (after a generate kicks off) */
   poll: boolean;
   onPollComplete?: () => void;
+  /** Optional cap on the number of summaries to display (most recent first) */
+  limit?: number;
 }
 
 function fmtDate(d: string) {
@@ -75,6 +77,7 @@ export function GroupedSummariesView({
   canDelete = false,
   poll,
   onPollComplete,
+  limit,
 }: Props) {
   const [data, setData] = useState<GroupedResponse | null>(null);
   const [loading, setLoading] = useState(true);
