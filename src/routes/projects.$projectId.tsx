@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import {
   Hash,
+  User,
   Users as UsersIcon,
   FileText,
   LayoutGrid,
@@ -282,7 +283,7 @@ function ProjectTabs({
                   : "border-transparent text-slate-500 hover:text-slate-700")
               }
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon className="h-4 w-4" />
               {t.label}
             </button>
           );
@@ -349,9 +350,9 @@ function OverviewTab({
   const [assigning, setAssigning] = useState(false);
 
   return (
-    <div className="space-y-4">
+    <div className="pt-5 pb-10 max-w-2xl space-y-6">
       {canManage && (
-        <div className="flex gap-2 justify-end mb-4">
+        <div className="flex gap-2 justify-end">
           <Button variant="outline" size="sm" onClick={onEdit}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" />
             Edit
@@ -369,37 +370,44 @@ function OverviewTab({
           )}
         </div>
       )}
-      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-        <div>
-          <dt className="text-xs uppercase tracking-wider text-muted-foreground">Manager</dt>
-          <dd className="mt-1 flex items-center gap-2">
-            <span className={project.manager_name ? "text-foreground" : "italic text-muted-foreground"}>
-              {project.manager_name || "Unassigned"}
-            </span>
-            {isAdmin && (
-              <Button variant="outline" size="sm" onClick={() => setAssigning(true)}>
-                {project.manager_id ? "Change" : "Assign"}
-              </Button>
-            )}
-          </dd>
+
+      {project.description && (
+        <p className="text-sm text-slate-600 leading-relaxed">{project.description}</p>
+      )}
+
+      <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden bg-white">
+        <div className="flex items-center gap-3 px-4 py-3.5">
+          <User className="h-4 w-4 text-slate-400 shrink-0" />
+          <span className="text-[13px] text-slate-500 w-24 shrink-0">Manager</span>
+          <span className={`text-[13px] font-medium flex-1 min-w-0 truncate ${project.manager_name ? "text-slate-900" : "italic text-slate-400"}`}>
+            {project.manager_name || "Unassigned"}
+          </span>
+          {isAdmin && (
+            <Button variant="outline" size="sm" className="shrink-0 ml-2" onClick={() => setAssigning(true)}>
+              {project.manager_id ? "Change" : "Assign"}
+            </Button>
+          )}
         </div>
-        <div>
-          <dt className="text-xs uppercase tracking-wider text-muted-foreground">Members</dt>
-          <dd className="mt-1 text-foreground">{project.member_count ?? 0}</dd>
+        <div className="flex items-center gap-3 px-4 py-3.5">
+          <UsersIcon className="h-4 w-4 text-slate-400 shrink-0" />
+          <span className="text-[13px] text-slate-500 w-24 shrink-0">Members</span>
+          <span className="text-[13px] font-medium text-slate-900">{project.member_count ?? 0}</span>
         </div>
-        <div>
-          <dt className="text-xs uppercase tracking-wider text-muted-foreground">Channels</dt>
-          <dd className="mt-1 text-foreground">{project.channel_count ?? 0}</dd>
+        <div className="flex items-center gap-3 px-4 py-3.5">
+          <Hash className="h-4 w-4 text-slate-400 shrink-0" />
+          <span className="text-[13px] text-slate-500 w-24 shrink-0">Channels</span>
+          <span className="text-[13px] font-medium text-slate-900">{project.channel_count ?? 0}</span>
         </div>
         {project.created_at && (
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-muted-foreground">Created</dt>
-            <dd className="mt-1 text-foreground">
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <CalendarIcon className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="text-[13px] text-slate-500 w-24 shrink-0">Created</span>
+            <span className="text-[13px] font-medium text-slate-900">
               {new Date(project.created_at).toLocaleDateString()}
-            </dd>
+            </span>
           </div>
         )}
-      </dl>
+      </div>
 
       {assigning && (
         <Dialog open onOpenChange={(o) => !o && setAssigning(false)}>
