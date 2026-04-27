@@ -528,7 +528,7 @@ export function AppShell({
       )}
 
       {/* ── Main column (col 3) — Slack workspace pane ── */}
-      <div className="flex-1 min-w-0 flex flex-col lg:ml-[330px]">
+      <div className="flex-1 min-w-0 flex flex-col lg:ml-[324px]">
         <TopHeader
           title={title}
           subtitle={subtitle}
