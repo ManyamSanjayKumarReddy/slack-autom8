@@ -265,6 +265,7 @@ export function GroupedSummariesView({
         </div>
       ) : (
         <div className="divide-y divide-border">
+        <div className="max-h-[600px] overflow-y-auto divide-y divide-border">
           {dates.map((date) => (
             <div key={date} className="px-4 sm:px-6 py-4 space-y-3">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -278,6 +279,8 @@ export function GroupedSummariesView({
                     structured={scope === "project"}
                     canDelete={canDelete}
                     deleting={deletingId === s.id}
+                    expanded={expandedIds.has(s.id)}
+                    onToggle={() => toggleExpanded(s.id)}
                     onDelete={() => setConfirmDelete(s)}
                   />
                 ))}
