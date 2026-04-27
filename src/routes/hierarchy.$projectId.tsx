@@ -4,15 +4,10 @@ import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import {
   CalendarIcon,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
   Loader2,
   FileSearch,
   BarChart3,
   RefreshCw,
-  Sparkles,
-  PenLine,
   Users,
   ArrowLeft,
 } from "lucide-react";
@@ -24,8 +19,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { projectColor, projectInitials } from "@/lib/project-colors";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { SlackStyleFeed, type FeedRow } from "@/components/summaries/SlackStyleFeed";
 
 export const Route = createFileRoute("/hierarchy/$projectId")({
   beforeLoad: () => {
@@ -62,29 +56,8 @@ interface HierarchyProject {
 interface HierarchyResponse {
   projects: HierarchyProject[];
 }
-interface FlatRow {
-  id: string;
-  rowKey: string;
-  date: string;
-  created_at: string;
-  summary_text: string;
-  message_count: number;
-  is_auto_generated?: boolean;
-  type: "project" | "personal";
-  member_name?: string;
-  member_role?: "employee" | "team_lead";
-}
+type FlatRow = FeedRow;
 
-
-function stripMd(text: string): string {
-  return text
-    .replace(/#{1,6}\s+/g, "")
-    .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/\*(.*?)\*/g, "$1")
-    .replace(/`(.*?)`/g, "$1")
-    .replace(/\n+/g, " ")
-    .trim();
-}
 function flattenProject(project: HierarchyProject): FlatRow[] {
   const rows: FlatRow[] = [];
   for (const [date, d] of Object.entries(project.dates)) {
@@ -116,17 +89,6 @@ function formatRange(r: DateRange | undefined): string {
     return format(r.from, "MMM d, yyyy");
   return `${format(r.from, "MMM d")} – ${format(r.to, "MMM d, yyyy")}`;
 }
-
-const MD =
-  "text-[13px] text-slate-700 leading-relaxed " +
-  "[&_h1]:text-[13.5px] [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1 [&_h1]:text-slate-900 " +
-  "[&_h2]:text-[13px] [&_h2]:font-semibold [&_h2]:mt-2.5 [&_h2]:mb-0.5 [&_h2]:text-slate-800 " +
-  "[&_h3]:text-[12.5px] [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:text-slate-800 " +
-  "[&_p]:mt-1.5 [&_p]:leading-relaxed " +
-  "[&_ul]:list-disc [&_ul]:pl-4 [&_ul]:space-y-0.5 [&_ul]:mt-1 " +
-  "[&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:space-y-0.5 [&_ol]:mt-1 " +
-  "[&_strong]:font-semibold [&_strong]:text-slate-900 " +
-  "[&_code]:bg-slate-100 [&_code]:rounded [&_code]:px-1 [&_code]:text-xs";
 
 function ProjectReportPage() {
   return (
@@ -415,209 +377,9 @@ function Inner() {
           </Link>
         </div>
       ) : (
-        <SummaryTable rows={rows} />
+        <SlackStyleFeed rows={rows} />
       )}
     </div>
   );
 }
 
-/* ── Summary table ── */
-function SummaryTable({ rows }: { rows: FlatRow[] }) {
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-
-  const toggleRow = (id: string) =>
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-
-  return (
-    <div
-      className="rounded-2xl bg-white overflow-hidden"
-      style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.05)" }}
-    >
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm border-collapse min-w-[820px]">
-          <thead>
-            <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-              <th className="text-left px-5 py-3 font-semibold whitespace-nowrap"
-                style={{ fontSize: "11px", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase", width: "220px" }}>
-                Who / Type
-              </th>
-              <th className="text-left px-4 py-3 font-semibold whitespace-nowrap"
-                style={{ fontSize: "11px", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase", width: "110px" }}>
-                Date
-              </th>
-              <th className="text-left px-4 py-3 font-semibold whitespace-nowrap"
-                style={{ fontSize: "11px", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase", width: "90px" }}>
-                Time
-              </th>
-              <th className="text-left px-4 py-3 font-semibold whitespace-nowrap"
-                style={{ fontSize: "11px", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase", width: "130px" }}>
-                Source
-              </th>
-              <th className="text-left px-4 py-3 font-semibold"
-                style={{ fontSize: "11px", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                Summary Preview
-              </th>
-              <th className="px-4 py-3" style={{ width: "60px" }} />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, idx) => {
-              const isExpanded = expandedRows.has(row.rowKey);
-              const isLast = idx === rows.length - 1;
-              const preview = stripMd(row.summary_text).slice(0, 120);
-              const hasMore = row.summary_text.length > 0;
-
-              return (
-                <RowItem
-                  key={row.rowKey}
-                  row={row}
-                  idx={idx}
-                  isLast={isLast}
-                  isExpanded={isExpanded}
-                  preview={preview}
-                  hasMore={hasMore}
-                  onToggle={toggleRow}
-                />
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function RowItem({
-  row,
-  idx,
-  isLast,
-  isExpanded,
-  preview,
-  hasMore,
-  onToggle,
-}: {
-  row: FlatRow;
-  idx: number;
-  isLast: boolean;
-  isExpanded: boolean;
-  preview: string;
-  hasMore: boolean;
-  onToggle: (id: string) => void;
-}) {
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (hasMore && (e.key === "Enter" || e.key === " ")) {
-      e.preventDefault();
-      onToggle(row.rowKey);
-    }
-  };
-
-  return (
-    <>
-      <tr
-        role={hasMore ? "button" : undefined}
-        tabIndex={hasMore ? 0 : undefined}
-        aria-expanded={hasMore ? isExpanded : undefined}
-        style={{
-          borderBottom: isExpanded ? "none" : isLast ? "none" : "1px solid #f1f5f9",
-          background: isExpanded ? "#f8f9ff" : idx % 2 === 0 ? "#fff" : "#fafbfc",
-          cursor: hasMore ? "pointer" : "default",
-          outline: "none",
-        }}
-        className={hasMore ? "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400" : ""}
-        onClick={() => hasMore && onToggle(row.rowKey)}
-        onKeyDown={handleKeyDown}
-      >
-        <td className="px-5 py-3.5 align-top">
-          {row.type === "project" ? (
-            <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold whitespace-nowrap"
-              style={{ background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}>
-              <BarChart3 className="h-3 w-3 shrink-0" />
-              Project Summary
-            </span>
-          ) : (
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-                style={{ background: "linear-gradient(135deg, #64748b, #475569)" }}>
-                {projectInitials(row.member_name ?? "?")}
-              </div>
-              <div className="min-w-0">
-                <div className="font-semibold truncate" style={{ fontSize: "12.5px", color: "#0f172a" }}>
-                  {row.member_name}
-                </div>
-                {row.member_role === "team_lead" && (
-                  <span className="text-[10px] font-semibold" style={{ color: "#6366f1" }}>Team Lead</span>
-                )}
-              </div>
-            </div>
-          )}
-        </td>
-
-        <td className="px-4 py-3.5 align-top whitespace-nowrap" style={{ fontSize: "12.5px", color: "#475569" }}>
-          {format(new Date(row.date), "MMM d, yyyy")}
-        </td>
-
-        <td className="px-4 py-3.5 align-top whitespace-nowrap" style={{ fontSize: "12.5px", color: "#475569" }}>
-          {format(new Date(row.created_at), "h:mm a")}
-        </td>
-
-        <td className="px-4 py-3.5 align-top">
-          <div className="flex flex-col gap-1">
-            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold w-fit"
-              style={row.is_auto_generated
-                ? { background: "#ecfdf5", color: "#059669", border: "1px solid #a7f3d0" }
-                : { background: "#faf5ff", color: "#7c3aed", border: "1px solid #ddd6fe" }}>
-              {row.is_auto_generated
-                ? <><Sparkles className="h-2.5 w-2.5" /> Auto</>
-                : <><PenLine className="h-2.5 w-2.5" /> Manual</>}
-            </span>
-            <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-              {row.message_count} {row.message_count === 1 ? "msg" : "msgs"}
-            </span>
-          </div>
-        </td>
-
-        <td className="px-4 py-3.5 align-top">
-          <p style={{ fontSize: "12.5px", color: "#475569", lineHeight: "1.6" }}>
-            {preview}{row.summary_text.length > 120 ? "…" : ""}
-          </p>
-        </td>
-
-        <td className="px-4 py-3.5 align-top text-center"
-          onClick={(e) => { e.stopPropagation(); if (hasMore) onToggle(row.rowKey); }}>
-          {hasMore && (
-            <button
-              aria-label={isExpanded ? "Collapse summary" : "Expand summary"}
-              className="inline-flex items-center justify-center h-7 w-7 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-              style={{ background: isExpanded ? "#eef2ff" : "#f1f5f9" }}
-            >
-              {isExpanded
-                ? <ChevronUp className="h-3.5 w-3.5" style={{ color: "#6366f1" }} />
-                : <ChevronDown className="h-3.5 w-3.5" style={{ color: "#94a3b8" }} />}
-            </button>
-          )}
-        </td>
-      </tr>
-
-      {isExpanded && (
-        <tr style={{ borderBottom: isLast ? "none" : "1px solid #e0e7ff" }}
-          className="animate-in fade-in slide-in-from-top-1 duration-200">
-          <td colSpan={6} className="px-6 pb-5 pt-2" style={{ background: "#f8f9ff" }}>
-            <div className="rounded-xl p-4" style={{ background: "#fff", border: "1px solid #e0e7ff" }}>
-              <div className={MD}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{row.summary_text}</ReactMarkdown>
-              </div>
-            </div>
-          </td>
-        </tr>
-      )}
-    </>
-  );
-}
