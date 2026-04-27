@@ -397,7 +397,7 @@ function Inner() {
           </Link>
         </div>
       ) : (
-        <SummaryTable rows={rows} />
+        <SlackStyleFeed rows={rows} />
       )}
     </div>
   );
