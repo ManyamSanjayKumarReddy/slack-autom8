@@ -447,11 +447,12 @@ export function AppShell({
   title,
   subtitle,
   children,
-  maxWidth = "max-w-6xl",
+  maxWidth,
 }: {
   title?: string;
   subtitle?: string;
   children: ReactNode;
+  /** Optional max width for content (e.g. "max-w-6xl"). Omit for Slack-style full-width left-aligned. */
   maxWidth?: string;
 }) {
   const { user } = useCurrentUser();
@@ -477,7 +478,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen flex" style={{ background: "var(--background)" }}>
-      {/* ── Workspace rail (col 1) ── */}
+      {/* ── Workspace rail (col 1, fixed) ── */}
       <div
         className="hidden lg:flex fixed inset-y-0 left-0 z-30"
         style={{ width: RAIL_W }}
@@ -485,7 +486,7 @@ export function AppShell({
         <WorkspaceRail items={items} initial={initial} onLogout={handleLogout} />
       </div>
 
-      {/* ── Channels column (col 2) ── */}
+      {/* ── Channels column (col 2, fixed) ── */}
       <aside
         className="hidden lg:flex fixed inset-y-0 z-20"
         style={{ left: RAIL_W, width: CHANNELS_W, boxShadow: "var(--shadow-sidebar)" }}
@@ -524,33 +525,24 @@ export function AppShell({
         </>
       )}
 
-      {/* ── Main column (col 3) ── */}
-      <div
-        className="flex-1 min-w-0 flex flex-col"
-        style={{ marginLeft: 0 }}
-      >
-        <div
-          className="flex-1 flex flex-col"
-          style={{
-            // Push past rail + channels on desktop
-            marginLeft: 0,
-          }}
-        >
-          <div
-            className="flex-1 flex flex-col lg:ml-[330px]"
-          >
-            <TopHeader
-              title={title}
-              subtitle={subtitle}
-              onOpenMobile={() => setMobileOpen(true)}
-            />
-            <main className="flex-1 min-w-0">
-              <div className={`mx-auto ${maxWidth} px-5 sm:px-8 py-7 sm:py-8`}>
-                {children}
-              </div>
-            </main>
+      {/* ── Main column (col 3) — Slack workspace pane ── */}
+      <div className="flex-1 min-w-0 flex flex-col lg:ml-[330px]">
+        <TopHeader
+          title={title}
+          subtitle={subtitle}
+          onOpenMobile={() => setMobileOpen(true)}
+        />
+
+        {/* Slack-style workspace pane: full-width left-aligned content area */}
+        <main className="flex-1 min-w-0" style={{ background: "var(--background)" }}>
+          <div className="w-full px-5 sm:px-8 py-6 sm:py-7">
+            {maxWidth ? (
+              <div className={`mx-auto ${maxWidth}`}>{children}</div>
+            ) : (
+              children
+            )}
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

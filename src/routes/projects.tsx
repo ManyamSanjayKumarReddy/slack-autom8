@@ -94,7 +94,7 @@ function ProjectsListPage() {
   }, [page, pageSize]);
 
   return (
-    <AppShell maxWidth="max-w-7xl">
+    <AppShell title="Projects">
       <div className="space-y-8">
         {/* Page banner */}
         <div

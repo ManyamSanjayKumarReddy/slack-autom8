@@ -31,7 +31,7 @@ function HierarchyRoot() {
     return <Outlet />;
   }
   return (
-    <AppShell maxWidth="max-w-7xl">
+    <AppShell title="Summary Report">
       <ProjectPickerPage />
     </AppShell>
   );
