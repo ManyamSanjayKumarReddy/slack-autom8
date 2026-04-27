@@ -333,18 +333,20 @@ function SummaryCard({
   structured,
   canDelete,
   deleting,
+  expanded,
+  onToggle,
   onDelete,
 }: {
   summary: ProjectSummary;
   structured?: boolean;
   canDelete: boolean;
   deleting: boolean;
+  expanded: boolean;
+  onToggle: () => void;
   onDelete: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const text = summary.summary_text || "";
-  const isLong = text.length > 280;
-  const display = expanded || !isLong ? text : text.slice(0, 280) + "…";
+  const isLong = text.length > 0;
 
   return (
     <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-2.5 transition-shadow hover:shadow-sm">
@@ -379,22 +381,24 @@ function SummaryCard({
           </button>
         )}
       </div>
-      {structured ? (
-        <StructuredProjectSummary text={text} />
+      {structured && expanded ? (
+        <StructuredProjectSummary text={text} collapsible={false} />
       ) : (
-        <>
-          <div className="text-sm text-foreground leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-2 [&_p]:mt-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-semibold [&_a]:text-primary [&_a]:underline">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{display}</ReactMarkdown>
-          </div>
-          {isLong && (
-            <button
-              onClick={() => setExpanded((v) => !v)}
-              className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded transition-colors"
-            >
-              {expanded ? "↑ Show less" : "↓ Show more"}
-            </button>
-          )}
-        </>
+        <div
+          className={`text-sm text-foreground leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-2 [&_p]:mt-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-semibold [&_a]:text-primary [&_a]:underline ${
+            expanded ? "" : "line-clamp-3"
+          }`}
+        >
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+        </div>
+      )}
+      {isLong && (
+        <button
+          onClick={onToggle}
+          className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded transition-colors"
+        >
+          {expanded ? "↑ Show less" : "↓ Show more"}
+        </button>
       )}
     </div>
   );
