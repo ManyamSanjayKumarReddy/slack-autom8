@@ -209,8 +209,8 @@ export function GroupedSummariesView({
       <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold text-foreground">
-            {data && data.total > 0
-              ? `${data.total} ${data.total === 1 ? "summary" : "summaries"}`
+            {displayTotal > 0
+              ? `${displayTotal} ${displayTotal === 1 ? "summary" : "summaries"}${typeof limit === "number" && (data?.total ?? 0) > displayTotal ? ` of ${data?.total}` : ""}`
               : "Summaries"}
           </h2>
           {poll && (
@@ -254,7 +254,7 @@ export function GroupedSummariesView({
                 {fmtDate(date)}
               </div>
               <div className="space-y-3">
-                {data.grouped_by_date[date].map((s) => (
+                {displayGrouped[date].map((s) => (
                   <SummaryCard
                     key={s.id}
                     summary={s}
