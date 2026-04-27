@@ -50,6 +50,8 @@ interface Props {
   /** When true, polls every 5s for up to 60s (after a generate kicks off) */
   poll: boolean;
   onPollComplete?: () => void;
+  /** Optional cap on the number of summaries to display (most recent first) */
+  limit?: number;
 }
 
 function fmtDate(d: string) {
@@ -75,6 +77,7 @@ export function GroupedSummariesView({
   canDelete = false,
   poll,
   onPollComplete,
+  limit,
 }: Props) {
   const [data, setData] = useState<GroupedResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -182,17 +185,32 @@ export function GroupedSummariesView({
     }
   };
 
-  const dates = data
-    ? Object.keys(data.grouped_by_date).sort((a, b) => (a < b ? 1 : -1))
-    : [];
+  let displayGrouped: Record<string, ProjectSummary[]> = data?.grouped_by_date ?? {};
+  let displayTotal = data?.total ?? 0;
+  if (data && typeof limit === "number") {
+    const flat = Object.entries(data.grouped_by_date)
+      .flatMap(([date, items]) => items.map((s) => ({ date, s })))
+      .sort(
+        (a, b) =>
+          new Date(b.s.created_at).getTime() - new Date(a.s.created_at).getTime(),
+      )
+      .slice(0, limit);
+    const re: Record<string, ProjectSummary[]> = {};
+    for (const { date, s } of flat) {
+      (re[date] ||= []).push(s);
+    }
+    displayGrouped = re;
+    displayTotal = flat.length;
+  }
+  const dates = Object.keys(displayGrouped).sort((a, b) => (a < b ? 1 : -1));
 
   return (
     <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
       <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold text-foreground">
-            {data && data.total > 0
-              ? `${data.total} ${data.total === 1 ? "summary" : "summaries"}`
+            {displayTotal > 0
+              ? `${displayTotal} ${displayTotal === 1 ? "summary" : "summaries"}${typeof limit === "number" && (data?.total ?? 0) > displayTotal ? ` of ${data?.total}` : ""}`
               : "Summaries"}
           </h2>
           {poll && (
@@ -236,7 +254,7 @@ export function GroupedSummariesView({
                 {fmtDate(date)}
               </div>
               <div className="space-y-3">
-                {data.grouped_by_date[date].map((s) => (
+                {displayGrouped[date].map((s) => (
                   <SummaryCard
                     key={s.id}
                     summary={s}

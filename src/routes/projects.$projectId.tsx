@@ -1125,16 +1125,23 @@ function SummariesSection({
             </h3>
           )}
         </div>
-        {canGenerateCurrent && (
-          <Button onClick={() => setGenerateOpen(true)} disabled={polling}>
-            {polling ? (
-              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4 mr-1.5" />
-            )}
-            {scope === "personal" ? "Generate My Summary" : "Generate Project Summary"}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/hierarchy/$projectId" params={{ projectId }}>
+              View all
+            </Link>
           </Button>
-        )}
+          {canGenerateCurrent && (
+            <Button onClick={() => setGenerateOpen(true)} disabled={polling}>
+              {polling ? (
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-1.5" />
+              )}
+              {scope === "personal" ? "Generate My Summary" : "Generate Project Summary"}
+            </Button>
+          )}
+        </div>
       </div>
 
       <GroupedSummariesView
@@ -1144,6 +1151,7 @@ function SummariesSection({
         canDelete={scope === "personal"}
         poll={polling}
         onPollComplete={() => setPolling(false)}
+        limit={3}
       />
 
       {generateOpen && (
