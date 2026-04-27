@@ -131,9 +131,7 @@ const MD =
 function ProjectReportPage() {
   return (
     <AppShell maxWidth="max-w-7xl">
-      <RoleGate allowed={["employee", "team_lead", "manager", "admin"]}>
-        <Inner />
-      </RoleGate>
+      <Inner />
     </AppShell>
   );
 }

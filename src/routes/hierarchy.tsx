@@ -33,9 +33,7 @@ function HierarchyRoot() {
   }
   return (
     <AppShell maxWidth="max-w-7xl">
-      <RoleGate allowed={["employee", "team_lead", "manager", "admin"]}>
-        <ProjectPickerPage />
-      </RoleGate>
+      <ProjectPickerPage />
     </AppShell>
   );
 }
