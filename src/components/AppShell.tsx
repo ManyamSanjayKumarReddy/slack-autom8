@@ -61,7 +61,7 @@ function WorkspaceRail({
   return (
     <div
       className="hidden lg:flex flex-col items-center justify-between py-3 shrink-0"
-      style={{ width: 70, background: "var(--slack-rail)", borderRight: "1px solid rgba(0,0,0,0.25)" }}
+      style={{ width: 64, background: "var(--slack-rail)", borderRight: "1px solid rgba(0,0,0,0.25)" }}
     >
       <div className="flex flex-col items-center gap-1.5">
         {/* Workspace badge */}
