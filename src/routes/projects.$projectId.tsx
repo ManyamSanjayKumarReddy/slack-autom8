@@ -266,7 +266,7 @@ function ProjectTabs({
 
   return (
     <div className="-mt-6 sm:-mt-7">
-      <div className="flex items-center border-b border-slate-200 bg-white px-2 -mx-5 sm:-mx-8 overflow-x-auto">
+      <div className="flex items-center border-b border-slate-200 bg-transparent px-0 -mx-5 sm:-mx-8 overflow-x-auto">
         {tabs.map((t) => {
           const Icon = t.icon;
           const active = activeTab === t.key;
@@ -289,45 +289,41 @@ function ProjectTabs({
         })}
       </div>
 
-      <div className="py-4">
-        {activeTab === "overview" && (
-          <OverviewTab
-            project={project}
-            isAdmin={isAdmin}
-            canManage={canManage}
-            onChanged={fetchProject}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        )}
+      {activeTab === "overview" && (
+        <OverviewTab
+          project={project}
+          isAdmin={isAdmin}
+          canManage={canManage}
+          onChanged={fetchProject}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      )}
 
-        {activeTab === "members" && (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                <Hash className="h-3.5 w-3.5" /> Channels
-              </h3>
-              <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                <UsersIcon className="h-3.5 w-3.5" /> Members
-              </h3>
-              <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
-            </div>
+      {activeTab === "members" && (
+        <div className="space-y-6 py-4">
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              <Hash className="h-3.5 w-3.5" /> Channels
+            </h3>
+            <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
           </div>
-        )}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              <UsersIcon className="h-3.5 w-3.5" /> Members
+            </h3>
+            <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
+          </div>
+        </div>
+      )}
 
-        {activeTab === "summaries" && (
-          <div className="space-y-4">
-            <SummariesSection
-              projectId={projectId}
-              hasPersonalSummaries={hasPersonalSummaries}
-              canGenerateProjectSummary={canGenerateProjectSummary}
-            />
-          </div>
-        )}
-      </div>
+      {activeTab === "summaries" && (
+        <SummariesSection
+          projectId={projectId}
+          hasPersonalSummaries={hasPersonalSummaries}
+          canGenerateProjectSummary={canGenerateProjectSummary}
+        />
+      )}
     </div>
   );
 }
@@ -1304,7 +1300,7 @@ function SummariesSection({
   return (
     <div className="space-y-4">
       {/* Header: scope toggle + actions */}
-      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-[var(--shadow-card)] flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex items-center justify-between gap-3 flex-wrap py-3">
         <div className="flex items-center gap-2">
           {showTabs ? (
             <Tabs value={scope} onValueChange={(v) => setScope(v as "personal" | "project")}>
