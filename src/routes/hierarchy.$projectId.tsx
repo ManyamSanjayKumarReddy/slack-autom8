@@ -227,6 +227,7 @@ function Inner() {
   const [from, to] = projectColor(project?.project_name ?? projectId);
 
   return (
+    <AppShell title={project?.project_name ?? "Project Report"} subtitle="Summary report">
     <div className="space-y-6">
       {/* Back link */}
       <button
@@ -376,6 +377,7 @@ function Inner() {
         <SlackStyleFeed rows={rows} />
       )}
     </div>
+    </AppShell>
   );
 }
 
