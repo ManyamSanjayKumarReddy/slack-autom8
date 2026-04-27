@@ -63,11 +63,11 @@ function WorkspaceRail({
       className="hidden lg:flex flex-col items-center justify-between py-3 shrink-0"
       style={{ width: 70, background: "var(--slack-rail)", borderRight: "1px solid rgba(0,0,0,0.25)" }}
     >
-      <div className="flex flex-col items-center gap-2.5">
+      <div className="flex flex-col items-center gap-1.5">
         {/* Workspace badge */}
         <Link
           to="/dashboard"
-          className="h-10 w-10 rounded-[10px] flex items-center justify-center no-underline transition-transform hover:scale-105"
+          className="h-10 w-10 rounded-[9px] flex items-center justify-center no-underline transition-transform hover:scale-[1.04] mb-2"
           style={{
             background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
             boxShadow: "0 2px 6px rgba(0,0,0,0.35)",
@@ -77,9 +77,7 @@ function WorkspaceRail({
           <SlackIcon className="h-5 w-5" />
         </Link>
 
-        <div className="w-7 h-px my-1" style={{ background: "var(--slack-divider)" }} />
-
-        {/* Nav icons */}
+        {/* Nav icons — clean, icon-only, Slack-style */}
         {items.map((item) => {
           const Icon = item.icon;
           const active =
@@ -89,20 +87,24 @@ function WorkspaceRail({
             <Link
               key={item.to}
               to={item.to}
-              className="group relative h-11 w-11 rounded-[10px] flex flex-col items-center justify-center no-underline transition-colors"
+              className="group relative h-10 w-10 rounded-[9px] flex items-center justify-center no-underline transition-all duration-150"
               style={{
-                background: active ? "rgba(255,255,255,0.18)" : "transparent",
-                color: active ? "var(--slack-rail-text-strong)" : "var(--slack-rail-text)",
+                background: active ? "rgba(255,255,255,0.16)" : "transparent",
+                color: active ? "#ffffff" : "rgba(255,255,255,0.72)",
+              }}
+              onMouseEnter={(e) => {
+                if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+              }}
+              onMouseLeave={(e) => {
+                if (!active) e.currentTarget.style.background = "transparent";
               }}
               title={item.label}
+              aria-label={item.label}
             >
-              <Icon className="h-[18px] w-[18px]" />
-              <span className="text-[9.5px] mt-0.5 font-semibold tracking-tight">
-                {item.label.split(" ")[0]}
-              </span>
+              <Icon className="h-[19px] w-[19px]" strokeWidth={2} />
               {/* Tooltip on hover */}
               <span
-                className="pointer-events-none absolute left-full ml-2 px-2 py-1 rounded-md text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50"
+                className="pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 rounded-md text-[12px] font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50"
                 style={{ background: "#1d1c1d", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}
               >
                 {item.label}
