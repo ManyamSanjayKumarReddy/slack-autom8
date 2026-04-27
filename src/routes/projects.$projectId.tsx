@@ -20,7 +20,7 @@ import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 import { useCurrentUser } from "@/lib/user-store";
 import { invalidateProjectsCache, type ProjectRole } from "@/lib/projects-store";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
