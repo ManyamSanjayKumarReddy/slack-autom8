@@ -1,5 +1,7 @@
 import { createFileRoute, redirect, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import {
   ArrowLeft,
   Hash,
@@ -13,6 +15,9 @@ import {
   Plus,
   X,
   Loader2,
+  CalendarIcon,
+  RefreshCw,
+  FileSearch,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
@@ -55,7 +60,10 @@ import {
 import { isOneOf } from "@/lib/roles";
 import { projectColor, projectInitials } from "@/lib/project-colors";
 import { GenerateProjectSummaryDialog } from "@/components/summaries/GenerateProjectSummaryDialog";
-import { GroupedSummariesView } from "@/components/summaries/GroupedSummariesView";
+import { SlackStyleFeed, type FeedRow } from "@/components/summaries/SlackStyleFeed";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { UserSearchPicker, type SearchUser } from "@/components/UserSearchPicker";
 
 interface ProjectDetail {
