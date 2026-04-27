@@ -84,6 +84,14 @@ export function GroupedSummariesView({
   const [refreshing, setRefreshing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<ProjectSummary | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) =>
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollStart = useRef<number>(0);
   const baselineCount = useRef<number>(0);
@@ -264,7 +272,7 @@ export function GroupedSummariesView({
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-border">
+        <div className="max-h-[600px] overflow-y-auto divide-y divide-border">
           {dates.map((date) => (
             <div key={date} className="px-4 sm:px-6 py-4 space-y-3">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -278,6 +286,8 @@ export function GroupedSummariesView({
                     structured={scope === "project"}
                     canDelete={canDelete}
                     deleting={deletingId === s.id}
+                    expanded={expandedIds.has(s.id)}
+                    onToggle={() => toggleExpanded(s.id)}
                     onDelete={() => setConfirmDelete(s)}
                   />
                 ))}
@@ -323,18 +333,20 @@ function SummaryCard({
   structured,
   canDelete,
   deleting,
+  expanded,
+  onToggle,
   onDelete,
 }: {
   summary: ProjectSummary;
   structured?: boolean;
   canDelete: boolean;
   deleting: boolean;
+  expanded: boolean;
+  onToggle: () => void;
   onDelete: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const text = summary.summary_text || "";
-  const isLong = text.length > 280;
-  const display = expanded || !isLong ? text : text.slice(0, 280) + "…";
+  const isLong = text.length > 0;
 
   return (
     <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-2.5 transition-shadow hover:shadow-sm">
@@ -369,22 +381,24 @@ function SummaryCard({
           </button>
         )}
       </div>
-      {structured ? (
-        <StructuredProjectSummary text={text} />
+      {structured && expanded ? (
+        <StructuredProjectSummary text={text} collapsible={false} />
       ) : (
-        <>
-          <div className="text-sm text-foreground leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-2 [&_p]:mt-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-semibold [&_a]:text-primary [&_a]:underline">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{display}</ReactMarkdown>
-          </div>
-          {isLong && (
-            <button
-              onClick={() => setExpanded((v) => !v)}
-              className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded transition-colors"
-            >
-              {expanded ? "↑ Show less" : "↓ Show more"}
-            </button>
-          )}
-        </>
+        <div
+          className={`text-sm text-foreground leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-2 [&_p]:mt-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-semibold [&_a]:text-primary [&_a]:underline ${
+            expanded ? "" : "line-clamp-3"
+          }`}
+        >
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+        </div>
+      )}
+      {isLong && (
+        <button
+          onClick={onToggle}
+          className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded transition-colors"
+        >
+          {expanded ? "↑ Show less" : "↓ Show more"}
+        </button>
       )}
     </div>
   );
