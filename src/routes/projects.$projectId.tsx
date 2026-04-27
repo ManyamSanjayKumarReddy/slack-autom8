@@ -175,12 +175,9 @@ function ProjectDetailPage() {
     );
   }
 
-  const [projFrom, projTo] = projectColor(project.name);
-  const projInitials = projectInitials(project.name);
-
   return (
     <AppShell title={project.name} subtitle={project.description ?? undefined}>
-      <div className="space-y-8">
+      <div className="space-y-6">
         <Link
           to="/projects"
           className="inline-flex items-center gap-1.5 transition-colors hover:opacity-75"
@@ -188,91 +185,6 @@ function ProjectDetailPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to projects
         </Link>
-
-        {/* Project header banner */}
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{ border: "1px solid #e0e7ff", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)" }}
-        >
-          {/* Colored top strip */}
-          <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${projFrom}, ${projTo})` }} />
-
-          <div
-            className="px-5 sm:px-8 py-5 sm:py-7 relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)" }}
-          >
-            <div
-              className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
-              style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
-            />
-            <div
-              className="absolute right-[60px] bottom-[-30px] h-[120px] w-[120px] rounded-full pointer-events-none"
-              style={{ background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)" }}
-            />
-            <div className="relative flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-4 min-w-0">
-                {/* Avatar */}
-                <div
-                  className="h-12 w-12 rounded-xl flex items-center justify-center text-white text-sm font-extrabold shrink-0"
-                  style={{
-                    background: `linear-gradient(135deg, ${projFrom}, ${projTo})`,
-                    boxShadow: `0 4px 10px ${projFrom}40`,
-                  }}
-                >
-                  {projInitials}
-                </div>
-                <div className="min-w-0">
-                  <h1
-                    className="font-extrabold mb-1"
-                    style={{ fontSize: "22px", color: "#0f172a", letterSpacing: "-0.025em" }}
-                  >
-                    {project.name}
-                  </h1>
-                  {project.description && (
-                    <p style={{ fontSize: "13.5px", color: "#64748b" }}>{project.description}</p>
-                  )}
-                  <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                    <Badge variant="outline">
-                      <UsersIcon className="h-3 w-3 mr-1" />
-                      {project.member_count ?? 0} members
-                    </Badge>
-                    <Badge variant="outline">
-                      <Hash className="h-3 w-3 mr-1" />
-                      {project.channel_count ?? 0} channels
-                    </Badge>
-                    {project.manager_name && (
-                      <Badge variant="outline">Manager: {project.manager_name}</Badge>
-                    )}
-                    {project.my_role && (
-                      <Badge>
-                        {project.my_role === "team_lead" ? "Team Lead" : "Member"}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-              {canManage && (
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                    <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                    Edit
-                  </Button>
-                  {isAdmin && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => setConfirmDelete(true)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                      Delete
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
 
         <ProjectTabs
           project={project}
@@ -282,6 +194,8 @@ function ProjectDetailPage() {
           fetchProject={fetchProject}
           hasPersonalSummaries={hasPersonalSummaries}
           canGenerateProjectSummary={canGenerateProjectSummary}
+          onEdit={() => setEditing(true)}
+          onDelete={() => setConfirmDelete(true)}
         />
       </div>
 
