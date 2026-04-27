@@ -58,15 +58,6 @@ interface HierarchyResponse {
 }
 type FlatRow = FeedRow;
 
-function stripMd(text: string): string {
-  return text
-    .replace(/#{1,6}\s+/g, "")
-    .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/\*(.*?)\*/g, "$1")
-    .replace(/`(.*?)`/g, "$1")
-    .replace(/\n+/g, " ")
-    .trim();
-}
 function flattenProject(project: HierarchyProject): FlatRow[] {
   const rows: FlatRow[] = [];
   for (const [date, d] of Object.entries(project.dates)) {
@@ -98,17 +89,6 @@ function formatRange(r: DateRange | undefined): string {
     return format(r.from, "MMM d, yyyy");
   return `${format(r.from, "MMM d")} – ${format(r.to, "MMM d, yyyy")}`;
 }
-
-const MD =
-  "text-[13px] text-slate-700 leading-relaxed " +
-  "[&_h1]:text-[13.5px] [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1 [&_h1]:text-slate-900 " +
-  "[&_h2]:text-[13px] [&_h2]:font-semibold [&_h2]:mt-2.5 [&_h2]:mb-0.5 [&_h2]:text-slate-800 " +
-  "[&_h3]:text-[12.5px] [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:text-slate-800 " +
-  "[&_p]:mt-1.5 [&_p]:leading-relaxed " +
-  "[&_ul]:list-disc [&_ul]:pl-4 [&_ul]:space-y-0.5 [&_ul]:mt-1 " +
-  "[&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:space-y-0.5 [&_ol]:mt-1 " +
-  "[&_strong]:font-semibold [&_strong]:text-slate-900 " +
-  "[&_code]:bg-slate-100 [&_code]:rounded [&_code]:px-1 [&_code]:text-xs";
 
 function ProjectReportPage() {
   return (
