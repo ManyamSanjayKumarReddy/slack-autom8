@@ -17,6 +17,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
+import { useCurrentUser } from "@/lib/user-store";
 import { AppShell } from "@/components/AppShell";
 
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -141,6 +142,8 @@ function Inner() {
   const { projectId } = Route.useParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { user } = useCurrentUser();
+  const isEmployee = user?.role === "employee";
   const today = new Date();
   const [range, setRange] = useState<DateRange | undefined>({ from: today, to: today });
   const [activeQuick, setActiveQuick] = useState<QuickKey>("today");
@@ -151,9 +154,9 @@ function Inner() {
 
   useEffect(() => {
     document.title = "Project Report — Slack Autom8";
-    fetchData({ from: today, to: today });
+    if (user) fetchData({ from: today, to: today });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
+  }, [projectId, user?.role]);
 
   const fetchData = async (r?: DateRange) => {
     const active = r ?? range;
@@ -163,6 +166,47 @@ function Inner() {
       const params = new URLSearchParams();
       if (active?.from) params.set("from_date", format(active.from, "yyyy-MM-dd"));
       if (active?.to) params.set("to_date", format(active.to, "yyyy-MM-dd"));
+
+      if (isEmployee) {
+        // Employees: hierarchy endpoint is restricted. Fetch project summaries
+        // (already scoped server-side to summaries triggered by this user) and
+        // adapt the response into the HierarchyProject shape this page renders.
+        const [sumRes, projRes] = await Promise.all([
+          apiFetch(`/summaries/projects/${projectId}?${params.toString()}`),
+          apiFetch(`/projects/${projectId}`),
+        ]);
+        if (!sumRes.ok) {
+          setProject(null);
+          setNotFound(true);
+          return;
+        }
+        const sumData = (await sumRes.json()) as {
+          project_id: string;
+          grouped_by_date: Record<string, PersonalSummary[]>;
+        };
+        let projectName = "Project Report";
+        if (projRes.ok) {
+          try {
+            const p = (await projRes.json()) as { name?: string };
+            if (p?.name) projectName = p.name;
+          } catch {
+            // ignore
+          }
+        }
+        const dates: Record<string, HierarchyDate> = {};
+        for (const [date, items] of Object.entries(sumData.grouped_by_date ?? {})) {
+          dates[date] = { project_summaries: items, members: [] };
+        }
+        const adapted: HierarchyProject = {
+          project_id: projectId,
+          project_name: projectName,
+          dates,
+        };
+        setProject(adapted);
+        if (Object.keys(dates).length === 0) setNotFound(true);
+        return;
+      }
+
       const res = await apiFetch(`/summaries/hierarchy?${params.toString()}`);
       if (!res.ok) {
         // Backend handles access control — just show empty state without a permission toast
