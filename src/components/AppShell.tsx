@@ -20,7 +20,6 @@ import { SlackIcon } from "@/components/SlackIcon";
 import { clearToken } from "@/lib/auth";
 import { useCurrentUser, clearCachedUser } from "@/lib/user-store";
 import { useProjects } from "@/lib/projects-store";
-import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/roles";
 import { isOneOf } from "@/lib/roles";
 
@@ -49,11 +48,9 @@ const ROLE_LABELS: Record<string, string> = {
 
 function WorkspaceRail({
   items,
-  initial,
   onLogout,
 }: {
   items: NavItem[];
-  initial: string;
   onLogout: () => void;
 }) {
   const location = useLocation();
@@ -124,14 +121,6 @@ function WorkspaceRail({
         >
           <LogOut className="h-[17px] w-[17px]" />
         </button>
-        <Link
-          to="/profile"
-          className="h-8 w-8 rounded-md flex items-center justify-center text-xs font-bold text-white no-underline ring-2 ring-transparent hover:ring-white/30 transition-all"
-          style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)" }}
-          aria-label="Profile"
-        >
-          {initial}
-        </Link>
       </div>
     </div>
   );
@@ -476,7 +465,6 @@ export function AppShell({
   };
 
   const displayName = user?.name || user?.email || "there";
-  const initial = (displayName?.[0] ?? "?").toUpperCase();
 
   return (
     <div className="min-h-screen flex" style={{ background: "var(--background)" }}>
@@ -485,7 +473,7 @@ export function AppShell({
         className="hidden lg:flex fixed inset-y-0 left-0 z-30"
         style={{ width: RAIL_W }}
       >
-        <WorkspaceRail items={items} initial={initial} onLogout={handleLogout} />
+        <WorkspaceRail items={items} onLogout={handleLogout} />
       </div>
 
       {/* ── Channels column (col 2, fixed) ── */}
@@ -514,7 +502,7 @@ export function AppShell({
             className="lg:hidden fixed inset-y-0 left-0 z-50 flex animate-in slide-in-from-left duration-200"
             style={{ width: RAIL_W + CHANNELS_W, maxWidth: "92vw" }}
           >
-            <WorkspaceRail items={items} initial={initial} onLogout={handleLogout} />
+            <WorkspaceRail items={items} onLogout={handleLogout} />
             <div className="flex-1 min-w-0">
               <ChannelsColumn
                 workspaceName="Slack Autom8"
