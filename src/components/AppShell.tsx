@@ -442,7 +442,7 @@ function TopHeader({
 
 /* ───────────────────────── AppShell ───────────────────────── */
 
-const RAIL_W = 70;
+const RAIL_W = 64;
 const CHANNELS_W = 260;
 
 export function AppShell({
