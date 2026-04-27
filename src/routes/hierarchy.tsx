@@ -9,7 +9,6 @@ import {
   Search,
 } from "lucide-react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
-import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 
 import { projectColor, projectInitials } from "@/lib/project-colors";
