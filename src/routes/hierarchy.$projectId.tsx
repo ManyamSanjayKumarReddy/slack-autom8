@@ -17,6 +17,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
+import { useCurrentUser } from "@/lib/user-store";
 import { AppShell } from "@/components/AppShell";
 
 import { useIsMobile } from "@/hooks/use-mobile";
