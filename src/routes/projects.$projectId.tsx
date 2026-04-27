@@ -4,7 +4,6 @@ import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import {
   Hash,
-  User,
   Users as UsersIcon,
   FileText,
   LayoutGrid,
@@ -277,7 +276,7 @@ function ProjectTabs({
               type="button"
               onClick={() => setActiveTab(t.key)}
               className={
-                "inline-flex items-center gap-1.5 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px " +
+                "inline-flex items-center gap-1.5 px-5 py-3.5 text-[14px] font-medium whitespace-nowrap transition-colors border-b-2 -mb-px " +
                 (active
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-slate-500 hover:text-slate-700")
@@ -302,16 +301,16 @@ function ProjectTabs({
       )}
 
       {activeTab === "members" && (
-        <div className="space-y-6 py-4">
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-              <Hash className="h-3.5 w-3.5" /> Channels
+        <div className="py-5">
+          <div className="mb-8">
+            <h3 className="text-base font-semibold text-slate-800 flex items-center gap-1.5 mb-3">
+              <Hash className="h-4 w-4" /> Channels
             </h3>
             <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
           </div>
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-              <UsersIcon className="h-3.5 w-3.5" /> Members
+          <div>
+            <h3 className="text-base font-semibold text-slate-800 flex items-center gap-1.5 mb-3">
+              <UsersIcon className="h-4 w-4" /> Members
             </h3>
             <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
           </div>
@@ -350,9 +349,9 @@ function OverviewTab({
   const [assigning, setAssigning] = useState(false);
 
   return (
-    <div className="pt-5 pb-10 max-w-2xl space-y-6">
+    <div className="pt-5 pb-10 max-w-2xl">
       {canManage && (
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end mb-6">
           <Button variant="outline" size="sm" onClick={onEdit}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" />
             Edit
@@ -372,42 +371,38 @@ function OverviewTab({
       )}
 
       {project.description && (
-        <p className="text-sm text-slate-600 leading-relaxed">{project.description}</p>
+        <p className="text-[15px] text-slate-600 leading-relaxed mb-6">{project.description}</p>
       )}
 
-      <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden bg-white">
-        <div className="flex items-center gap-3 px-4 py-3.5">
-          <User className="h-4 w-4 text-slate-400 shrink-0" />
-          <span className="text-[13px] text-slate-500 w-24 shrink-0">Manager</span>
-          <span className={`text-[13px] font-medium flex-1 min-w-0 truncate ${project.manager_name ? "text-slate-900" : "italic text-slate-400"}`}>
+      <dl className="grid grid-cols-2 sm:grid-cols-4 gap-8 mt-8">
+        <div>
+          <dt className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Manager</dt>
+          <dd className={`text-[16px] font-semibold text-slate-800 ${!project.manager_name ? "italic text-slate-400" : ""}`}>
             {project.manager_name || "Unassigned"}
-          </span>
+          </dd>
           {isAdmin && (
-            <Button variant="outline" size="sm" className="shrink-0 ml-2" onClick={() => setAssigning(true)}>
+            <Button variant="outline" size="sm" className="mt-2" onClick={() => setAssigning(true)}>
               {project.manager_id ? "Change" : "Assign"}
             </Button>
           )}
         </div>
-        <div className="flex items-center gap-3 px-4 py-3.5">
-          <UsersIcon className="h-4 w-4 text-slate-400 shrink-0" />
-          <span className="text-[13px] text-slate-500 w-24 shrink-0">Members</span>
-          <span className="text-[13px] font-medium text-slate-900">{project.member_count ?? 0}</span>
+        <div>
+          <dt className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Members</dt>
+          <dd className="text-[16px] font-semibold text-slate-800">{project.member_count ?? 0}</dd>
         </div>
-        <div className="flex items-center gap-3 px-4 py-3.5">
-          <Hash className="h-4 w-4 text-slate-400 shrink-0" />
-          <span className="text-[13px] text-slate-500 w-24 shrink-0">Channels</span>
-          <span className="text-[13px] font-medium text-slate-900">{project.channel_count ?? 0}</span>
+        <div>
+          <dt className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Channels</dt>
+          <dd className="text-[16px] font-semibold text-slate-800">{project.channel_count ?? 0}</dd>
         </div>
         {project.created_at && (
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <CalendarIcon className="h-4 w-4 text-slate-400 shrink-0" />
-            <span className="text-[13px] text-slate-500 w-24 shrink-0">Created</span>
-            <span className="text-[13px] font-medium text-slate-900">
+          <div>
+            <dt className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Created</dt>
+            <dd className="text-[16px] font-semibold text-slate-800">
               {new Date(project.created_at).toLocaleDateString()}
-            </span>
+            </dd>
           </div>
         )}
-      </div>
+      </dl>
 
       {assigning && (
         <Dialog open onOpenChange={(o) => !o && setAssigning(false)}>
@@ -579,13 +574,13 @@ function ChannelsTab({
 
   return (
     <div>
-      <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-sm font-semibold text-foreground">
+      <div className="py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="text-base font-semibold text-slate-800">
           {channels ? `${channels.length} channels` : "Channels"}
         </h2>
         {canManage && (
-          <Button size="sm" onClick={() => setAdding(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+          <Button size="default" onClick={() => setAdding(true)}>
+            <Plus className="h-4 w-4 mr-1.5" />
             Add channel
           </Button>
         )}
@@ -606,15 +601,15 @@ function ChannelsTab({
           {channels.map((c) => (
             <li
               key={c.channel_id}
-              className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3"
+              className="flex items-center justify-between gap-3 py-3.5 px-4"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-muted-foreground">#</span>
-                <span className="text-sm font-medium text-foreground truncate">
+                <span className="text-slate-400 font-medium">#</span>
+                <span className="text-[15px] font-medium text-slate-800 truncate">
                   {c.channel_name}
                 </span>
                 {c.added_at && (
-                  <span className="text-xs text-muted-foreground hidden sm:inline">
+                  <span className="text-[13px] text-slate-500 hidden sm:inline">
                     · added {new Date(c.added_at).toLocaleDateString()}
                   </span>
                 )}
@@ -623,7 +618,7 @@ function ChannelsTab({
                 <button
                   onClick={() => handleRemove(c.channel_id)}
                   disabled={removingId === c.channel_id}
-                  className="text-xs text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50"
+                  className="text-sm text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50"
                 >
                   {removingId === c.channel_id ? "Removing…" : "Remove"}
                 </button>
@@ -827,13 +822,13 @@ function MembersTab({
 
   return (
     <div>
-      <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-sm font-semibold text-foreground">
+      <div className="py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="text-base font-semibold text-slate-800">
           {members ? `${members.length} members` : "Members"}
         </h2>
         {canManage && (
-          <Button size="sm" onClick={() => setAdding(true)}>
-            <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+          <Button size="default" onClick={() => setAdding(true)}>
+            <UserPlus className="h-4 w-4 mr-1.5" />
             Add member
           </Button>
         )}
@@ -854,11 +849,11 @@ function MembersTab({
           {members.map((m) => (
             <li
               key={m.user_id}
-              className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 flex-wrap"
+              className="flex items-center justify-between gap-3 py-4 px-4 sm:px-6 flex-wrap"
             >
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-foreground truncate">{m.name}</div>
-                <div className="text-xs text-muted-foreground truncate">{m.email}</div>
+                <div className="text-[15px] font-medium text-slate-800 truncate">{m.name}</div>
+                <div className="text-[13px] text-slate-400 mt-0.5 truncate">{m.email}</div>
               </div>
               <Badge variant="outline" className="shrink-0">
                 {m.project_role === "team_lead" ? "Team Lead" : "Employee"}
@@ -1318,7 +1313,7 @@ function SummariesSection({
               </TabsList>
             </Tabs>
           ) : (
-            <h3 className="text-sm font-semibold text-foreground">
+            <h3 className="text-base font-semibold text-slate-800">
               {scope === "personal" ? "My Summaries" : "Project Summaries"}
             </h3>
           )}
@@ -1352,7 +1347,7 @@ function SummariesSection({
             const active = activeQuick === key;
             return (
               <button key={key} type="button" onClick={() => applyQuick(key)}
-                className="rounded-full px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[34px]"
+                className="rounded-full px-4 py-2 text-sm font-semibold transition-all min-h-[36px]"
                 style={active
                   ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
                   : { background: "#f1f5f9", color: "#475569" }}>
@@ -1366,7 +1361,7 @@ function SummariesSection({
           <Popover open={calOpen} onOpenChange={setCalOpen}>
             <PopoverTrigger asChild>
               <button type="button"
-                className="inline-flex items-center gap-2 rounded-full px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[34px]"
+                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all min-h-[36px]"
                 style={activeQuick === "custom"
                   ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
                   : { background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}>
@@ -1393,7 +1388,7 @@ function SummariesSection({
         </div>
 
         <button type="button" onClick={() => fetchData()} disabled={loading || !range?.from}
-          className="sm:ml-auto w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-all disabled:opacity-50 min-h-[34px]"
+          className="sm:ml-auto w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 min-h-[36px]"
           style={{ background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}>
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
           {loading ? "Loading…" : "Apply"}
