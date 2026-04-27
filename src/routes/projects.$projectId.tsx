@@ -20,7 +20,7 @@ import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 import { useCurrentUser } from "@/lib/user-store";
 import { invalidateProjectsCache, type ProjectRole } from "@/lib/projects-store";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -274,41 +274,15 @@ function ProjectDetailPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-4">
-          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
-            <TabsList className="inline-flex w-max">
-              <TabsTrigger value="overview">
-                <LayoutGrid className="h-3.5 w-3.5 mr-1.5" /> Overview
-              </TabsTrigger>
-              <TabsTrigger value="channels">
-                <Hash className="h-3.5 w-3.5 mr-1.5" /> Channels
-              </TabsTrigger>
-              <TabsTrigger value="members">
-                <UsersIcon className="h-3.5 w-3.5 mr-1.5" /> Members
-              </TabsTrigger>
-              <TabsTrigger value="summaries">
-                <FileText className="h-3.5 w-3.5 mr-1.5" /> Summaries
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="overview">
-            <OverviewTab project={project} isAdmin={isAdmin} onChanged={fetchProject} />
-          </TabsContent>
-          <TabsContent value="channels">
-            <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
-          </TabsContent>
-          <TabsContent value="members">
-            <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
-          </TabsContent>
-          <TabsContent value="summaries" className="space-y-4">
-            <SummariesSection
-              projectId={projectId}
-              hasPersonalSummaries={hasPersonalSummaries}
-              canGenerateProjectSummary={canGenerateProjectSummary}
-            />
-          </TabsContent>
-        </Tabs>
+        <ProjectTabs
+          project={project}
+          projectId={projectId}
+          isAdmin={isAdmin}
+          canManage={canManage}
+          fetchProject={fetchProject}
+          hasPersonalSummaries={hasPersonalSummaries}
+          canGenerateProjectSummary={canGenerateProjectSummary}
+        />
       </div>
 
       {editing && (
@@ -348,7 +322,96 @@ function ProjectDetailPage() {
   );
 }
 
+/* ----------------------- Slack-style Tab Bar ----------------------- */
+
+type ProjectTabKey = "overview" | "members" | "summaries";
+
+function ProjectTabs({
+  project,
+  projectId,
+  isAdmin,
+  canManage,
+  fetchProject,
+  hasPersonalSummaries,
+  canGenerateProjectSummary,
+}: {
+  project: ProjectDetail;
+  projectId: string;
+  isAdmin: boolean;
+  canManage: boolean;
+  fetchProject: () => void;
+  hasPersonalSummaries: boolean;
+  canGenerateProjectSummary: boolean;
+}) {
+  const [activeTab, setActiveTab] = useState<ProjectTabKey>("overview");
+
+  const tabs: { key: ProjectTabKey; label: string; icon: typeof LayoutGrid }[] = [
+    { key: "overview", label: "Overview", icon: LayoutGrid },
+    { key: "members", label: "Members & Channels", icon: UsersIcon },
+    { key: "summaries", label: "Summaries", icon: FileText },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="border-b border-slate-200 bg-white flex gap-1 px-2 -mx-4 sm:mx-0 overflow-x-auto">
+        {tabs.map((t) => {
+          const Icon = t.icon;
+          const active = activeTab === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setActiveTab(t.key)}
+              className={
+                "inline-flex items-center gap-1.5 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px " +
+                (active
+                  ? "border-indigo-500 text-indigo-600"
+                  : "border-transparent text-slate-500 hover:text-slate-800")
+              }
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {activeTab === "overview" && (
+        <OverviewTab project={project} isAdmin={isAdmin} onChanged={fetchProject} />
+      )}
+
+      {activeTab === "members" && (
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              <Hash className="h-3.5 w-3.5" /> Channels
+            </h3>
+            <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              <UsersIcon className="h-3.5 w-3.5" /> Members
+            </h3>
+            <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
+          </div>
+        </div>
+      )}
+
+      {activeTab === "summaries" && (
+        <div className="space-y-4">
+          <SummariesSection
+            projectId={projectId}
+            hasPersonalSummaries={hasPersonalSummaries}
+            canGenerateProjectSummary={canGenerateProjectSummary}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ----------------------- Overview ----------------------- */
+
 
 function OverviewTab({
   project,
