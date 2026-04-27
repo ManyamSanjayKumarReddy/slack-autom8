@@ -19,7 +19,7 @@ import {
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
-import { RoleGate } from "@/components/RoleGate";
+
 import { useIsMobile } from "@/hooks/use-mobile";
 import { projectColor, projectInitials } from "@/lib/project-colors";
 import { Calendar } from "@/components/ui/calendar";
@@ -131,9 +131,7 @@ const MD =
 function ProjectReportPage() {
   return (
     <AppShell maxWidth="max-w-7xl">
-      <RoleGate allowed={["employee", "team_lead", "manager", "admin"]}>
-        <Inner />
-      </RoleGate>
+      <Inner />
     </AppShell>
   );
 }

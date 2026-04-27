@@ -11,7 +11,7 @@ import {
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
-import { RoleGate } from "@/components/RoleGate";
+
 import { projectColor, projectInitials } from "@/lib/project-colors";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Project } from "@/lib/projects-store";
@@ -33,9 +33,7 @@ function HierarchyRoot() {
   }
   return (
     <AppShell maxWidth="max-w-7xl">
-      <RoleGate allowed={["employee", "team_lead", "manager", "admin"]}>
-        <ProjectPickerPage />
-      </RoleGate>
+      <ProjectPickerPage />
     </AppShell>
   );
 }
