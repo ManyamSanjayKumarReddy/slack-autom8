@@ -93,10 +93,27 @@ export function GroupedSummariesView({
       ? `/summaries/projects/${projectId}/personal`
       : `/summaries/projects/${projectId}`;
 
+  const buildUrl = () => {
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - 30);
+    const fmt = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    };
+    const params = new URLSearchParams({
+      from_date: fmt(from),
+      to_date: fmt(to),
+    });
+    return `${basePath}?${params.toString()}`;
+  };
+
   const fetchData = async (silent = false): Promise<number> => {
     if (!silent) setLoading(true);
     try {
-      const res = await apiFetch(basePath);
+      const res = await apiFetch(buildUrl());
       if (!res.ok) {
         await handleApiError(res, "Failed to load summaries");
         setData({ total: 0, project_id: projectId, grouped_by_date: {} });
