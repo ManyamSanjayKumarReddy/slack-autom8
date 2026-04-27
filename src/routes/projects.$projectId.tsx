@@ -248,6 +248,8 @@ function ProjectTabs({
   fetchProject,
   hasPersonalSummaries,
   canGenerateProjectSummary,
+  onEdit,
+  onDelete,
 }: {
   project: ProjectDetail;
   projectId: string;
@@ -256,6 +258,8 @@ function ProjectTabs({
   fetchProject: () => void;
   hasPersonalSummaries: boolean;
   canGenerateProjectSummary: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<ProjectTabKey>("overview");
 
@@ -291,7 +295,14 @@ function ProjectTabs({
       </div>
 
       {activeTab === "overview" && (
-        <OverviewTab project={project} isAdmin={isAdmin} onChanged={fetchProject} />
+        <OverviewTab
+          project={project}
+          isAdmin={isAdmin}
+          canManage={canManage}
+          onChanged={fetchProject}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       )}
 
       {activeTab === "members" && (
@@ -330,16 +341,41 @@ function ProjectTabs({
 function OverviewTab({
   project,
   isAdmin,
+  canManage,
   onChanged,
+  onEdit,
+  onDelete,
 }: {
   project: ProjectDetail;
   isAdmin: boolean;
+  canManage: boolean;
   onChanged: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const [assigning, setAssigning] = useState(false);
 
   return (
     <section className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-card)] space-y-4">
+      {canManage && (
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" size="sm" onClick={onEdit}>
+            <Pencil className="h-3.5 w-3.5 mr-1.5" />
+            Edit
+          </Button>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              Delete
+            </Button>
+          )}
+        </div>
+      )}
       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <div>
           <dt className="text-xs uppercase tracking-wider text-muted-foreground">Manager</dt>
