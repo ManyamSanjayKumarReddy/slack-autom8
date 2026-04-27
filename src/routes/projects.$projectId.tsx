@@ -159,7 +159,7 @@ function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <AppShell>
+      <AppShell title="Loading…">
         <Skeleton className="h-32 w-full rounded-2xl" />
       </AppShell>
     );
@@ -167,7 +167,7 @@ function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <AppShell>
+      <AppShell title="Project not found">
         <Link to="/projects" className="text-sm hover:underline" style={{ color: "#6366f1" }}>
           ← Back to projects
         </Link>
@@ -179,7 +179,7 @@ function ProjectDetailPage() {
   const projInitials = projectInitials(project.name);
 
   return (
-    <AppShell>
+    <AppShell title={project.name} subtitle={project.description ?? undefined}>
       <div className="space-y-8">
         <Link
           to="/projects"
