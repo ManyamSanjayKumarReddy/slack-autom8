@@ -168,11 +168,11 @@ function Inner() {
       if (active?.to) params.set("to_date", format(active.to, "yyyy-MM-dd"));
 
       if (isEmployee) {
-        // Employees: hierarchy endpoint is restricted. Fetch project summaries
-        // (already scoped server-side to summaries triggered by this user) and
-        // adapt the response into the HierarchyProject shape this page renders.
+        // Employees: hierarchy endpoint is restricted. Use the personal-summaries
+        // endpoint (server-scoped to this user) and adapt the response into the
+        // HierarchyProject shape so summaries render as personal rows.
         const [sumRes, projRes] = await Promise.all([
-          apiFetch(`/summaries/projects/${projectId}?${params.toString()}`),
+          apiFetch(`/summaries/projects/${projectId}/personal?${params.toString()}`),
           apiFetch(`/projects/${projectId}`),
         ]);
         if (!sumRes.ok) {
@@ -193,9 +193,21 @@ function Inner() {
             // ignore
           }
         }
+        const memberName = user?.name || user?.email || "You";
+        const memberId = user?.id || "me";
         const dates: Record<string, HierarchyDate> = {};
         for (const [date, items] of Object.entries(sumData.grouped_by_date ?? {})) {
-          dates[date] = { project_summaries: items, members: [] };
+          dates[date] = {
+            project_summaries: [],
+            members: [
+              {
+                user_id: memberId,
+                user_name: memberName,
+                project_role: "employee",
+                personal_summaries: items,
+              },
+            ],
+          };
         }
         const adapted: HierarchyProject = {
           project_id: projectId,
