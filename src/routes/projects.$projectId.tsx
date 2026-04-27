@@ -299,17 +299,11 @@ function ProjectTabs({
             onDelete={onDelete}
           />
 
-          <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-10 pb-10">
-            <div>
-              <h3 className="text-base font-semibold text-slate-800 flex items-center gap-1.5 mb-3">
-                <Hash className="h-4 w-4" /> Channels
-              </h3>
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
+            <div className="border border-slate-100 rounded-xl overflow-hidden">
               <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
             </div>
-            <div>
-              <h3 className="text-base font-semibold text-slate-800 flex items-center gap-1.5 mb-3">
-                <UsersIcon className="h-4 w-4" /> Members
-              </h3>
+            <div className="border border-slate-100 rounded-xl overflow-hidden">
               <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
             </div>
           </div>
@@ -348,9 +342,9 @@ function OverviewTab({
   const [assigning, setAssigning] = useState(false);
 
   return (
-    <div className="pt-5 pb-10 max-w-2xl">
+    <div className="pt-5 pb-2">
       {canManage && (
-        <div className="flex gap-2 justify-end mb-6">
+        <div className="flex gap-2 justify-end mb-5">
           <Button variant="outline" size="sm" onClick={onEdit}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" />
             Edit
@@ -370,38 +364,43 @@ function OverviewTab({
       )}
 
       {project.description && (
-        <p className="text-[15px] text-slate-600 leading-relaxed mb-6">{project.description}</p>
+        <p className="text-[15px] text-slate-600 leading-relaxed mb-5">{project.description}</p>
       )}
 
-      <dl className="grid grid-cols-2 sm:grid-cols-4 gap-8 mt-8">
-        <div>
-          <dt className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Manager</dt>
-          <dd className={`text-[16px] font-semibold text-slate-800 ${!project.manager_name ? "italic text-slate-400" : ""}`}>
-            {project.manager_name || "Unassigned"}
-          </dd>
-          {isAdmin && (
-            <Button variant="outline" size="sm" className="mt-2" onClick={() => setAssigning(true)}>
-              {project.manager_id ? "Change" : "Assign"}
-            </Button>
-          )}
+      <div className="flex flex-wrap divide-x divide-slate-100 border border-slate-100 rounded-xl bg-white overflow-hidden">
+        <div className="flex-1 min-w-[140px] px-5 py-4">
+          <div className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Manager</div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-[15px] font-semibold leading-snug ${project.manager_name ? "text-slate-800" : "italic text-slate-400"}`}>
+              {project.manager_name || "Unassigned"}
+            </span>
+            {isAdmin && (
+              <button
+                onClick={() => setAssigning(true)}
+                className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline transition-colors"
+              >
+                {project.manager_id ? "change" : "assign"}
+              </button>
+            )}
+          </div>
         </div>
-        <div>
-          <dt className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Members</dt>
-          <dd className="text-[16px] font-semibold text-slate-800">{project.member_count ?? 0}</dd>
+        <div className="px-5 py-4 min-w-[90px]">
+          <div className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Members</div>
+          <div className="text-[15px] font-semibold text-slate-800">{project.member_count ?? 0}</div>
         </div>
-        <div>
-          <dt className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Channels</dt>
-          <dd className="text-[16px] font-semibold text-slate-800">{project.channel_count ?? 0}</dd>
+        <div className="px-5 py-4 min-w-[90px]">
+          <div className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Channels</div>
+          <div className="text-[15px] font-semibold text-slate-800">{project.channel_count ?? 0}</div>
         </div>
         {project.created_at && (
-          <div>
-            <dt className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Created</dt>
-            <dd className="text-[16px] font-semibold text-slate-800">
+          <div className="px-5 py-4 min-w-[120px]">
+            <div className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Created</div>
+            <div className="text-[15px] font-semibold text-slate-800">
               {new Date(project.created_at).toLocaleDateString()}
-            </dd>
+            </div>
           </div>
         )}
-      </dl>
+      </div>
 
       {assigning && (
         <Dialog open onOpenChange={(o) => !o && setAssigning(false)}>
@@ -573,13 +572,14 @@ function ChannelsTab({
 
   return (
     <div>
-      <div className="py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-base font-semibold text-slate-800">
-          {channels ? `${channels.length} channels` : "Channels"}
+      <div className="px-4 py-3.5 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+          <Hash className="h-3.5 w-3.5 text-slate-400" />
+          {channels ? `${channels.length} ${channels.length === 1 ? "channel" : "channels"}` : "Channels"}
         </h2>
         {canManage && (
-          <Button size="default" onClick={() => setAdding(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
+          <Button size="sm" onClick={() => setAdding(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
             Add channel
           </Button>
         )}
@@ -821,13 +821,14 @@ function MembersTab({
 
   return (
     <div>
-      <div className="py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-base font-semibold text-slate-800">
-          {members ? `${members.length} members` : "Members"}
+      <div className="px-4 py-3.5 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+          <UsersIcon className="h-3.5 w-3.5 text-slate-400" />
+          {members ? `${members.length} ${members.length === 1 ? "member" : "members"}` : "Members"}
         </h2>
         {canManage && (
-          <Button size="default" onClick={() => setAdding(true)}>
-            <UserPlus className="h-4 w-4 mr-1.5" />
+          <Button size="sm" onClick={() => setAdding(true)}>
+            <UserPlus className="h-3.5 w-3.5 mr-1.5" />
             Add member
           </Button>
         )}
