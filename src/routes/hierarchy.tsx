@@ -51,7 +51,7 @@ function ProjectPickerPage() {
       try {
         const res = await apiFetch(`/projects/?page=1&page_size=200`);
         if (!res.ok) {
-          await handleApiError(res, "Failed to load projects");
+          // Backend handles access control — show empty state without permission toast
           setProjects([]);
           return;
         }
