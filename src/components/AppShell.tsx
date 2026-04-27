@@ -199,9 +199,9 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — fixed so it stays put while content scrolls */}
       <aside
-        className="hidden lg:flex flex-col w-[240px] shrink-0 sticky top-0 h-screen z-20"
+        className="hidden lg:flex flex-col w-[240px] fixed inset-y-0 left-0 z-20"
         style={{ boxShadow: "var(--shadow-sidebar)" }}
       >
         <SidebarContent
@@ -240,7 +240,7 @@ export function AppShell({
       )}
 
       {/* Main content area */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col lg:ml-[240px]">
         {/* Mobile top bar */}
         <header
           className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 h-[56px] border-b border-slate-200"
