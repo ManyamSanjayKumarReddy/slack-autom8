@@ -447,11 +447,12 @@ export function AppShell({
   title,
   subtitle,
   children,
-  maxWidth = "max-w-6xl",
+  maxWidth,
 }: {
   title?: string;
   subtitle?: string;
   children: ReactNode;
+  /** Optional max width for content (e.g. "max-w-6xl"). Omit for Slack-style full-width left-aligned. */
   maxWidth?: string;
 }) {
   const { user } = useCurrentUser();
