@@ -91,11 +91,7 @@ function formatRange(r: DateRange | undefined): string {
 }
 
 function ProjectReportPage() {
-  return (
-    <AppShell maxWidth="max-w-7xl">
-      <Inner />
-    </AppShell>
-  );
+  return <Inner />;
 }
 
 type QuickKey = "today" | "yesterday" | "last7" | "last30" | "custom";
@@ -231,6 +227,7 @@ function Inner() {
   const [from, to] = projectColor(project?.project_name ?? projectId);
 
   return (
+    <AppShell title={project?.project_name ?? "Project Report"} subtitle="Summary report">
     <div className="space-y-6">
       {/* Back link */}
       <button
@@ -380,6 +377,7 @@ function Inner() {
         <SlackStyleFeed rows={rows} />
       )}
     </div>
+    </AppShell>
   );
 }
 
