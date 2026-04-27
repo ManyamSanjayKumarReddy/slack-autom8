@@ -91,11 +91,7 @@ function formatRange(r: DateRange | undefined): string {
 }
 
 function ProjectReportPage() {
-  return (
-    <AppShell>
-      <Inner />
-    </AppShell>
-  );
+  return <Inner />;
 }
 
 type QuickKey = "today" | "yesterday" | "last7" | "last30" | "custom";
