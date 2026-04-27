@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import {
-  ArrowLeft,
   Hash,
   Users as UsersIcon,
   FileText,
@@ -176,36 +175,24 @@ function ProjectDetailPage() {
   if (!project) {
     return (
       <AppShell title="Project not found">
-        <Link to="/projects" className="text-sm hover:underline" style={{ color: "#6366f1" }}>
-          ← Back to projects
-        </Link>
+        <p className="text-sm text-muted-foreground">Project not found.</p>
       </AppShell>
     );
   }
 
   return (
     <AppShell title={project.name} subtitle={project.description ?? undefined}>
-      <div className="space-y-6">
-        <Link
-          to="/projects"
-          className="inline-flex items-center gap-1.5 transition-colors hover:opacity-75"
-          style={{ fontSize: "13.5px", color: "#64748b" }}
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to projects
-        </Link>
-
-        <ProjectTabs
-          project={project}
-          projectId={projectId}
-          isAdmin={isAdmin}
-          canManage={canManage}
-          fetchProject={fetchProject}
-          hasPersonalSummaries={hasPersonalSummaries}
-          canGenerateProjectSummary={canGenerateProjectSummary}
-          onEdit={() => setEditing(true)}
-          onDelete={() => setConfirmDelete(true)}
-        />
-      </div>
+      <ProjectTabs
+        project={project}
+        projectId={projectId}
+        isAdmin={isAdmin}
+        canManage={canManage}
+        fetchProject={fetchProject}
+        hasPersonalSummaries={hasPersonalSummaries}
+        canGenerateProjectSummary={canGenerateProjectSummary}
+        onEdit={() => setEditing(true)}
+        onDelete={() => setConfirmDelete(true)}
+      />
 
       {editing && (
         <EditProjectDialog
@@ -278,8 +265,8 @@ function ProjectTabs({
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="border-b border-slate-200 bg-white flex gap-1 px-2 -mx-4 sm:mx-0 overflow-x-auto">
+    <div className="-mt-6 sm:-mt-7">
+      <div className="flex items-center border-b border-slate-200 bg-white px-2 -mx-5 sm:-mx-8 overflow-x-auto">
         {tabs.map((t) => {
           const Icon = t.icon;
           const active = activeTab === t.key;
@@ -292,7 +279,7 @@ function ProjectTabs({
                 "inline-flex items-center gap-1.5 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px " +
                 (active
                   ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-slate-500 hover:text-slate-800")
+                  : "border-transparent text-slate-500 hover:text-slate-700")
               }
             >
               <Icon className="h-3.5 w-3.5" />
@@ -302,43 +289,45 @@ function ProjectTabs({
         })}
       </div>
 
-      {activeTab === "overview" && (
-        <OverviewTab
-          project={project}
-          isAdmin={isAdmin}
-          canManage={canManage}
-          onChanged={fetchProject}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
-      )}
-
-      {activeTab === "members" && (
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-              <Hash className="h-3.5 w-3.5" /> Channels
-            </h3>
-            <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-              <UsersIcon className="h-3.5 w-3.5" /> Members
-            </h3>
-            <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
-          </div>
-        </div>
-      )}
-
-      {activeTab === "summaries" && (
-        <div className="space-y-4">
-          <SummariesSection
-            projectId={projectId}
-            hasPersonalSummaries={hasPersonalSummaries}
-            canGenerateProjectSummary={canGenerateProjectSummary}
+      <div className="py-4">
+        {activeTab === "overview" && (
+          <OverviewTab
+            project={project}
+            isAdmin={isAdmin}
+            canManage={canManage}
+            onChanged={fetchProject}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
-        </div>
-      )}
+        )}
+
+        {activeTab === "members" && (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                <Hash className="h-3.5 w-3.5" /> Channels
+              </h3>
+              <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                <UsersIcon className="h-3.5 w-3.5" /> Members
+              </h3>
+              <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "summaries" && (
+          <div className="space-y-4">
+            <SummariesSection
+              projectId={projectId}
+              hasPersonalSummaries={hasPersonalSummaries}
+              canGenerateProjectSummary={canGenerateProjectSummary}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -364,9 +353,9 @@ function OverviewTab({
   const [assigning, setAssigning] = useState(false);
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-card)] space-y-4">
+    <div className="space-y-4">
       {canManage && (
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end mb-4">
           <Button variant="outline" size="sm" onClick={onEdit}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" />
             Edit
@@ -449,7 +438,7 @@ function OverviewTab({
           </DialogContent>
         </Dialog>
       )}
-    </section>
+    </div>
   );
 }
 
@@ -585,7 +574,7 @@ function ChannelsTab({
   };
 
   return (
-    <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
+    <div>
       <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-sm font-semibold text-foreground">
           {channels ? `${channels.length} channels` : "Channels"}
@@ -651,7 +640,7 @@ function ChannelsTab({
           }}
         />
       )}
-    </section>
+    </div>
   );
 }
 
@@ -833,7 +822,7 @@ function MembersTab({
   };
 
   return (
-    <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
+    <div>
       <div className="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-sm font-semibold text-foreground">
           {members ? `${members.length} members` : "Members"}
@@ -939,7 +928,7 @@ function MembersTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </section>
+    </div>
   );
 }
 
