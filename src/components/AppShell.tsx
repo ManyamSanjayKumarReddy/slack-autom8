@@ -308,7 +308,7 @@ function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: Cha
           {openDirect && (
             <div className="mt-0.5 space-y-px">
               {NAV.filter((n) => (role ? isOneOf(role, n.allowed) : false))
-                .filter((n) => n.to !== "/dashboard")
+                .filter((n) => n.to !== "/dashboard" && n.to !== "/projects" && n.to !== "/hierarchy")
                 .map((item) => {
                   const Icon = item.icon;
                   const active =
