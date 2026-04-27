@@ -58,7 +58,7 @@ export const Route = createFileRoute("/admin/users")({
 
 function AdminUsersPage() {
   return (
-    <AppShell maxWidth="max-w-6xl">
+    <AppShell>
       <div className="space-y-8">
         {/* Page banner */}
         <div

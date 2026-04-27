@@ -159,7 +159,7 @@ function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <AppShell maxWidth="max-w-5xl">
+      <AppShell>
         <Skeleton className="h-32 w-full rounded-2xl" />
       </AppShell>
     );
@@ -167,7 +167,7 @@ function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <AppShell maxWidth="max-w-5xl">
+      <AppShell>
         <Link to="/projects" className="text-sm hover:underline" style={{ color: "#6366f1" }}>
           ← Back to projects
         </Link>
@@ -179,7 +179,7 @@ function ProjectDetailPage() {
   const projInitials = projectInitials(project.name);
 
   return (
-    <AppShell maxWidth="max-w-5xl">
+    <AppShell>
       <div className="space-y-8">
         <Link
           to="/projects"

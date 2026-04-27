@@ -92,7 +92,7 @@ function formatRange(r: DateRange | undefined): string {
 
 function ProjectReportPage() {
   return (
-    <AppShell maxWidth="max-w-7xl">
+    <AppShell>
       <Inner />
     </AppShell>
   );
