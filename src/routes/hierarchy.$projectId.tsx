@@ -64,6 +64,7 @@ interface HierarchyResponse {
 }
 interface FlatRow {
   id: string;
+  rowKey: string;
   date: string;
   created_at: string;
   summary_text: string;
@@ -88,11 +89,18 @@ function flattenProject(project: HierarchyProject): FlatRow[] {
   const rows: FlatRow[] = [];
   for (const [date, d] of Object.entries(project.dates)) {
     for (const s of d.project_summaries) {
-      rows.push({ ...s, date, type: "project" });
+      rows.push({ ...s, date, type: "project", rowKey: `project-${date}-${s.id}` });
     }
     for (const m of d.members) {
       for (const s of m.personal_summaries) {
-        rows.push({ ...s, date, type: "personal", member_name: m.user_name, member_role: m.project_role });
+        rows.push({
+          ...s,
+          date,
+          type: "personal",
+          member_name: m.user_name,
+          member_role: m.project_role,
+          rowKey: `personal-${m.user_id}-${date}-${s.id}`,
+        });
       }
     }
   }
@@ -123,7 +131,7 @@ const MD =
 function ProjectReportPage() {
   return (
     <AppShell maxWidth="max-w-7xl">
-      <RoleGate allowed={["manager", "admin"]}>
+      <RoleGate allowed={["employee", "team_lead", "manager", "admin"]}>
         <Inner />
       </RoleGate>
     </AppShell>
@@ -409,14 +417,14 @@ function SummaryTable({ rows }: { rows: FlatRow[] }) {
           </thead>
           <tbody>
             {rows.map((row, idx) => {
-              const isExpanded = expandedRows.has(row.id);
+              const isExpanded = expandedRows.has(row.rowKey);
               const isLast = idx === rows.length - 1;
               const preview = stripMd(row.summary_text).slice(0, 120);
               const hasMore = row.summary_text.length > 0;
 
               return (
                 <RowItem
-                  key={row.id}
+                  key={row.rowKey}
                   row={row}
                   idx={idx}
                   isLast={isLast}
@@ -454,7 +462,7 @@ function RowItem({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (hasMore && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
-      onToggle(row.id);
+      onToggle(row.rowKey);
     }
   };
 
@@ -471,7 +479,7 @@ function RowItem({
           outline: "none",
         }}
         className={hasMore ? "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400" : ""}
-        onClick={() => hasMore && onToggle(row.id)}
+        onClick={() => hasMore && onToggle(row.rowKey)}
         onKeyDown={handleKeyDown}
       >
         <td className="px-5 py-3.5 align-top">
@@ -530,7 +538,7 @@ function RowItem({
         </td>
 
         <td className="px-4 py-3.5 align-top text-center"
-          onClick={(e) => { e.stopPropagation(); if (hasMore) onToggle(row.id); }}>
+          onClick={(e) => { e.stopPropagation(); if (hasMore) onToggle(row.rowKey); }}>
           {hasMore && (
             <button
               aria-label={isExpanded ? "Collapse summary" : "Expand summary"}

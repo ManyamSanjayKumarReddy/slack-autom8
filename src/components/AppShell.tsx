@@ -27,7 +27,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, allowed: ["employee", "team_lead", "manager", "admin"] },
   { to: "/projects", label: "Projects", icon: FolderKanban, allowed: ["employee", "team_lead", "manager", "admin"] },
-  { to: "/hierarchy", label: "Summary Report", icon: GitBranch, allowed: ["manager", "admin"] },
+  { to: "/hierarchy", label: "Summary Report", icon: GitBranch, allowed: ["employee", "team_lead", "manager", "admin"] },
   { to: "/admin/users", label: "User Management", icon: UserCog, allowed: ["admin"] },
 ];
 
