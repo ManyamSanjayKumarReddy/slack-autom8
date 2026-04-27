@@ -31,7 +31,7 @@ function HierarchyRoot() {
     return <Outlet />;
   }
   return (
-    <AppShell>
+    <AppShell title="Summary Report">
       <ProjectPickerPage />
     </AppShell>
   );

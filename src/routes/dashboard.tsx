@@ -57,7 +57,7 @@ function DashboardPage() {
   const subtitle = role ? (ROLE_GREETINGS[role] ?? "Welcome back.") : "Welcome back.";
 
   return (
-    <AppShell>
+    <AppShell title="Home">
       <div className="space-y-8">
         {/* Welcome banner */}
         <div

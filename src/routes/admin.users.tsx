@@ -58,7 +58,7 @@ export const Route = createFileRoute("/admin/users")({
 
 function AdminUsersPage() {
   return (
-    <AppShell>
+    <AppShell title="User Management">
       <div className="space-y-8">
         {/* Page banner */}
         <div

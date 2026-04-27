@@ -94,7 +94,7 @@ function ProjectsListPage() {
   }, [page, pageSize]);
 
   return (
-    <AppShell>
+    <AppShell title="Projects">
       <div className="space-y-8">
         {/* Page banner */}
         <div
