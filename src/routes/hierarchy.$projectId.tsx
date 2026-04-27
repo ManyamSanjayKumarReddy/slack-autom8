@@ -4,15 +4,10 @@ import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import {
   CalendarIcon,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
   Loader2,
   FileSearch,
   BarChart3,
   RefreshCw,
-  Sparkles,
-  PenLine,
   Users,
   ArrowLeft,
 } from "lucide-react";
@@ -24,8 +19,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { projectColor, projectInitials } from "@/lib/project-colors";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { SlackStyleFeed, type FeedRow } from "@/components/summaries/SlackStyleFeed";
 
 export const Route = createFileRoute("/hierarchy/$projectId")({
   beforeLoad: () => {
