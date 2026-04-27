@@ -9,7 +9,6 @@ import {
   Search,
 } from "lucide-react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
-import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 
 import { projectColor, projectInitials } from "@/lib/project-colors";
@@ -51,7 +50,7 @@ function ProjectPickerPage() {
       try {
         const res = await apiFetch(`/projects/?page=1&page_size=200`);
         if (!res.ok) {
-          await handleApiError(res, "Failed to load projects");
+          // Backend handles access control — show empty state without permission toast
           setProjects([]);
           return;
         }

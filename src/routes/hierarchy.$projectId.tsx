@@ -17,7 +17,6 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
-import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -166,7 +165,7 @@ function Inner() {
       if (active?.to) params.set("to_date", format(active.to, "yyyy-MM-dd"));
       const res = await apiFetch(`/summaries/hierarchy?${params.toString()}`);
       if (!res.ok) {
-        await handleApiError(res, "Failed to load report");
+        // Backend handles access control — just show empty state without a permission toast
         setProject(null);
         setNotFound(true);
         return;
