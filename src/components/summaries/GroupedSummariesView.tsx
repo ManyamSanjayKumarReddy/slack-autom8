@@ -185,9 +185,24 @@ export function GroupedSummariesView({
     }
   };
 
-  const dates = data
-    ? Object.keys(data.grouped_by_date).sort((a, b) => (a < b ? 1 : -1))
-    : [];
+  let displayGrouped: Record<string, ProjectSummary[]> = data?.grouped_by_date ?? {};
+  let displayTotal = data?.total ?? 0;
+  if (data && typeof limit === "number") {
+    const flat = Object.entries(data.grouped_by_date)
+      .flatMap(([date, items]) => items.map((s) => ({ date, s })))
+      .sort(
+        (a, b) =>
+          new Date(b.s.created_at).getTime() - new Date(a.s.created_at).getTime(),
+      )
+      .slice(0, limit);
+    const re: Record<string, ProjectSummary[]> = {};
+    for (const { date, s } of flat) {
+      (re[date] ||= []).push(s);
+    }
+    displayGrouped = re;
+    displayTotal = flat.length;
+  }
+  const dates = Object.keys(displayGrouped).sort((a, b) => (a < b ? 1 : -1));
 
   return (
     <section className="rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
