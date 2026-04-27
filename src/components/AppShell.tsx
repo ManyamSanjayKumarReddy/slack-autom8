@@ -525,30 +525,19 @@ export function AppShell({
       )}
 
       {/* ── Main column (col 3) — Slack workspace pane ── */}
-      <div
-        className="flex-1 min-w-0 flex flex-col"
-        style={{ marginLeft: `var(--main-offset, 0px)` }}
-      >
-        <style>{`
-          @media (min-width: 1024px) {
-            :root { --main-offset: ${RAIL_W + CHANNELS_W}px; }
-          }
-        `}</style>
-
+      <div className="flex-1 min-w-0 flex flex-col lg:ml-[330px]">
         <TopHeader
           title={title}
           subtitle={subtitle}
           onOpenMobile={() => setMobileOpen(true)}
         />
 
-        {/* Slack-style "workspace pane": white card area with rounded top corners,
-            flush left to the channels column, full available width. */}
-        <main
-          className="flex-1 min-w-0"
-          style={{ background: "var(--background)" }}
-        >
-          <div className={`w-full ${maxWidth ? `mx-auto ${maxWidth}` : ""} px-5 sm:px-8 py-6 sm:py-7`}>
-            {children}
+        {/* Slack-style workspace pane: full-width left-aligned content area */}
+        <main className="flex-1 min-w-0" style={{ background: "var(--background)" }}>
+          <div className="w-full px-5 sm:px-8 py-6 sm:py-7">
+            <div className={`mx-auto ${maxWidth}`}>
+              {children}
+            </div>
           </div>
         </main>
       </div>
