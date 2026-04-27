@@ -43,6 +43,19 @@
   --shadow-elevated: 0 2px 8px oklch(0 0 0 / 0.06), 0 16px 48px oklch(0 0 0 / 0.1);
   --shadow-button: 0 1px 2px oklch(0 0 0 / 0.08), 0 3px 10px oklch(0 0 0 / 0.08);
   --shadow-sidebar: 2px 0 16px oklch(0 0 0 / 0.06);
+
+  /* ── Slack-style workspace chrome ── */
+  --slack-rail: #3f0e40;          /* aubergine */
+  --slack-rail-hover: #522653;
+  --slack-rail-active: #1164a3;
+  --slack-rail-text: #d1c5d2;
+  --slack-rail-text-strong: #ffffff;
+  --slack-channels: #481349;      /* slightly lighter aubergine */
+  --slack-channels-hover: #5a1c5b;
+  --slack-channels-active: #1164a3;
+  --slack-channels-text: #bcabbc;
+  --slack-channels-text-strong: #ffffff;
+  --slack-divider: rgba(255,255,255,0.08);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -358,3 +371,56 @@ tr[role="button"]:focus-visible {
   transition-duration: 0.2s;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+/* ─────────────────────────────────────────────────────────
+   Slack-style channels column scrollbar
+───────────────────────────────────────────────────────── */
+.slack-scroll::-webkit-scrollbar { width: 8px; }
+.slack-scroll::-webkit-scrollbar-track { background: transparent; }
+.slack-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+}
+.slack-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Slack-feed: sticky date dividers */
+.slack-feed-divider {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 0 10px;
+  background: linear-gradient(to bottom, var(--background) 70%, transparent);
+}
+.slack-feed-divider::before,
+.slack-feed-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.slack-feed-divider > span {
+  margin: 0 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* Slack-feed: hover affordance */
+.slack-msg {
+  transition: background-color 0.12s ease;
+}
+.slack-msg:hover {
+  background: oklch(0.98 0.005 248);
+}
+
