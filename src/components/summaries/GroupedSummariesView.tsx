@@ -264,7 +264,6 @@ export function GroupedSummariesView({
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-border">
         <div className="max-h-[600px] overflow-y-auto divide-y divide-border">
           {dates.map((date) => (
             <div key={date} className="px-4 sm:px-6 py-4 space-y-3">
