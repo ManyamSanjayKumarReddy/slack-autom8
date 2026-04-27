@@ -1098,6 +1098,68 @@ function EditMemberRoleDialog({
 
 /* ----------------------- Summaries ----------------------- */
 
+/* ----- Hierarchy types & helpers (mirrored from hierarchy.$projectId.tsx) ----- */
+interface PersonalSummary {
+  id: string;
+  summary_text: string;
+  message_count: number;
+  is_auto_generated?: boolean;
+  created_at: string;
+}
+interface HierarchyMember {
+  user_id: string;
+  user_name: string;
+  project_role: "employee" | "team_lead";
+  personal_summaries: PersonalSummary[];
+}
+interface HierarchyDate {
+  project_summaries: PersonalSummary[];
+  members: HierarchyMember[];
+}
+interface HierarchyProject {
+  project_id: string;
+  project_name: string;
+  dates: Record<string, HierarchyDate>;
+}
+interface HierarchyResponse {
+  projects: HierarchyProject[];
+}
+
+function flattenProject(project: HierarchyProject): FeedRow[] {
+  const rows: FeedRow[] = [];
+  for (const [date, d] of Object.entries(project.dates)) {
+    for (const s of d.project_summaries) {
+      rows.push({ ...s, date, type: "project", rowKey: `project-${date}-${s.id}` });
+    }
+    for (const m of d.members) {
+      for (const s of m.personal_summaries) {
+        rows.push({
+          ...s,
+          date,
+          type: "personal",
+          member_name: m.user_name,
+          member_role: m.project_role,
+          rowKey: `personal-${m.user_id}-${date}-${s.id}`,
+        });
+      }
+    }
+  }
+  return rows.sort((a, b) => {
+    if (a.date !== b.date) return a.date > b.date ? -1 : 1;
+    if (a.type !== b.type) return a.type === "project" ? -1 : 1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+}
+
+function formatRange(r: DateRange | undefined): string {
+  if (!r?.from) return "Pick dates";
+  if (!r.to || r.from.toDateString() === r.to.toDateString())
+    return format(r.from, "MMM d, yyyy");
+  return `${format(r.from, "MMM d")} – ${format(r.to, "MMM d, yyyy")}`;
+}
+
+type QuickKey = "today" | "yesterday" | "last7" | "last30" | "custom";
+
 function SummariesSection({
   projectId,
   hasPersonalSummaries,
@@ -1107,17 +1169,19 @@ function SummariesSection({
   hasPersonalSummaries: boolean;
   canGenerateProjectSummary: boolean;
 }) {
+  const { user } = useCurrentUser();
+  const isEmployee = user?.role === "employee";
+  const isMobile = useIsMobile();
+
   // Default scope: personal if user has it, otherwise project.
   const initialScope: "personal" | "project" = hasPersonalSummaries
     ? "personal"
     : "project";
   const [scope, setScope] = useState<"personal" | "project">(initialScope);
   const [generateOpen, setGenerateOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [polling, setPolling] = useState(false);
 
-  // If a user can't access the current scope (e.g. admin landing on personal),
-  // snap to the allowed one.
+  // If a user can't access the current scope, snap to the allowed one.
   useEffect(() => {
     if (scope === "personal" && !hasPersonalSummaries) setScope("project");
     if (scope === "project" && !canGenerateProjectSummary && hasPersonalSummaries) {
@@ -1129,8 +1193,128 @@ function SummariesSection({
   const canGenerateCurrent =
     scope === "personal" ? hasPersonalSummaries : canGenerateProjectSummary;
 
+  // Date-filtered feed (mirrors hierarchy.$projectId.tsx)
+  const today = new Date();
+  const [range, setRange] = useState<DateRange | undefined>({ from: today, to: today });
+  const [activeQuick, setActiveQuick] = useState<QuickKey>("today");
+  const [calOpen, setCalOpen] = useState(false);
+  const [project, setProject] = useState<HierarchyProject | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+
+  const fetchData = async (r?: DateRange) => {
+    const active = r ?? range;
+    setLoading(true);
+    setNotFound(false);
+    try {
+      const params = new URLSearchParams();
+      if (active?.from) params.set("from_date", format(active.from, "yyyy-MM-dd"));
+      if (active?.to) params.set("to_date", format(active.to, "yyyy-MM-dd"));
+
+      if (isEmployee) {
+        const [sumRes, projRes] = await Promise.all([
+          apiFetch(`/summaries/projects/${projectId}/personal?${params.toString()}`),
+          apiFetch(`/projects/${projectId}`),
+        ]);
+        if (!sumRes.ok) {
+          setProject(null);
+          setNotFound(true);
+          return;
+        }
+        const sumData = (await sumRes.json()) as {
+          project_id: string;
+          grouped_by_date: Record<string, PersonalSummary[]>;
+        };
+        let projectName = "Project";
+        if (projRes.ok) {
+          try {
+            const p = (await projRes.json()) as { name?: string };
+            if (p?.name) projectName = p.name;
+          } catch {
+            // ignore
+          }
+        }
+        const memberName = user?.name || user?.email || "You";
+        const memberId = user?.id || "me";
+        const dates: Record<string, HierarchyDate> = {};
+        for (const [date, items] of Object.entries(sumData.grouped_by_date ?? {})) {
+          dates[date] = {
+            project_summaries: [],
+            members: [
+              {
+                user_id: memberId,
+                user_name: memberName,
+                project_role: "employee",
+                personal_summaries: items,
+              },
+            ],
+          };
+        }
+        const adapted: HierarchyProject = {
+          project_id: projectId,
+          project_name: projectName,
+          dates,
+        };
+        setProject(adapted);
+        if (Object.keys(dates).length === 0) setNotFound(true);
+        return;
+      }
+
+      const res = await apiFetch(`/summaries/hierarchy?${params.toString()}`);
+      if (!res.ok) {
+        setProject(null);
+        setNotFound(true);
+        return;
+      }
+      const data = (await res.json()) as HierarchyResponse;
+      const found = data.projects.find((p) => p.project_id === projectId) ?? null;
+      setProject(found);
+      if (!found) setNotFound(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyQuick = (key: QuickKey) => {
+    setActiveQuick(key);
+    const end = new Date();
+    let r: DateRange;
+    if (key === "today") {
+      r = { from: new Date(), to: new Date() };
+    } else if (key === "yesterday") {
+      const y = new Date(); y.setDate(y.getDate() - 1);
+      r = { from: y, to: y };
+    } else if (key === "last7") {
+      const s = new Date(); s.setDate(s.getDate() - 6);
+      r = { from: s, to: end };
+    } else {
+      const s = new Date(); s.setDate(s.getDate() - 29);
+      r = { from: s, to: end };
+    }
+    setRange(r);
+    fetchData(r);
+  };
+
+  // Initial + on user/projectId change
+  useEffect(() => {
+    if (user) fetchData({ from: today, to: today });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, user?.role]);
+
+  const allRows = project ? flattenProject(project) : [];
+  // Filter rows by current scope: personal vs project
+  const rows = allRows.filter((r) => r.type === scope);
+
+  const QUICK_PICKS: { label: string; key: QuickKey }[] = [
+    { label: "Today", key: "today" },
+    { label: "Yesterday", key: "yesterday" },
+    { label: "Last 7 days", key: "last7" },
+    { label: "Last 30 days", key: "last30" },
+  ];
+
   return (
     <div className="space-y-4">
+      {/* Header: scope toggle + actions */}
       <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-[var(--shadow-card)] flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           {showTabs ? (
@@ -1165,15 +1349,83 @@ function SummariesSection({
         </div>
       </div>
 
-      <GroupedSummariesView
-        projectId={projectId}
-        scope={scope}
-        refreshKey={refreshKey}
-        canDelete={scope === "personal"}
-        poll={polling}
-        onPollComplete={() => setPolling(false)}
-        limit={3}
-      />
+      {/* Date filter bar */}
+      <div
+        className="rounded-2xl bg-white px-4 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-2 sm:flex-wrap"
+        style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+      >
+        <div className="flex items-center gap-2 flex-wrap">
+          {QUICK_PICKS.map(({ label, key }) => {
+            const active = activeQuick === key;
+            return (
+              <button key={key} type="button" onClick={() => applyQuick(key)}
+                className="rounded-full px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[34px]"
+                style={active
+                  ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
+                  : { background: "#f1f5f9", color: "#475569" }}>
+                {label}
+              </button>
+            );
+          })}
+
+          <div className="hidden sm:block w-px h-5 mx-1 shrink-0" style={{ background: "#e2e8f0" }} />
+
+          <Popover open={calOpen} onOpenChange={setCalOpen}>
+            <PopoverTrigger asChild>
+              <button type="button"
+                className="inline-flex items-center gap-2 rounded-full px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[34px]"
+                style={activeQuick === "custom"
+                  ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
+                  : { background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}>
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {formatRange(range)}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 max-w-[calc(100vw-2rem)]" align="start">
+              <Calendar
+                mode="range"
+                selected={range}
+                onSelect={(r) => {
+                  setRange(r);
+                  setActiveQuick("custom");
+                  if (r?.from && r?.to) setCalOpen(false);
+                }}
+                numberOfMonths={isMobile ? 1 : 2}
+                disabled={{ after: today }}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <button type="button" onClick={() => fetchData()} disabled={loading || !range?.from}
+          className="sm:ml-auto w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-all disabled:opacity-50 min-h-[34px]"
+          style={{ background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}>
+          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+          {loading ? "Loading…" : "Apply"}
+        </button>
+      </div>
+
+      {/* Feed */}
+      {loading && !project ? (
+        <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "1px solid #e2e8f0" }}>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" style={{ color: "#6366f1" }} />
+          <p style={{ fontSize: "14px", color: "#64748b" }}>Loading summaries…</p>
+        </div>
+      ) : notFound || !project || rows.length === 0 ? (
+        <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "2px dashed #e2e8f0" }}>
+          <FileSearch className="h-10 w-10 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
+          <p className="font-semibold mb-1" style={{ fontSize: "15px", color: "#334155" }}>
+            No summaries found
+          </p>
+          <p style={{ fontSize: "13px", color: "#94a3b8" }}>
+            Try a different date range, or generate a summary above.
+          </p>
+        </div>
+      ) : (
+        <SlackStyleFeed rows={rows} />
+      )}
 
       {generateOpen && (
         <GenerateProjectSummaryDialog
@@ -1182,8 +1434,12 @@ function SummariesSection({
           projectId={projectId}
           scope={scope}
           onStarted={() => {
-            setRefreshKey((k) => k + 1);
             setPolling(true);
+            // Re-fetch shortly after to pick up new summary
+            setTimeout(() => {
+              fetchData();
+              setPolling(false);
+            }, 1500);
           }}
         />
       )}
