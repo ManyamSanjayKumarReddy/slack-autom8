@@ -64,13 +64,13 @@ function AdminUsersPage() {
         <div
           className="rounded-2xl px-5 sm:px-8 py-5 sm:py-7 relative overflow-hidden border"
           style={{
-            background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)",
-            borderColor: "#e0e7ff",
+            background: "linear-gradient(135deg, #e8f1f8 0%, #f0f7fc 55%, #f6f8fc 100%)",
+            borderColor: "#c8dff0",
           }}
         >
           <div
             className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, rgba(18,100,163,0.14) 0%, transparent 70%)" }}
           />
           <div className="relative">
             <h1

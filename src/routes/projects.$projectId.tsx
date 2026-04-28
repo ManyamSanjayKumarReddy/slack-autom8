@@ -1428,7 +1428,7 @@ function SummariesSection({
               <button key={key} type="button" onClick={() => applyQuick(key)}
                 className="rounded-full px-4 py-2 text-sm font-semibold transition-all min-h-[36px]"
                 style={active
-                  ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
+                  ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
                   : { background: "#f1f5f9", color: "#475569" }}>
                 {label}
               </button>
@@ -1442,8 +1442,8 @@ function SummariesSection({
               <button type="button"
                 className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all min-h-[36px]"
                 style={activeQuick === "custom"
-                  ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
-                  : { background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}>
+                  ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
+                  : { background: "#e8f1f8", color: "#0b4f7e", border: "1px solid #c8dff0" }}>
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {formatRange(range)}
               </button>
@@ -1468,7 +1468,7 @@ function SummariesSection({
 
         <button type="button" onClick={() => fetchData()} disabled={loading || !range?.from}
           className="sm:ml-auto w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 min-h-[36px]"
-          style={{ background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}>
+          style={{ background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.3)" }}>
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
           {loading ? "Loading…" : "Apply"}
         </button>
@@ -1477,7 +1477,7 @@ function SummariesSection({
       {/* Feed */}
       {loading && !project ? (
         <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "1px solid #e2e8f0" }}>
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" style={{ color: "#6366f1" }} />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" style={{ color: "#1264a3" }} />
           <p style={{ fontSize: "14px", color: "#64748b" }}>Loading summaries…</p>
         </div>
       ) : notFound || !project || rows.length === 0 ? (

@@ -38,6 +38,19 @@
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
 
+  /* ── Override Tailwind's indigo scale → Slack blue ── */
+  --color-indigo-50:  #e8f1f8;
+  --color-indigo-100: #d4e7f5;
+  --color-indigo-200: #aacde8;
+  --color-indigo-300: #77b1d8;
+  --color-indigo-400: #4493c6;
+  --color-indigo-500: #1264a3;
+  --color-indigo-600: #0f5289;
+  --color-indigo-700: #0b4170;
+  --color-indigo-800: #083058;
+  --color-indigo-900: #051f3a;
+  --color-indigo-950: #030f1e;
+
   /* ── Shadows ── */
   --shadow-card: 0 1px 2px oklch(0 0 0 / 0.04), 0 3px 12px oklch(0 0 0 / 0.05);
   --shadow-elevated: 0 2px 8px oklch(0 0 0 / 0.06), 0 16px 48px oklch(0 0 0 / 0.1);
@@ -75,10 +88,10 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.13 0.024 256);
 
-  /* Primary: indigo-500 #6366f1 */
-  --primary: oklch(0.546 0.228 267);
-  --primary-foreground: oklch(0.99 0 0);
-  --primary-hover: oklch(0.49 0.228 267);       /* indigo-600 #4f46e5 */
+  /* Primary: Slack blue #1264a3 */
+  --primary: #1264a3;
+  --primary-foreground: #ffffff;
+  --primary-hover: #0f5289;
 
   /* Subtle: slate-100 */
   --secondary: oklch(0.965 0.008 248);
@@ -88,9 +101,9 @@
   --muted: oklch(0.965 0.008 248);
   --muted-foreground: oklch(0.52 0.018 250);    /* slate-500 #64748b */
 
-  /* Accent: indigo-50 / indigo-700 */
-  --accent: oklch(0.955 0.026 265);             /* #eef2ff */
-  --accent-foreground: oklch(0.465 0.218 267);  /* indigo-700 #4338ca */
+  /* Accent: Slack blue-50 / Slack blue-700 */
+  --accent: #e8f1f8;
+  --accent-foreground: #0b4170;
 
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
@@ -98,7 +111,7 @@
   /* Borders: slate-200 #e2e8f0 */
   --border: oklch(0.905 0.012 250);
   --input: oklch(0.905 0.012 250);
-  --ring: oklch(0.546 0.228 267);
+  --ring: #1264a3;
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -111,9 +124,9 @@
   --card-foreground: oklch(0.97 0 0);
   --popover: oklch(0.175 0.02 256);
   --popover-foreground: oklch(0.97 0 0);
-  --primary: oklch(0.68 0.22 267);
-  --primary-foreground: oklch(0.12 0.02 256);
-  --primary-hover: oklch(0.72 0.22 267);
+  --primary: #4493c6;
+  --primary-foreground: #ffffff;
+  --primary-hover: #77b1d8;
   --secondary: oklch(0.22 0.02 256);
   --secondary-foreground: oklch(0.97 0 0);
   --muted: oklch(0.22 0.02 256);
@@ -124,7 +137,7 @@
   --destructive-foreground: oklch(0.97 0 0);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.68 0.22 267);
+  --ring: #4493c6;
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -250,7 +263,7 @@
 }
 .lp-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -12px rgba(99, 102, 241, 0.18),
+  box-shadow: 0 20px 40px -12px rgba(18, 100, 163, 0.18),
               0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
@@ -346,7 +359,7 @@ nav {
    Focus-visible global style — indigo ring
 ───────────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid oklch(0.546 0.228 267);
+  outline: 2px solid #1264a3;
   outline-offset: 2px;
 }
 
@@ -359,7 +372,7 @@ nav {
    Table row keyboard affordance
 ───────────────────────────────────────────────────────── */
 tr[role="button"]:focus-visible {
-  outline: 2px solid oklch(0.546 0.228 267);
+  outline: 2px solid #1264a3;
   outline-offset: -2px;
 }
 

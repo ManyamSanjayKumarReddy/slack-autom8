@@ -66,7 +66,7 @@ function WorkspaceRail({
           to="/dashboard"
           className="h-10 w-10 rounded-[9px] flex items-center justify-center no-underline transition-transform hover:scale-[1.04] mb-2"
           style={{
-            background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+            background: "linear-gradient(135deg, #1264a3 0%, #0f5289 100%)",
             boxShadow: "0 2px 6px rgba(0,0,0,0.35)",
           }}
           aria-label="Slack Autom8"
@@ -346,7 +346,7 @@ function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: Cha
         <span className="relative">
           <span
             className="h-7 w-7 rounded-md flex items-center justify-center text-xs font-bold text-white"
-            style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)" }}
+            style={{ background: "linear-gradient(135deg, #1264a3, #0f5289)" }}
           >
             {(displayName?.[0] ?? "?").toUpperCase()}
           </span>
