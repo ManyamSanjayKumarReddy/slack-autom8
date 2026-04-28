@@ -590,8 +590,8 @@ function ChannelsTab({
     <div>
       <div className="px-6 py-5 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
-            <Hash className="h-4 w-4 text-indigo-500" />
+          <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
+            <Hash className="h-4 w-4 text-primary" />
           </div>
           <div>
             <h2 className="text-[15px] font-semibold text-foreground leading-none">Channels</h2>
@@ -621,7 +621,7 @@ function ChannelsTab({
           No channels in this project yet.
         </div>
       ) : (
-        <ul className="divide-y divide-slate-50">
+        <ul className="divide-y divide-border">
           {channels.map((c) => (
             <li
               key={c.channel_id}
@@ -835,12 +835,12 @@ function MemberAvatar({ name }: { name: string }) {
       .map((w) => w[0]?.toUpperCase() ?? "")
       .join("") || "?";
   const palettes: [string, string][] = [
-    ["#ede9fe", "#7c3aed"],
-    ["#dbeafe", "#1d4ed8"],
-    ["#dcfce7", "#15803d"],
-    ["#fef9c3", "#a16207"],
-    ["#fce7f3", "#be185d"],
-    ["#e0f2fe", "#0369a1"],
+    ["rgba(139,92,246,0.2)", "#a78bfa"],
+    ["rgba(59,130,246,0.2)", "#60a5fa"],
+    ["rgba(16,185,129,0.2)", "#34d399"],
+    ["rgba(245,158,11,0.2)", "#fbbf24"],
+    ["rgba(236,72,153,0.2)", "#f472b6"],
+    ["rgba(14,165,233,0.2)", "#38bdf8"],
   ];
   const [bg, color] = palettes[name.charCodeAt(0) % palettes.length];
   return (
@@ -910,8 +910,8 @@ function MembersTab({
     <div>
       <div className="px-6 py-5 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
-            <UsersIcon className="h-4 w-4 text-purple-500" />
+          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            <UsersIcon className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
             <h2 className="text-[15px] font-semibold text-foreground leading-none">Members</h2>
@@ -941,7 +941,7 @@ function MembersTab({
           No members yet.
         </div>
       ) : (
-        <ul className="divide-y divide-slate-50">
+        <ul className="divide-y divide-border">
           {members.map((m) => (
             <li
               key={m.user_id}
@@ -1463,7 +1463,7 @@ function SummariesSection({
             );
           })}
 
-          <div className="hidden sm:block w-px h-5 mx-1 shrink-0" style={{ background: "#e2e8f0" }} />
+          <div className="hidden sm:block w-px h-5 mx-1 shrink-0 bg-border" />
 
           <Popover open={calOpen} onOpenChange={setCalOpen}>
             <PopoverTrigger asChild>

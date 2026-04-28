@@ -90,6 +90,26 @@
   --cal-btn-inactive-color: #0b4f7e;
   --cal-btn-inactive-border: #c8dff0;
 
+  /* Banner */
+  --banner-bg: linear-gradient(135deg, #e8f1f8 0%, #f0f7fc 55%, #f6f8fc 100%);
+  --banner-border: #c8dff0;
+  --banner-heading-color: #0f172a;
+  --banner-subtitle-color: #64748b;
+
+  /* Feed/card text */
+  --feed-text: #475569;
+  --feed-heading: #0f172a;
+  --feed-muted: #64748b;
+  --feed-subtle: #94a3b8;
+
+  /* Feed badges */
+  --badge-team-bg: #e8f1f8;
+  --badge-team-color: #0b4f7e;
+  --badge-auto-bg: #ecfdf5;
+  --badge-auto-color: #059669;
+  --badge-manual-bg: #faf5ff;
+  --badge-manual-color: #7c3aed;
+
   /* Page canvas: very light cool blue-white (#f6f8fc) */
   --background: oklch(0.974 0.008 248);
   --foreground: oklch(0.13 0.024 256);          /* slate-900 #0f172a */
@@ -165,6 +185,26 @@
   --cal-btn-inactive-bg: rgba(29, 155, 209, 0.12);
   --cal-btn-inactive-color: #4493c6;
   --cal-btn-inactive-border: rgba(29, 155, 209, 0.25);
+
+  /* Banner (dark) */
+  --banner-bg: linear-gradient(135deg, rgba(29,155,209,0.12) 0%, rgba(29,155,209,0.05) 60%, #222529 100%);
+  --banner-border: rgba(29,155,209,0.2);
+  --banner-heading-color: #d1d2d3;
+  --banner-subtitle-color: #8b8f94;
+
+  /* Feed/card text (dark) */
+  --feed-text: #8b8f94;
+  --feed-heading: #d1d2d3;
+  --feed-muted: #8b8f94;
+  --feed-subtle: #5e6267;
+
+  /* Feed badges (dark) */
+  --badge-team-bg: rgba(29,155,209,0.15);
+  --badge-team-color: #4493c6;
+  --badge-auto-bg: rgba(16,185,129,0.15);
+  --badge-auto-color: #34d399;
+  --badge-manual-bg: rgba(139,92,246,0.15);
+  --badge-manual-color: #a78bfa;
 }
 
 /* ─────────────────────────────────────────────────────────
