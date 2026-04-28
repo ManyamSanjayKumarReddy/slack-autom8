@@ -103,12 +103,12 @@
   --feed-subtle: #94a3b8;
 
   /* Feed badges */
-  --badge-team-bg: #e8f1f8;
+  --badge-team-bg: rgba(18,100,163,0.1);
   --badge-team-color: #0b4f7e;
   --badge-auto-bg: #ecfdf5;
   --badge-auto-color: #059669;
-  --badge-manual-bg: #faf5ff;
-  --badge-manual-color: #7c3aed;
+  --badge-manual-bg: rgba(245,158,11,0.12);
+  --badge-manual-color: #b45309;
 
   /* Page canvas: very light cool blue-white (#f6f8fc) */
   --background: oklch(0.974 0.008 248);
@@ -203,8 +203,8 @@
   --badge-team-color: #4493c6;
   --badge-auto-bg: rgba(16,185,129,0.15);
   --badge-auto-color: #34d399;
-  --badge-manual-bg: rgba(139,92,246,0.15);
-  --badge-manual-color: #a78bfa;
+  --badge-manual-bg: rgba(245,158,11,0.15);
+  --badge-manual-color: #fbbf24;
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -465,16 +465,16 @@ tr[role="button"]:focus-visible {
   background: rgba(255,255,255,0.2);
 }
 
-/* Slack-feed: sticky date dividers */
+/* Slack-feed: sticky date dividers — exact Slack style */
 .slack-feed-divider {
   position: sticky;
   top: 0;
   z-index: 5;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 14px 0 10px;
-  background: linear-gradient(to bottom, var(--background) 70%, transparent);
+  padding: 12px 20px 8px;
+  background: linear-gradient(to bottom, var(--card) 60%, transparent);
+  pointer-events: none;
 }
 .slack-feed-divider::before,
 .slack-feed-divider::after {
@@ -482,18 +482,16 @@ tr[role="button"]:focus-visible {
   flex: 1;
   height: 1px;
   background: var(--border);
+  opacity: 0.6;
 }
 .slack-feed-divider > span {
-  margin: 0 12px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  font-size: 12px;
+  margin: 0 10px;
+  font-size: 11.5px;
   font-weight: 700;
-  color: var(--foreground);
-  letter-spacing: -0.01em;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  color: var(--muted-foreground);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: auto;
 }
 
 /* Slack-feed: hover affordance */
