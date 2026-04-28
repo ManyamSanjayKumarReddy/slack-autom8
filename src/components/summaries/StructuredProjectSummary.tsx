@@ -11,8 +11,8 @@ const MD =
   "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_ul]:mt-1.5 " +
   "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1 [&_ol]:mt-1.5 " +
   "[&_strong]:font-semibold " +
-  "[&_code]:bg-slate-100 [&_code]:text-slate-700 [&_code]:rounded [&_code]:px-1 [&_code]:text-xs " +
-  "[&_blockquote]:border-l-2 [&_blockquote]:border-slate-200 [&_blockquote]:pl-3 [&_blockquote]:text-slate-500 " +
+  "[&_code]:bg-muted [&_code]:text-muted-foreground [&_code]:rounded [&_code]:px-1 [&_code]:text-xs " +
+  "[&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground " +
   "[&_a]:text-primary [&_a]:underline";
 
 export function StructuredProjectSummary({

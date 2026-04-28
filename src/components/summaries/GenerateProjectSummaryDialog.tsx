@@ -145,8 +145,7 @@ export function GenerateProjectSummaryDialog({
                   type="button"
                   onClick={fn}
                   disabled={submitting}
-                  className="rounded-lg px-3 py-1.5 text-xs font-semibold border transition-colors hover:bg-accent hover:text-accent-foreground"
-                  style={{ borderColor: "#e2e8f0", color: "#475569", background: "#f8fafc" }}
+                  className="rounded-lg px-3 py-1.5 text-xs font-semibold border border-border text-muted-foreground bg-muted transition-colors hover:bg-accent hover:text-accent-foreground"
                 >
                   {label}
                 </button>

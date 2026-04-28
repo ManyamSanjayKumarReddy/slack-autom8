@@ -63,8 +63,8 @@ function DashboardPage() {
         <div
           className="rounded-2xl px-5 sm:px-8 py-5 sm:py-7 relative overflow-hidden border"
           style={{
-            background: "linear-gradient(135deg, #e8f1f8 0%, #f0f7fc 55%, #f6f8fc 100%)",
-            borderColor: "#c8dff0",
+            background: "var(--banner-bg)",
+            borderColor: "var(--banner-border)",
           }}
         >
           <div
@@ -77,11 +77,11 @@ function DashboardPage() {
           <div className="relative">
             <h1
               className="text-[24px] sm:text-[28px] font-extrabold mb-1.5"
-              style={{ color: "#0f172a", letterSpacing: "-0.025em" }}
+              style={{ color: "var(--banner-heading-color)", letterSpacing: "-0.025em" }}
             >
               Good to see you, {displayName}! 👋
             </h1>
-            <p style={{ fontSize: "15px", color: "#64748b" }}>{subtitle}</p>
+            <p style={{ fontSize: "15px", color: "var(--banner-subtitle-color)" }}>{subtitle}</p>
           </div>
         </div>
 
@@ -93,11 +93,11 @@ function DashboardPage() {
             <div>
               <h2
                 className="font-bold"
-                style={{ fontSize: "18px", color: "#0f172a", letterSpacing: "-0.02em" }}
+                style={{ fontSize: "18px", color: "var(--color-foreground)", letterSpacing: "-0.02em" }}
               >
                 Your projects
               </h2>
-              <p style={{ fontSize: "13px", color: "#64748b", marginTop: "3px" }}>
+              <p style={{ fontSize: "13px", color: "var(--color-muted-foreground)", marginTop: "3px" }}>
                 Jump into any project below
               </p>
             </div>
@@ -119,14 +119,14 @@ function DashboardPage() {
             </div>
           ) : !projects || projects.length === 0 ? (
             <div
-              className="rounded-2xl p-12 text-center bg-white"
-              style={{ border: "2px dashed #e2e8f0" }}
+              className="rounded-2xl p-12 text-center bg-card"
+              style={{ border: "2px dashed var(--color-border)" }}
             >
-              <FolderKanban className="h-10 w-10 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
-              <p className="font-semibold mb-1" style={{ fontSize: "15px", color: "#334155" }}>
+              <FolderKanban className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+              <p className="font-semibold mb-1 text-foreground" style={{ fontSize: "15px" }}>
                 No projects yet
               </p>
-              <p className="mb-5" style={{ fontSize: "13px", color: "#94a3b8" }}>
+              <p className="mb-5 text-muted-foreground" style={{ fontSize: "13px" }}>
                 {role === "admin"
                   ? "Create your first project to start tracking Slack summaries."
                   : "You haven't been added to any projects yet. Ask your admin to add you."}
@@ -163,9 +163,8 @@ function ProjectCard({ project }: { project: Project }) {
     <Link
       to="/projects/$projectId"
       params={{ projectId: project.id }}
-      className="group rounded-2xl bg-white flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg no-underline overflow-hidden"
+      className="group rounded-2xl bg-card flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg no-underline overflow-hidden border border-border"
       style={{
-        border: "1px solid #e2e8f0",
         boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)",
       }}
     >
@@ -182,8 +181,8 @@ function ProjectCard({ project }: { project: Project }) {
           </div>
           <div className="min-w-0 flex-1 pt-0.5">
             <h3
-              className="font-bold truncate transition-colors"
-              style={{ fontSize: "15px", color: "#0f172a" }}
+              className="font-bold truncate transition-colors text-foreground"
+              style={{ fontSize: "15px" }}
             >
               {project.name}
             </h3>
@@ -197,40 +196,40 @@ function ProjectCard({ project }: { project: Project }) {
 
         {project.description ? (
           <p
-            className="line-clamp-2 leading-relaxed flex-1"
-            style={{ fontSize: "13px", color: "#64748b" }}
+            className="line-clamp-2 leading-relaxed flex-1 text-muted-foreground"
+            style={{ fontSize: "13px" }}
           >
             {project.description}
           </p>
         ) : (
-          <p className="italic flex-1" style={{ fontSize: "13px", color: "#94a3b8" }}>
+          <p className="italic flex-1 text-muted-foreground/60" style={{ fontSize: "13px" }}>
             No description provided.
           </p>
         )}
 
         <div
-          className="flex items-center gap-4 pt-3"
-          style={{ borderTop: "1px solid #f1f5f9", fontSize: "12px", color: "#94a3b8" }}
+          className="flex items-center gap-4 pt-3 border-t border-border text-muted-foreground"
+          style={{ fontSize: "12px" }}
         >
           <span className="inline-flex items-center gap-1.5">
             <UsersIcon className="h-3.5 w-3.5" />
-            <span className="font-semibold" style={{ color: "#334155" }}>
+            <span className="font-semibold text-foreground">
               {project.member_count ?? 0}
             </span>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Hash className="h-3.5 w-3.5" />
-            <span className="font-semibold" style={{ color: "#334155" }}>
+            <span className="font-semibold text-foreground">
               {project.channel_count ?? 0}
             </span>
           </span>
           <span className="ml-auto truncate" style={{ fontSize: "11px" }}>
             {project.manager_name ? (
-              <span className="font-medium" style={{ color: "#475569" }}>
+              <span className="font-medium text-muted-foreground">
                 {project.manager_name}
               </span>
             ) : (
-              <span className="italic" style={{ color: "#94a3b8" }}>
+              <span className="italic text-muted-foreground/60">
                 Unassigned
               </span>
             )}
@@ -269,9 +268,9 @@ function StatCard({ card, loading }: { card: StatCardData; loading: boolean }) {
   const Icon = card.icon;
   return (
     <div
-      className="rounded-2xl flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-md overflow-hidden relative"
+      className="rounded-2xl bg-card flex flex-col gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-md overflow-hidden relative"
       style={{
-        background: `linear-gradient(145deg, ${card.gradientFrom}20 0%, ${card.gradientFrom}08 50%, #ffffff 100%)`,
+        background: `linear-gradient(145deg, ${card.gradientFrom}20 0%, ${card.gradientFrom}08 50%, transparent 100%)`,
         border: `1px solid ${card.gradientFrom}28`,
         boxShadow: `0 1px 3px rgba(0,0,0,0.04), 0 4px 16px ${card.gradientFrom}12`,
       }}
@@ -292,19 +291,16 @@ function StatCard({ card, loading }: { card: StatCardData; loading: boolean }) {
       </div>
       <div className="relative">
         <div
-          className="font-extrabold leading-none"
-          style={{ fontSize: "28px", color: "#0f172a", letterSpacing: "-0.03em" }}
+          className="font-extrabold leading-none text-foreground"
+          style={{ fontSize: "28px", letterSpacing: "-0.03em" }}
         >
           {loading ? (
-            <span
-              className="inline-block h-7 w-10 rounded-lg animate-pulse"
-              style={{ background: "#f1f5f9" }}
-            />
+            <span className="inline-block h-7 w-10 rounded-lg animate-pulse bg-muted" />
           ) : (
             (card.value ?? 0).toLocaleString()
           )}
         </div>
-        <div className="mt-1.5 font-medium" style={{ fontSize: "12px", color: "#64748b" }}>
+        <div className="mt-1.5 font-medium text-muted-foreground" style={{ fontSize: "12px" }}>
           {card.label}
         </div>
       </div>
@@ -394,8 +390,8 @@ function DashboardStats({ role }: { role: "admin" | "manager" }) {
   return (
     <section>
       <h2
-        className="font-bold mb-5"
-        style={{ fontSize: "18px", color: "#0f172a", letterSpacing: "-0.02em" }}
+        className="font-bold mb-5 text-foreground"
+        style={{ fontSize: "18px", letterSpacing: "-0.02em" }}
       >
         Workspace stats
       </h2>
