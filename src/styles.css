@@ -77,6 +77,19 @@
 :root {
   --radius: 0.75rem;
 
+  /* Topbar */
+  --topbar-bg: rgba(255, 255, 255, 0.92);
+  --topbar-border: #e2e8f0;
+
+  /* Quick-pick pill buttons (inactive state) */
+  --pill-inactive-bg: #f1f5f9;
+  --pill-inactive-color: #475569;
+
+  /* Calendar/date custom button (inactive state) */
+  --cal-btn-inactive-bg: #e8f1f8;
+  --cal-btn-inactive-color: #0b4f7e;
+  --cal-btn-inactive-border: #c8dff0;
+
   /* Page canvas: very light cool blue-white (#f6f8fc) */
   --background: oklch(0.974 0.008 248);
   --foreground: oklch(0.13 0.024 256);          /* slate-900 #0f172a */
@@ -115,29 +128,43 @@
 }
 
 /* ─────────────────────────────────────────────────────────
-   Dark theme (kept for completeness)
+   Dark theme — Slack dark style
 ───────────────────────────────────────────────────────── */
 .dark {
-  --background: oklch(0.13 0.018 256);
-  --foreground: oklch(0.97 0 0);
-  --card: oklch(0.175 0.02 256);
-  --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.175 0.02 256);
-  --popover-foreground: oklch(0.97 0 0);
-  --primary: #4493c6;
+  /* Slack dark: main canvas #1a1d21, surface #222529 */
+  --background: #1a1d21;
+  --foreground: #d1d2d3;
+  --card: #222529;
+  --card-foreground: #d1d2d3;
+  --popover: #2c2d30;
+  --popover-foreground: #d1d2d3;
+  --primary: #1d9bd1;
   --primary-foreground: #ffffff;
-  --primary-hover: #77b1d8;
-  --secondary: oklch(0.22 0.02 256);
-  --secondary-foreground: oklch(0.97 0 0);
-  --muted: oklch(0.22 0.02 256);
-  --muted-foreground: oklch(0.64 0.015 256);
-  --accent: oklch(0.26 0.05 267);
-  --accent-foreground: oklch(0.97 0 0);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.97 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: #4493c6;
+  --primary-hover: #1264a3;
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: #d1d2d3;
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: #8b8f94;
+  --accent: rgba(29, 155, 209, 0.15);
+  --accent-foreground: #d1d2d3;
+  --destructive: #e01e5a;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #1d9bd1;
+
+  /* Topbar (dark overrides) */
+  --topbar-bg: rgba(26, 29, 33, 0.92);
+  --topbar-border: rgba(255, 255, 255, 0.1);
+
+  /* Quick-pick pill buttons inactive (dark) */
+  --pill-inactive-bg: rgba(255, 255, 255, 0.07);
+  --pill-inactive-color: #8b8f94;
+
+  /* Calendar/date custom button inactive (dark) */
+  --cal-btn-inactive-bg: rgba(29, 155, 209, 0.12);
+  --cal-btn-inactive-color: #4493c6;
+  --cal-btn-inactive-border: rgba(29, 155, 209, 0.25);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -435,5 +462,8 @@ tr[role="button"]:focus-visible {
 }
 .slack-msg:hover {
   background: oklch(0.98 0.005 248);
+}
+.dark .slack-msg:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
