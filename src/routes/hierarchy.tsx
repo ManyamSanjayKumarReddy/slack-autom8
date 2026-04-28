@@ -72,8 +72,8 @@ function ProjectPickerPage() {
       <div
         className="rounded-2xl px-5 sm:px-8 py-5 sm:py-7 relative overflow-hidden border"
         style={{
-          background: "linear-gradient(135deg, #e8f1f8 0%, #f0f7fc 55%, #f6f8fc 100%)",
-          borderColor: "#c8dff0",
+          background: "var(--banner-bg)",
+          borderColor: "var(--banner-border)",
         }}
       >
         <div
@@ -84,24 +84,23 @@ function ProjectPickerPage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full px-2.5 py-1 mb-3"
               style={{ background: "rgba(18,100,163,0.1)", border: "1px solid rgba(18,100,163,0.2)" }}>
-              <GitBranch className="h-3 w-3" style={{ color: "#1264a3" }} />
-              <span className="text-[11px] font-semibold" style={{ color: "#0b4f7e" }}>
+              <GitBranch className="h-3 w-3 text-primary" />
+              <span className="text-[11px] font-semibold" style={{ color: "var(--badge-team-color)" }}>
                 Summary Report
               </span>
             </div>
             <h1 className="font-extrabold mb-1.5"
-              style={{ fontSize: "26px", color: "#0f172a", letterSpacing: "-0.025em" }}>
+              style={{ fontSize: "26px", color: "var(--banner-heading-color)", letterSpacing: "-0.025em" }}>
               Pick a project
             </h1>
-            <p style={{ fontSize: "14px", color: "#64748b" }}>
+            <p style={{ fontSize: "14px", color: "var(--banner-subtitle-color)" }}>
               Select a project to view its full summary report — project digests, members, and personal summaries.
             </p>
           </div>
           {projects && projects.length > 0 && (
-            <div className="rounded-xl px-3.5 py-2 flex items-center gap-2"
-              style={{ background: "#fff", border: "1px solid #c8dff0" }}>
-              <FolderKanban className="h-3.5 w-3.5" style={{ color: "#1264a3" }} />
-              <span className="font-semibold" style={{ fontSize: "13px", color: "#0b4f7e" }}>
+            <div className="rounded-xl px-3.5 py-2 flex items-center gap-2 bg-card border border-border">
+              <FolderKanban className="h-3.5 w-3.5 text-primary" />
+              <span className="font-semibold text-foreground" style={{ fontSize: "13px" }}>
                 {projects.length} {projects.length === 1 ? "project" : "projects"}
               </span>
             </div>
@@ -112,14 +111,13 @@ function ProjectPickerPage() {
       {/* Search */}
       {projects && projects.length > 4 && (
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#94a3b8" }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search projects…"
-            className="w-full rounded-xl bg-white pl-10 pr-4 py-2.5 text-sm transition-shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-300"
-            style={{ border: "1px solid #e2e8f0" }}
+            className="w-full rounded-xl bg-card pl-10 pr-4 py-2.5 text-sm text-foreground transition-shadow focus:outline-none focus:ring-2 focus:ring-primary border border-border"
           />
         </div>
       )}
@@ -132,12 +130,12 @@ function ProjectPickerPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "2px dashed #e2e8f0" }}>
-          <FolderKanban className="h-10 w-10 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
-          <p className="font-semibold mb-1" style={{ fontSize: "15px", color: "#334155" }}>
+        <div className="rounded-2xl bg-card p-16 text-center" style={{ border: "2px dashed var(--color-border)" }}>
+          <FolderKanban className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+          <p className="font-semibold mb-1 text-foreground" style={{ fontSize: "15px" }}>
             {search ? "No matching projects" : "No projects available"}
           </p>
-          <p style={{ fontSize: "13px", color: "#94a3b8" }}>
+          <p className="text-muted-foreground" style={{ fontSize: "13px" }}>
             {search ? "Try a different search term." : "You don't have access to any project reports yet."}
           </p>
         </div>
@@ -160,9 +158,8 @@ function ProjectReportCard({ project }: { project: Project }) {
     <Link
       to="/hierarchy/$projectId"
       params={{ projectId: project.id }}
-      className="group rounded-2xl bg-white flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg no-underline overflow-hidden"
+      className="group rounded-2xl bg-card flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg no-underline overflow-hidden border border-border"
       style={{
-        border: "1px solid #e2e8f0",
         boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)",
       }}
     >
@@ -176,37 +173,37 @@ function ProjectReportCard({ project }: { project: Project }) {
             {init}
           </div>
           <div className="min-w-0 flex-1 pt-0.5">
-            <h3 className="font-bold truncate" style={{ fontSize: "15px", color: "#0f172a" }}>
+            <h3 className="font-bold truncate text-foreground" style={{ fontSize: "15px" }}>
               {project.name}
             </h3>
-            <p className="text-[11.5px] mt-0.5" style={{ color: "#94a3b8" }}>
+            <p className="text-[11.5px] mt-0.5 text-muted-foreground">
               View summary report
             </p>
           </div>
         </div>
 
         {project.description ? (
-          <p className="line-clamp-2 leading-relaxed flex-1" style={{ fontSize: "13px", color: "#64748b" }}>
+          <p className="line-clamp-2 leading-relaxed flex-1 text-muted-foreground" style={{ fontSize: "13px" }}>
             {project.description}
           </p>
         ) : (
-          <p className="italic flex-1" style={{ fontSize: "13px", color: "#94a3b8" }}>
+          <p className="italic flex-1 text-muted-foreground/60" style={{ fontSize: "13px" }}>
             No description provided.
           </p>
         )}
 
-        <div className="flex items-center gap-4 pt-3"
-          style={{ borderTop: "1px solid #f1f5f9", fontSize: "12px", color: "#94a3b8" }}>
+        <div className="flex items-center gap-4 pt-3 border-t border-border text-muted-foreground"
+          style={{ fontSize: "12px" }}>
           <span className="inline-flex items-center gap-1.5">
             <UsersIcon className="h-3.5 w-3.5" />
-            <span className="font-semibold" style={{ color: "#334155" }}>{project.member_count ?? 0}</span>
+            <span className="font-semibold text-foreground">{project.member_count ?? 0}</span>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Hash className="h-3.5 w-3.5" />
-            <span className="font-semibold" style={{ color: "#334155" }}>{project.channel_count ?? 0}</span>
+            <span className="font-semibold text-foreground">{project.channel_count ?? 0}</span>
           </span>
-          <span className="ml-auto inline-flex items-center gap-1 font-semibold transition-colors"
-            style={{ color: "#1264a3", fontSize: "12px" }}>
+          <span className="ml-auto inline-flex items-center gap-1 font-semibold transition-colors text-primary"
+            style={{ fontSize: "12px" }}>
             Open report
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </span>

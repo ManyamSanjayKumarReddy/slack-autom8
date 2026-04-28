@@ -19,16 +19,16 @@ export interface FeedRow {
 }
 
 const MD =
-  "text-[14px] text-slate-700 leading-relaxed " +
-  "[&_h1]:text-[14.5px] [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1 [&_h1]:text-slate-900 " +
-  "[&_h2]:text-[14px] [&_h2]:font-semibold [&_h2]:mt-2.5 [&_h2]:mb-0.5 [&_h2]:text-slate-800 " +
-  "[&_h3]:text-[13.5px] [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:text-slate-800 " +
+  "text-[14px] leading-relaxed text-[var(--feed-text)] " +
+  "[&_h1]:text-[14.5px] [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1 [&_h1]:text-[var(--feed-heading)] " +
+  "[&_h2]:text-[14px] [&_h2]:font-semibold [&_h2]:mt-2.5 [&_h2]:mb-0.5 [&_h2]:text-[var(--feed-heading)] " +
+  "[&_h3]:text-[13.5px] [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:text-[var(--feed-heading)] " +
   "[&_p]:mt-1.5 [&_p]:leading-relaxed " +
   "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ul]:mt-1 " +
   "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-0.5 [&_ol]:mt-1 " +
-  "[&_strong]:font-semibold [&_strong]:text-slate-900 " +
-  "[&_a]:text-indigo-600 [&_a]:underline " +
-  "[&_code]:bg-slate-100 [&_code]:rounded [&_code]:px-1 [&_code]:text-[12.5px]";
+  "[&_strong]:font-semibold [&_strong]:text-[var(--feed-heading)] " +
+  "[&_a]:text-primary [&_a]:underline " +
+  "[&_code]:bg-muted [&_code]:rounded [&_code]:px-1 [&_code]:text-[12.5px]";
 
 function fmtDateBucket(d: string): string {
   try {
@@ -76,7 +76,7 @@ export function SlackStyleFeed({ rows }: { rows: FeedRow[] }) {
 
   return (
     <div
-      className="rounded-2xl bg-white overflow-hidden"
+      className="rounded-2xl bg-card overflow-hidden"
       style={{
         border: "1px solid var(--border)",
         boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.04)",
@@ -126,7 +126,7 @@ function FeedMessage({
     row.type === "project" ? "Project Summary" : row.member_name || "Member";
 
   return (
-    <div className="slack-msg group flex gap-3 px-5 sm:px-6 py-3 border-b border-slate-100 last:border-b-0">
+    <div className="slack-msg group flex gap-3 px-5 sm:px-6 py-3 border-b border-border last:border-b-0">
       {/* Avatar */}
       <div
         className="h-9 w-9 rounded-md flex items-center justify-center text-white text-[11px] font-bold shrink-0 mt-0.5"
@@ -139,13 +139,13 @@ function FeedMessage({
       <div className="min-w-0 flex-1">
         {/* Header row: name · time · badges */}
         <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
-          <span className="font-bold text-[14.5px] text-slate-900 leading-none">
+          <span className="font-bold text-[14.5px] text-foreground leading-none">
             {displayName}
           </span>
           {row.member_role === "team_lead" && (
             <span
               className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded"
-              style={{ background: "#e8f1f8", color: "#0b4f7e" }}
+              style={{ background: "var(--badge-team-bg)", color: "var(--badge-team-color)" }}
             >
               LEAD
             </span>
@@ -153,20 +153,20 @@ function FeedMessage({
           {row.type === "project" && (
             <span
               className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded"
-              style={{ background: "#e8f1f8", color: "#0b4f7e" }}
+              style={{ background: "var(--badge-team-bg)", color: "var(--badge-team-color)" }}
             >
               <BarChart3 className="h-2.5 w-2.5" /> TEAM
             </span>
           )}
-          <span className="text-[12px] text-slate-400 leading-none">
+          <span className="text-[12px] text-muted-foreground leading-none">
             {format(new Date(row.created_at), "h:mm a")}
           </span>
           <span
             className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
             style={
               row.is_auto_generated
-                ? { background: "#ecfdf5", color: "#059669" }
-                : { background: "#faf5ff", color: "#7c3aed" }
+                ? { background: "var(--badge-auto-bg)", color: "var(--badge-auto-color)" }
+                : { background: "var(--badge-manual-bg)", color: "var(--badge-manual-color)" }
             }
           >
             {row.is_auto_generated ? (
@@ -179,7 +179,7 @@ function FeedMessage({
               </>
             )}
           </span>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-muted-foreground">
             · {row.message_count} {row.message_count === 1 ? "msg" : "msgs"}
           </span>
         </div>
@@ -195,7 +195,7 @@ function FeedMessage({
           <button
             type="button"
             onClick={onToggle}
-            className="mt-1 text-[12.5px] font-semibold text-indigo-600 hover:underline"
+            className="mt-1 text-[12.5px] font-semibold text-primary hover:underline"
           >
             {expanded ? "Show less" : "Show more"}
           </button>

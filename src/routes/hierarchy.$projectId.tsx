@@ -262,27 +262,25 @@ function Inner() {
             </div>
             <div className="min-w-0">
               <h1 className="font-extrabold mb-1 truncate"
-                style={{ fontSize: "24px", color: "#0f172a", letterSpacing: "-0.025em" }}>
+                style={{ fontSize: "24px", color: "var(--banner-heading-color)", letterSpacing: "-0.025em" }}>
                 {project?.project_name ?? "Project Report"}
               </h1>
-              <p style={{ fontSize: "13.5px", color: "#64748b" }}>
+              <p style={{ fontSize: "13.5px", color: "var(--banner-subtitle-color)" }}>
                 Project and personal summaries for the selected date range.
               </p>
             </div>
           </div>
           {rows.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="rounded-xl px-3 py-2 flex items-center gap-2"
-                style={{ background: "#fff", border: "1px solid #c8dff0" }}>
-                <BarChart3 className="h-3.5 w-3.5" style={{ color: "#1264a3" }} />
-                <span className="font-semibold" style={{ fontSize: "12.5px", color: "#0b4f7e" }}>
+              <div className="rounded-xl px-3 py-2 flex items-center gap-2 bg-card border border-border">
+                <BarChart3 className="h-3.5 w-3.5 text-primary" />
+                <span className="font-semibold text-foreground" style={{ fontSize: "12.5px" }}>
                   {projectCount} project
                 </span>
               </div>
-              <div className="rounded-xl px-3 py-2 flex items-center gap-2"
-                style={{ background: "#fff", border: "1px solid #c8dff0" }}>
-                <Users className="h-3.5 w-3.5" style={{ color: "#8b5cf6" }} />
-                <span className="font-semibold" style={{ fontSize: "12.5px", color: "#6d28d9" }}>
+              <div className="rounded-xl px-3 py-2 flex items-center gap-2 bg-card border border-border">
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-semibold text-foreground" style={{ fontSize: "12.5px" }}>
                   {personalCount} personal
                 </span>
               </div>
@@ -293,8 +291,8 @@ function Inner() {
 
       {/* Date filter bar */}
       <div
-        className="rounded-2xl bg-white px-4 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-2 sm:flex-wrap"
-        style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+        className="rounded-2xl bg-card px-4 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-2 sm:flex-wrap"
+        style={{ border: "1px solid var(--color-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
       >
         <div className="flex items-center gap-2 flex-wrap">
           {QUICK_PICKS.map(({ label, key }) => {
@@ -304,13 +302,13 @@ function Inner() {
                 className="rounded-full px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[34px]"
                 style={active
                   ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
-                  : { background: "#f1f5f9", color: "#475569" }}>
+                  : { background: "var(--pill-inactive-bg)", color: "var(--pill-inactive-color)" }}>
                 {label}
               </button>
             );
           })}
 
-          <div className="hidden sm:block w-px h-5 mx-1 shrink-0" style={{ background: "#e2e8f0" }} />
+          <div className="hidden sm:block w-px h-5 mx-1 shrink-0 bg-border" />
 
           <Popover open={calOpen} onOpenChange={setCalOpen}>
             <PopoverTrigger asChild>
@@ -318,7 +316,7 @@ function Inner() {
                 className="inline-flex items-center gap-2 rounded-full px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[34px]"
                 style={activeQuick === "custom"
                   ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
-                  : { background: "#e8f1f8", color: "#0b4f7e", border: "1px solid #c8dff0" }}>
+                  : { background: "var(--cal-btn-inactive-bg)", color: "var(--cal-btn-inactive-color)", border: "1px solid var(--cal-btn-inactive-border)" }}>
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {formatRange(range)}
               </button>
@@ -351,24 +349,23 @@ function Inner() {
 
       {/* Results */}
       {loading && !project ? (
-        <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "1px solid #e2e8f0" }}>
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" style={{ color: "#1264a3" }} />
-          <p style={{ fontSize: "14px", color: "#64748b" }}>Loading summaries…</p>
+        <div className="rounded-2xl bg-card p-16 text-center border border-border">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-primary" />
+          <p className="text-muted-foreground" style={{ fontSize: "14px" }}>Loading summaries…</p>
         </div>
       ) : notFound || !project || rows.length === 0 ? (
-        <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "2px dashed #e2e8f0" }}>
-          <FileSearch className="h-10 w-10 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
-          <p className="font-semibold mb-1" style={{ fontSize: "15px", color: "#334155" }}>
+        <div className="rounded-2xl bg-card p-16 text-center" style={{ border: "2px dashed var(--color-border)" }}>
+          <FileSearch className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+          <p className="font-semibold mb-1 text-foreground" style={{ fontSize: "15px" }}>
             No summaries found
           </p>
-          <p style={{ fontSize: "13px", color: "#94a3b8" }}>
+          <p className="text-muted-foreground" style={{ fontSize: "13px" }}>
             Try a different date range, or generate summaries from the project page.
           </p>
           <Link
             to="/projects/$projectId"
             params={{ projectId }}
-            className="inline-flex items-center gap-1.5 mt-4 text-xs font-semibold no-underline"
-            style={{ color: "#1264a3" }}
+            className="inline-flex items-center gap-1.5 mt-4 text-xs font-semibold no-underline text-primary"
           >
             Go to project →
           </Link>
