@@ -78,12 +78,12 @@ function LandingPage() {
   return (
     <main
       className="min-h-screen relative overflow-hidden"
-      style={{ background: "linear-gradient(180deg, #fafbff 0%, #f5f7ff 100%)" }}
+      style={{ background: "linear-gradient(180deg, #fafbff 0%, #f0f7fc 100%)" }}
     >
       {/* Decorative animated blobs */}
       <div
         className="absolute top-[-150px] left-[-100px] h-[400px] w-[400px] sm:h-[600px] sm:w-[600px] rounded-full pointer-events-none lp-blob"
-        style={{ background: "radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 65%)" }}
+        style={{ background: "radial-gradient(circle, rgba(18,100,163,0.18) 0%, transparent 65%)" }}
       />
       <div
         className="absolute top-[100px] right-[-100px] h-[300px] w-[300px] sm:h-[500px] sm:w-[500px] rounded-full pointer-events-none lp-blob"
@@ -115,8 +115,8 @@ function LandingPage() {
             <div
               className="h-10 w-10 rounded-xl flex items-center justify-center transition-transform hover:scale-105 hover:rotate-3"
               style={{
-                background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-                boxShadow: "0 4px 14px rgba(99,102,241,0.4)",
+                background: "linear-gradient(135deg, #1264a3, #0f5289)",
+                boxShadow: "0 4px 14px rgba(18,100,163,0.4)",
               }}
             >
               <SlackIcon className="h-5 w-5" />
@@ -154,15 +154,15 @@ function LandingPage() {
           style={{
             background: "rgba(255,255,255,0.7)",
             backdropFilter: "blur(8px)",
-            border: "1px solid rgba(99,102,241,0.2)",
+            border: "1px solid rgba(18,100,163,0.2)",
           }}
         >
           <span
             className="lp-pulse-dot inline-block h-1.5 w-1.5 rounded-full"
-            style={{ background: "#6366f1", color: "#6366f1" }}
+            style={{ background: "#1264a3", color: "#1264a3" }}
           />
-          <Sparkles className="h-3.5 w-3.5" style={{ color: "#6366f1" }} />
-          <span className="text-[12px] font-semibold" style={{ color: "#4338ca" }}>
+          <Sparkles className="h-3.5 w-3.5" style={{ color: "#1264a3" }} />
+          <span className="text-[12px] font-semibold" style={{ color: "#0b4f7e" }}>
             Powered by AI · Built for Slack
           </span>
         </div>
@@ -180,7 +180,7 @@ function LandingPage() {
           <span
             className="lp-gradient-text"
             style={{
-              background: "linear-gradient(90deg, #6366f1 0%, #8b5cf6 35%, #ec4899 70%, #6366f1 100%)",
+              background: "linear-gradient(90deg, #1264a3 0%, #8b5cf6 35%, #ec4899 70%, #1264a3 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -212,8 +212,8 @@ function LandingPage() {
             onClick={handleLogin}
             className="group inline-flex items-center gap-2.5 rounded-xl px-6 py-3.5 text-[14px] font-semibold text-white lp-cta"
             style={{
-              background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-              boxShadow: "0 8px 24px rgba(99,102,241,0.4)",
+              background: "linear-gradient(135deg, #1264a3 0%, #0f5289 100%)",
+              boxShadow: "0 8px 24px rgba(18,100,163,0.4)",
             }}
           >
             <SlackIcon className="h-5 w-5" />
@@ -270,7 +270,7 @@ function LandingPage() {
         <div className="flex items-center gap-2.5">
           <div
             className="h-7 w-7 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)" }}
+            style={{ background: "linear-gradient(135deg, #1264a3, #0f5289)" }}
           >
             <SlackIcon className="h-3.5 w-3.5" />
           </div>
@@ -293,7 +293,7 @@ function FeaturesSection() {
   return (
     <section className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24">
       <div ref={headerRef} className="text-center mb-14 lp-reveal">
-        <div className="text-[11px] font-bold uppercase tracking-[0.15em] mb-3" style={{ color: "#6366f1" }}>
+        <div className="text-[11px] font-bold uppercase tracking-[0.15em] mb-3" style={{ color: "#1264a3" }}>
           Why teams pick Slack Autom8
         </div>
         <h2
@@ -342,11 +342,11 @@ function FeatureCard({
       <div
         className="h-11 w-11 rounded-xl flex items-center justify-center mb-4 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6"
         style={{
-          background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.08))",
-          border: "1px solid rgba(99,102,241,0.15)",
+          background: "linear-gradient(135deg, rgba(18,100,163,0.1), rgba(139,92,246,0.08))",
+          border: "1px solid rgba(18,100,163,0.15)",
         }}
       >
-        <Icon className="h-5 w-5" style={{ color: "#6366f1" }} />
+        <Icon className="h-5 w-5" style={{ color: "#1264a3" }} />
       </div>
       <h3 className="font-bold mb-2" style={{ fontSize: "15px", color: "#0f172a", letterSpacing: "-0.01em" }}>
         {title}
@@ -361,7 +361,7 @@ function HowItWorksSection() {
   return (
     <section id="how-it-works" className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24">
       <div ref={headerRef} className="text-center mb-14 lp-reveal">
-        <div className="text-[11px] font-bold uppercase tracking-[0.15em] mb-3" style={{ color: "#6366f1" }}>
+        <div className="text-[11px] font-bold uppercase tracking-[0.15em] mb-3" style={{ color: "#1264a3" }}>
           How it works
         </div>
         <h2
@@ -407,7 +407,7 @@ function StepCard({
         <div
           className="text-[36px] font-extrabold mb-2 leading-none lp-gradient-text"
           style={{
-            background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)",
+            background: "linear-gradient(135deg, #1264a3 0%, #8b5cf6 50%, #ec4899 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
@@ -443,7 +443,7 @@ function StatsStrip() {
         <div key={label} className="text-center group">
           <Icon
             className="h-5 w-5 mx-auto mb-2 transition-transform duration-300 group-hover:scale-125"
-            style={{ color: "#6366f1" }}
+            style={{ color: "#1264a3" }}
           />
           <div className="font-extrabold" style={{ fontSize: "18px", color: "#0f172a" }}>
             {value}
@@ -466,10 +466,10 @@ function CTASection({ onLogin }: { onLogin: () => void }) {
         className="rounded-3xl px-6 sm:px-12 py-14 text-center relative overflow-hidden lp-reveal"
         style={{
           background:
-            "linear-gradient(135deg, #4338ca 0%, #6366f1 35%, #8b5cf6 70%, #4338ca 100%)",
+            "linear-gradient(135deg, #0b4f7e 0%, #1264a3 35%, #8b5cf6 70%, #0b4f7e 100%)",
           backgroundSize: "200% 200%",
           animation: "lp-gradient-shift 12s ease-in-out infinite",
-          boxShadow: "0 30px 80px -20px rgba(99,102,241,0.5)",
+          boxShadow: "0 30px 80px -20px rgba(18,100,163,0.5)",
         }}
       >
         <div
@@ -502,7 +502,7 @@ function CTASection({ onLogin }: { onLogin: () => void }) {
             className="group inline-flex items-center gap-2.5 rounded-xl px-6 py-3.5 text-[14px] font-semibold lp-cta"
             style={{
               background: "#fff",
-              color: "#4338ca",
+              color: "#0b4f7e",
               boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
             }}
           >

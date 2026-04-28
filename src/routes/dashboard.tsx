@@ -63,13 +63,13 @@ function DashboardPage() {
         <div
           className="rounded-2xl px-5 sm:px-8 py-5 sm:py-7 relative overflow-hidden border"
           style={{
-            background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)",
-            borderColor: "#e0e7ff",
+            background: "linear-gradient(135deg, #e8f1f8 0%, #f0f7fc 55%, #f6f8fc 100%)",
+            borderColor: "#c8dff0",
           }}
         >
           <div
             className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, rgba(18,100,163,0.14) 0%, transparent 70%)" }}
           />
           <div className="absolute right-[60px] bottom-[-30px] h-[120px] w-[120px] rounded-full pointer-events-none"
             style={{ background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)" }}
@@ -104,7 +104,7 @@ function DashboardPage() {
             <Link
               to="/projects"
               className="inline-flex items-center gap-1.5 font-semibold hover:opacity-75 transition-opacity no-underline"
-              style={{ fontSize: "13px", color: "#6366f1" }}
+              style={{ fontSize: "13px", color: "#1264a3" }}
             >
               View all
               <ArrowRight className="h-3.5 w-3.5" />
@@ -135,7 +135,7 @@ function DashboardPage() {
                 <Link
                   to="/projects"
                   className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold no-underline transition-opacity hover:opacity-80"
-                  style={{ background: "#6366f1", color: "#fff" }}
+                  style={{ background: "#1264a3", color: "#fff" }}
                 >
                   <FolderKanban className="h-4 w-4" />
                   Go to Projects
@@ -347,7 +347,7 @@ function DashboardStats({ role }: { role: "admin" | "manager" }) {
       icon: Users,
       color: "#8b5cf6",
       gradientFrom: "#8b5cf6",
-      gradientTo: "#6366f1",
+      gradientTo: "#1264a3",
     },
     {
       label: "Total Projects",
