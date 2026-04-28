@@ -1467,7 +1467,7 @@ function SummariesSection({
                 onSelect={(r) => {
                   setRange(r);
                   setActiveQuick("custom");
-                  if (r?.from && r?.to) setCalOpen(false);
+                  if (r?.from && r?.to && r.from.getTime() !== r.to.getTime()) setCalOpen(false);
                 }}
                 numberOfMonths={isMobile ? 1 : 2}
                 disabled={{ after: today }}
@@ -1505,7 +1505,7 @@ function SummariesSection({
       ) : (
         <>
           <SlackStyleFeed rows={rows} />
-          <SlackMessageComposer placeholder={`Add a note to ${scope === "personal" ? "my summaries" : "project summaries"}…`} />
+          <SlackMessageComposer placeholder={scope === "personal" && user?.name ? `What ${user.name} has done last week` : "What has the team done last week?"} />
         </>
       )}
 

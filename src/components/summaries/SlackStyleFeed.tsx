@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format, isToday, isYesterday } from "date-fns";
-import { Sparkles, PenLine, BarChart3, ChevronRight } from "lucide-react";
+import { Sparkles, PenLine } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { nameToGradient, nameInitials } from "@/lib/avatar-colors";
@@ -31,9 +31,10 @@ const MD =
   "[&_a]:text-primary [&_a]:underline " +
   "[&_code]:bg-muted [&_code]:rounded [&_code]:px-1 [&_code]:text-[12.5px]";
 
+const TRUNCATE_CHARS = 400;
+
 function fmtDateBucket(d: string): string {
   try {
-    // Use noon to avoid timezone edge-cases
     const dt = new Date(d + "T12:00:00");
     if (isToday(dt)) return "Today";
     if (isYesterday(dt)) return "Yesterday";
@@ -107,12 +108,11 @@ function FeedMessage({
   onToggle: () => void;
 }) {
   const av = avatarFor(row);
-  const isLong = row.summary_text.length > 280;
+  const isLong = row.summary_text.length > TRUNCATE_CHARS;
   const displayName = row.type === "project" ? "Project Summary" : (row.member_name || "Member");
 
   return (
     <div className="slack-msg group flex gap-3 px-5 sm:px-6 py-3 border-b border-border last:border-b-0">
-      {/* Avatar — colored initials, not generic "P" */}
       <div
         className="h-9 w-9 rounded-md flex items-center justify-center text-white text-[11px] font-bold shrink-0 mt-0.5 select-none"
         style={{ background: av.gradient, boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }}
@@ -120,15 +120,14 @@ function FeedMessage({
         {av.letters}
       </div>
 
-      {/* Body */}
       <div className="min-w-0 flex-1">
-        {/* Header row: name · badges · timestamp · msg count */}
+        {/* Header row */}
         <div className="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5 mb-0.5">
           <span className="font-bold text-[15px] text-foreground leading-snug">
             {displayName}
           </span>
 
-          {/* LEAD badge — subtle, lowercase */}
+          {/* LEAD badge */}
           {row.member_role === "team_lead" && (
             <span
               className="inline-flex items-center text-[10px] font-semibold px-1.5 py-[2px] rounded"
@@ -138,18 +137,17 @@ function FeedMessage({
             </span>
           )}
 
-          {/* TEAM badge — workspace-style indicator */}
+          {/* PROJECT SUMMARY label for team-type rows */}
           {row.type === "project" && (
             <span
-              className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-[2px] rounded"
-              style={{ background: "var(--badge-team-bg)", color: "var(--badge-team-color)" }}
+              className="inline-flex items-center text-[10px] font-semibold px-1.5 py-[2px] rounded"
+              style={{ background: "rgba(18,100,163,0.08)", color: "#1264a3" }}
             >
-              <BarChart3 className="h-2.5 w-2.5" />
-              team
+              project
             </span>
           )}
 
-          {/* Auto (green) / Manual (amber) badge */}
+          {/* Auto / Manual badge */}
           <span
             className="inline-flex items-center gap-[3px] rounded-full px-1.5 py-[2px] text-[10px] font-semibold"
             style={
@@ -165,7 +163,7 @@ function FeedMessage({
             )}
           </span>
 
-          {/* Timestamp — 11px, muted */}
+          {/* Timestamp */}
           <span className="text-[11px] text-muted-foreground/70 leading-none">
             {format(new Date(row.created_at), "h:mm a")}
           </span>
@@ -174,36 +172,23 @@ function FeedMessage({
           </span>
         </div>
 
-        {/* Markdown body — line-height 1.5, no size inflation on headers */}
-        <div className={`${expanded ? "" : "line-clamp-3"} ${MD}`}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{row.summary_text}</ReactMarkdown>
+        {/* Markdown body — always visible, optionally truncated */}
+        <div className={MD}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {isLong && !expanded
+              ? row.summary_text.slice(0, TRUNCATE_CHARS) + "…"
+              : row.summary_text}
+          </ReactMarkdown>
         </div>
 
-        {/* Thread-style expand — replaces plain "Show more" */}
+        {/* Show more / Show less */}
         {isLong && (
           <button
             type="button"
             onClick={onToggle}
-            className="group/thread mt-2 flex items-center gap-1.5"
+            className="mt-1.5 text-[12.5px] font-semibold text-primary hover:underline"
           >
-            {/* Mini avatar stack */}
-            <div
-              className="h-[18px] w-[18px] rounded-[3px] text-[7px] font-bold text-white flex items-center justify-center shrink-0 ring-1 ring-card"
-              style={{ background: av.gradient }}
-            >
-              {av.letters[0]}
-            </div>
-            <span className="text-[12.5px] font-semibold text-primary group-hover/thread:underline">
-              {expanded ? "Collapse thread" : "View thread"}
-            </span>
-            {!expanded && (
-              <span className="text-[11px] text-muted-foreground/60">
-                Last reply {format(new Date(row.created_at), "h:mm a")}
-              </span>
-            )}
-            <ChevronRight
-              className={`h-3 w-3 text-muted-foreground/60 transition-transform ${expanded ? "rotate-90" : ""}`}
-            />
+            {expanded ? "Show less" : "Show more"}
           </button>
         )}
       </div>

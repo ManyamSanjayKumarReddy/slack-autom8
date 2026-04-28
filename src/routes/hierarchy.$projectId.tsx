@@ -328,7 +328,7 @@ function Inner() {
                 onSelect={(r) => {
                   setRange(r);
                   setActiveQuick("custom");
-                  if (r?.from && r?.to) setCalOpen(false);
+                  if (r?.from && r?.to && r.from.getTime() !== r.to.getTime()) setCalOpen(false);
                 }}
                 numberOfMonths={isMobile ? 1 : 2}
                 disabled={{ after: today }}
