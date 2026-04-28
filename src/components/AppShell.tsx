@@ -14,7 +14,6 @@ import {
   Plus,
   Search,
   Bell,
-  HelpCircle,
 } from "lucide-react";
 import { SlackIcon } from "@/components/SlackIcon";
 import { clearToken } from "@/lib/auth";
@@ -386,16 +385,16 @@ function TopHeader({
     <header
       className="sticky top-0 z-30 flex items-center gap-3 px-4 sm:px-6 h-[56px] shrink-0"
       style={{
-        background: "rgba(255,255,255,0.92)",
+        background: "var(--topbar-bg)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
-        borderBottom: "1px solid #e2e8f0",
+        borderBottom: "1px solid var(--topbar-border)",
       }}
     >
       <button
         type="button"
         onClick={onOpenMobile}
-        className="lg:hidden h-9 w-9 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100"
+        className="lg:hidden h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted"
         aria-label="Open navigation"
       >
         <Menu className="h-5 w-5" />
@@ -403,28 +402,21 @@ function TopHeader({
 
       <div className="min-w-0 flex-1">
         {title && (
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
             <Hash className="h-4 w-4 text-slate-400 shrink-0" />
             <h1
-              className="font-extrabold truncate text-slate-900"
+              className="font-extrabold truncate shrink-0 max-w-[200px] sm:max-w-xs text-slate-900 dark:text-white"
               style={{ fontSize: "15.5px", letterSpacing: "-0.01em" }}
             >
               {title}
             </h1>
             {subtitle && (
-              <span className="hidden sm:inline text-[12.5px] text-slate-500 truncate">· {subtitle}</span>
+              <span className="hidden sm:inline text-[12.5px] text-slate-500 dark:text-slate-400 truncate min-w-0">· {subtitle}</span>
             )}
           </div>
         )}
       </div>
 
-      <button
-        className="h-8 w-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
-        aria-label="Help"
-        title="Help"
-      >
-        <HelpCircle className="h-4 w-4" />
-      </button>
     </header>
   );
 }

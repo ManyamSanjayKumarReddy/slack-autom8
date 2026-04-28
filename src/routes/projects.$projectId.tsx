@@ -265,7 +265,7 @@ function ProjectTabs({
 
   return (
     <div className="-mt-6 sm:-mt-7">
-      <div className="flex items-center border-b border-slate-200 bg-transparent px-0 -mx-5 sm:-mx-8 overflow-x-auto">
+      <div className="flex items-center border-b border-border bg-transparent px-0 -mx-5 sm:-mx-8">
         {tabs.map((t) => {
           const Icon = t.icon;
           const active = activeTab === t.key;
@@ -278,7 +278,7 @@ function ProjectTabs({
                 "inline-flex items-center gap-1.5 px-5 py-3.5 text-[14px] font-medium whitespace-nowrap transition-colors border-b-2 -mb-px " +
                 (active
                   ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700")
+                  : "border-transparent text-muted-foreground hover:text-foreground")
               }
             >
               <Icon className="h-4 w-4" />
@@ -300,10 +300,10 @@ function ProjectTabs({
           />
 
           <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-5 pb-10">
-            <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
               <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
             </div>
-            <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
               <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
             </div>
           </div>
@@ -344,21 +344,21 @@ function OverviewTab({
   return (
     <div className="pt-5 pb-2">
       {/* Project header card — description + contextual actions + stats */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden mb-6">
         {/* Description row with inline icon-only action buttons */}
         <div className="flex items-start gap-4 px-7 pt-7 pb-6">
           <div className="flex-1 min-w-0">
             {project.description ? (
-              <p className="text-[16px] text-slate-600 leading-relaxed">{project.description}</p>
+              <p className="text-[16px] text-foreground/80 leading-relaxed">{project.description}</p>
             ) : (
-              <p className="text-[16px] italic text-slate-400">No description provided.</p>
+              <p className="text-[16px] italic text-muted-foreground">No description provided.</p>
             )}
           </div>
           {canManage && (
             <div className="flex items-center gap-1 shrink-0 -mt-0.5">
               <button
                 onClick={onEdit}
-                className="h-9 w-9 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 title="Edit project"
               >
                 <Pencil className="h-[17px] w-[17px]" />
@@ -366,7 +366,7 @@ function OverviewTab({
               {isAdmin && (
                 <button
                   onClick={onDelete}
-                  className="h-9 w-9 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                  className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                   title="Delete project"
                 >
                   <Trash2 className="h-[17px] w-[17px]" />
@@ -376,14 +376,14 @@ function OverviewTab({
           )}
         </div>
 
-        <div className="border-t border-slate-100 mx-6" />
+        <div className="border-t border-border mx-6" />
 
         {/* Stat pills grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-7 pt-5">
-          <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-5 py-5">
-            <div className="text-[11.5px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Manager</div>
+          <div className="rounded-xl bg-muted/50 border border-border px-5 py-5">
+            <div className="text-[11.5px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Manager</div>
             <div className="flex flex-col gap-1.5">
-              <span className={`text-[15px] font-semibold leading-snug ${project.manager_name ? "text-slate-800" : "italic text-slate-400"}`}>
+              <span className={`text-[15px] font-semibold leading-snug ${project.manager_name ? "text-foreground" : "italic text-muted-foreground"}`}>
                 {project.manager_name || "Unassigned"}
               </span>
               {isAdmin && (
@@ -397,20 +397,20 @@ function OverviewTab({
             </div>
           </div>
 
-          <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-5 py-5">
-            <div className="text-[11.5px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Members</div>
-            <div className="text-[26px] font-bold text-slate-800 leading-none">{project.member_count ?? 0}</div>
+          <div className="rounded-xl bg-muted/50 border border-border px-5 py-5">
+            <div className="text-[11.5px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Members</div>
+            <div className="text-[26px] font-bold text-foreground leading-none">{project.member_count ?? 0}</div>
           </div>
 
-          <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-5 py-5">
-            <div className="text-[11.5px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Channels</div>
-            <div className="text-[26px] font-bold text-slate-800 leading-none">{project.channel_count ?? 0}</div>
+          <div className="rounded-xl bg-muted/50 border border-border px-5 py-5">
+            <div className="text-[11.5px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Channels</div>
+            <div className="text-[26px] font-bold text-foreground leading-none">{project.channel_count ?? 0}</div>
           </div>
 
           {project.created_at && (
-            <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-5 py-5">
-              <div className="text-[11.5px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Created</div>
-              <div className="text-[15px] font-semibold text-slate-800">{new Date(project.created_at).toLocaleDateString()}</div>
+            <div className="rounded-xl bg-muted/50 border border-border px-5 py-5">
+              <div className="text-[11.5px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Created</div>
+              <div className="text-[15px] font-semibold text-foreground">{new Date(project.created_at).toLocaleDateString()}</div>
             </div>
           )}
         </div>
@@ -539,6 +539,7 @@ function ChannelsTab({
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [confirmRemoveChannel, setConfirmRemoveChannel] = useState<ProjectChannel | null>(null);
 
   const fetchChannels = async () => {
     setLoading(true);
@@ -566,10 +567,10 @@ function ChannelsTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  const handleRemove = async (channelId: string) => {
-    setRemovingId(channelId);
+  const handleRemove = async (channel: ProjectChannel) => {
+    setRemovingId(channel.channel_id);
     try {
-      const res = await apiFetch(`/projects/${projectId}/channels/${channelId}`, {
+      const res = await apiFetch(`/projects/${projectId}/channels/${channel.channel_id}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -581,20 +582,21 @@ function ChannelsTab({
       onChanged();
     } finally {
       setRemovingId(null);
+      setConfirmRemoveChannel(null);
     }
   };
 
   return (
     <div>
-      <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+      <div className="px-6 py-5 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
             <Hash className="h-4 w-4 text-indigo-500" />
           </div>
           <div>
-            <h2 className="text-[15px] font-semibold text-slate-800 leading-none">Channels</h2>
+            <h2 className="text-[15px] font-semibold text-foreground leading-none">Channels</h2>
             {channels !== null && (
-              <p className="text-[12px] text-slate-400 mt-1">
+              <p className="text-[12px] text-muted-foreground mt-1">
                 {channels.length} {channels.length === 1 ? "channel" : "channels"}
               </p>
             )}
@@ -623,18 +625,18 @@ function ChannelsTab({
           {channels.map((c) => (
             <li
               key={c.channel_id}
-              className="flex items-center justify-between gap-3 py-4 px-6 hover:bg-slate-50/60 transition-colors min-h-[56px]"
+              className="flex items-center justify-between gap-3 py-4 px-6 hover:bg-muted/30 transition-colors min-h-[56px]"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <span className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 shrink-0 font-semibold text-[15px]">
+                <span className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0 font-semibold text-[15px]">
                   #
                 </span>
                 <div className="min-w-0">
-                  <span className="text-[15px] font-semibold text-slate-800 truncate block">
+                  <span className="text-[15px] font-semibold text-foreground truncate block">
                     {c.channel_name}
                   </span>
                   {c.added_at && (
-                    <span className="text-[12px] text-slate-400">
+                    <span className="text-[12px] text-muted-foreground">
                       added {new Date(c.added_at).toLocaleDateString()}
                     </span>
                   )}
@@ -642,9 +644,9 @@ function ChannelsTab({
               </div>
               {canManage && (
                 <button
-                  onClick={() => handleRemove(c.channel_id)}
+                  onClick={() => setConfirmRemoveChannel(c)}
                   disabled={removingId === c.channel_id}
-                  className="h-8 w-8 rounded-md flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40"
+                  className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-40"
                   title="Remove channel"
                 >
                   {removingId === c.channel_id ? (
@@ -670,6 +672,32 @@ function ChannelsTab({
           }}
         />
       )}
+
+      <AlertDialog
+        open={confirmRemoveChannel !== null}
+        onOpenChange={(o) => !o && setConfirmRemoveChannel(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this channel?</AlertDialogTitle>
+            <AlertDialogDescription>
+              #{confirmRemoveChannel?.channel_name} will be removed from this project.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (confirmRemoveChannel) handleRemove(confirmRemoveChannel);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -880,15 +908,15 @@ function MembersTab({
 
   return (
     <div>
-      <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+      <div className="px-6 py-5 border-b border-border flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
             <UsersIcon className="h-4 w-4 text-purple-500" />
           </div>
           <div>
-            <h2 className="text-[15px] font-semibold text-slate-800 leading-none">Members</h2>
+            <h2 className="text-[15px] font-semibold text-foreground leading-none">Members</h2>
             {members !== null && (
-              <p className="text-[12px] text-slate-400 mt-1">
+              <p className="text-[12px] text-muted-foreground mt-1">
                 {members.length} {members.length === 1 ? "member" : "members"}
               </p>
             )}
@@ -917,19 +945,19 @@ function MembersTab({
           {members.map((m) => (
             <li
               key={m.user_id}
-              className="flex items-center gap-3.5 py-4 px-6 hover:bg-slate-50/60 transition-colors min-h-[60px]"
+              className="flex items-center gap-3.5 py-4 px-6 hover:bg-muted/30 transition-colors min-h-[60px]"
             >
               <MemberAvatar name={m.name} />
               <div className="min-w-0 flex-1">
-                <div className="text-[15px] font-semibold text-slate-800 truncate leading-snug">{m.name}</div>
-                <div className="text-[13px] text-slate-400 mt-0.5 truncate">{m.email}</div>
+                <div className="text-[15px] font-semibold text-foreground truncate leading-snug">{m.name}</div>
+                <div className="text-[13px] text-muted-foreground mt-0.5 truncate">{m.email}</div>
               </div>
               <Badge
                 variant="outline"
                 className={`shrink-0 text-[12px] font-semibold px-3 py-1 ${
                   m.project_role === "team_lead"
-                    ? "border-indigo-200 text-indigo-700 bg-indigo-50"
-                    : "border-slate-200 text-slate-600 bg-slate-50"
+                    ? "border-indigo-200 text-indigo-700 bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:bg-indigo-950/50"
+                    : "border-border text-muted-foreground bg-muted"
                 }`}
               >
                 {m.project_role === "team_lead" ? "Team Lead" : "Employee"}
@@ -938,14 +966,14 @@ function MembersTab({
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     onClick={() => setEditingMember(m)}
-                    className="h-8 w-8 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                    className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                     title="Edit role"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
                   <button
                     onClick={() => setConfirmRemove(m)}
-                    className="h-8 w-8 rounded-md flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                    className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                     title="Remove member"
                   >
                     <X className="h-3.5 w-3.5" />
@@ -1392,7 +1420,7 @@ function SummariesSection({
               </TabsList>
             </Tabs>
           ) : (
-            <h3 className="text-base font-semibold text-slate-800">
+            <h3 className="text-base font-semibold text-foreground">
               {scope === "personal" ? "My Summaries" : "Project Summaries"}
             </h3>
           )}
@@ -1418,8 +1446,8 @@ function SummariesSection({
 
       {/* Date filter bar */}
       <div
-        className="rounded-2xl bg-white px-4 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-2 sm:flex-wrap"
-        style={{ border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+        className="rounded-2xl bg-card px-4 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-2 sm:flex-wrap"
+        style={{ border: "1px solid var(--color-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
       >
         <div className="flex items-center gap-2 flex-wrap">
           {QUICK_PICKS.map(({ label, key }) => {
@@ -1429,7 +1457,7 @@ function SummariesSection({
                 className="rounded-full px-4 py-2 text-sm font-semibold transition-all min-h-[36px]"
                 style={active
                   ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
-                  : { background: "#f1f5f9", color: "#475569" }}>
+                  : { background: "var(--pill-inactive-bg)", color: "var(--pill-inactive-color)" }}>
                 {label}
               </button>
             );
@@ -1443,7 +1471,7 @@ function SummariesSection({
                 className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all min-h-[36px]"
                 style={activeQuick === "custom"
                   ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
-                  : { background: "#e8f1f8", color: "#0b4f7e", border: "1px solid #c8dff0" }}>
+                  : { background: "var(--cal-btn-inactive-bg)", color: "var(--cal-btn-inactive-color)", border: "1px solid var(--cal-btn-inactive-border)" }}>
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {formatRange(range)}
               </button>
@@ -1476,17 +1504,17 @@ function SummariesSection({
 
       {/* Feed */}
       {loading && !project ? (
-        <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "1px solid #e2e8f0" }}>
+        <div className="rounded-2xl bg-card p-16 text-center" style={{ border: "1px solid var(--color-border)" }}>
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" style={{ color: "#1264a3" }} />
-          <p style={{ fontSize: "14px", color: "#64748b" }}>Loading summaries…</p>
+          <p className="text-muted-foreground" style={{ fontSize: "14px" }}>Loading summaries…</p>
         </div>
       ) : notFound || !project || rows.length === 0 ? (
-        <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "2px dashed #e2e8f0" }}>
-          <FileSearch className="h-10 w-10 mx-auto mb-3" style={{ color: "#cbd5e1" }} />
-          <p className="font-semibold mb-1" style={{ fontSize: "15px", color: "#334155" }}>
+        <div className="rounded-2xl bg-card p-16 text-center" style={{ border: "2px dashed var(--color-border)" }}>
+          <FileSearch className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+          <p className="font-semibold mb-1 text-foreground" style={{ fontSize: "15px" }}>
             No summaries found
           </p>
-          <p style={{ fontSize: "13px", color: "#94a3b8" }}>
+          <p className="text-muted-foreground" style={{ fontSize: "13px" }}>
             Try a different date range, or generate a summary above.
           </p>
         </div>
