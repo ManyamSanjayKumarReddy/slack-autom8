@@ -299,11 +299,11 @@ function ProjectTabs({
             onDelete={onDelete}
           />
 
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
-            <div className="border border-slate-100 rounded-xl overflow-hidden">
+          <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-5 pb-10">
+            <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
               <ChannelsTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
             </div>
-            <div className="border border-slate-100 rounded-xl overflow-hidden">
+            <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
               <MembersTab projectId={projectId} canManage={canManage} onChanged={fetchProject} />
             </div>
           </div>
@@ -343,63 +343,77 @@ function OverviewTab({
 
   return (
     <div className="pt-5 pb-2">
-      {canManage && (
-        <div className="flex gap-2 justify-end mb-5">
-          <Button variant="outline" size="sm" onClick={onEdit}>
-            <Pencil className="h-3.5 w-3.5 mr-1.5" />
-            Edit
-          </Button>
-          {isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-destructive hover:text-destructive"
-              onClick={onDelete}
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-              Delete
-            </Button>
-          )}
-        </div>
-      )}
-
-      {project.description && (
-        <p className="text-[15px] text-slate-600 leading-relaxed mb-5">{project.description}</p>
-      )}
-
-      <div className="flex flex-wrap divide-x divide-slate-100 border border-slate-100 rounded-xl bg-white overflow-hidden">
-        <div className="flex-1 min-w-[140px] px-5 py-4">
-          <div className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Manager</div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-[15px] font-semibold leading-snug ${project.manager_name ? "text-slate-800" : "italic text-slate-400"}`}>
-              {project.manager_name || "Unassigned"}
-            </span>
-            {isAdmin && (
-              <button
-                onClick={() => setAssigning(true)}
-                className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline transition-colors"
-              >
-                {project.manager_id ? "change" : "assign"}
-              </button>
+      {/* Project header card — description + contextual actions + stats */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+        {/* Description row with inline icon-only action buttons */}
+        <div className="flex items-start gap-3 px-6 pt-6 pb-5">
+          <div className="flex-1 min-w-0">
+            {project.description ? (
+              <p className="text-[15px] text-slate-600 leading-relaxed">{project.description}</p>
+            ) : (
+              <p className="text-[14px] italic text-slate-400">No description provided.</p>
             )}
           </div>
+          {canManage && (
+            <div className="flex items-center gap-0.5 shrink-0 -mt-0.5">
+              <button
+                onClick={onEdit}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                title="Edit project"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              {isAdmin && (
+                <button
+                  onClick={onDelete}
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                  title="Delete project"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
-        <div className="px-5 py-4 min-w-[90px]">
-          <div className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Members</div>
-          <div className="text-[15px] font-semibold text-slate-800">{project.member_count ?? 0}</div>
-        </div>
-        <div className="px-5 py-4 min-w-[90px]">
-          <div className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Channels</div>
-          <div className="text-[15px] font-semibold text-slate-800">{project.channel_count ?? 0}</div>
-        </div>
-        {project.created_at && (
-          <div className="px-5 py-4 min-w-[120px]">
-            <div className="text-xs uppercase tracking-widest text-slate-400 mb-1.5">Created</div>
-            <div className="text-[15px] font-semibold text-slate-800">
-              {new Date(project.created_at).toLocaleDateString()}
+
+        <div className="border-t border-slate-100 mx-6" />
+
+        {/* Stat pills grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-6">
+          <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-4 py-3.5">
+            <div className="text-[10.5px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Manager</div>
+            <div className="flex flex-col gap-1">
+              <span className={`text-sm font-semibold leading-snug ${project.manager_name ? "text-slate-800" : "italic text-slate-400"}`}>
+                {project.manager_name || "Unassigned"}
+              </span>
+              {isAdmin && (
+                <button
+                  onClick={() => setAssigning(true)}
+                  className="text-[11px] text-indigo-500 hover:text-indigo-700 transition-colors font-medium text-left w-fit"
+                >
+                  {project.manager_id ? "change" : "assign"}
+                </button>
+              )}
             </div>
           </div>
-        )}
+
+          <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-4 py-3.5">
+            <div className="text-[10.5px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Members</div>
+            <div className="text-2xl font-bold text-slate-800 leading-none">{project.member_count ?? 0}</div>
+          </div>
+
+          <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-4 py-3.5">
+            <div className="text-[10.5px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Channels</div>
+            <div className="text-2xl font-bold text-slate-800 leading-none">{project.channel_count ?? 0}</div>
+          </div>
+
+          {project.created_at && (
+            <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-4 py-3.5">
+              <div className="text-[10.5px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Created</div>
+              <div className="text-sm font-semibold text-slate-800">{new Date(project.created_at).toLocaleDateString()}</div>
+            </div>
+          )}
+        </div>
       </div>
 
       {assigning && (
@@ -572,13 +586,22 @@ function ChannelsTab({
 
   return (
     <div>
-      <div className="px-4 py-3.5 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
-          <Hash className="h-3.5 w-3.5 text-slate-400" />
-          {channels ? `${channels.length} ${channels.length === 1 ? "channel" : "channels"}` : "Channels"}
-        </h2>
+      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+            <Hash className="h-3.5 w-3.5 text-indigo-500" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-slate-800 leading-none">Channels</h2>
+            {channels !== null && (
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {channels.length} {channels.length === 1 ? "channel" : "channels"}
+              </p>
+            )}
+          </div>
+        </div>
         {canManage && (
-          <Button size="sm" onClick={() => setAdding(true)}>
+          <Button size="sm" variant="outline" onClick={() => setAdding(true)}>
             <Plus className="h-3.5 w-3.5 mr-1.5" />
             Add channel
           </Button>
@@ -596,30 +619,39 @@ function ChannelsTab({
           No channels in this project yet.
         </div>
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-slate-50">
           {channels.map((c) => (
             <li
               key={c.channel_id}
-              className="flex items-center justify-between gap-3 py-3.5 px-4"
+              className="flex items-center justify-between gap-3 py-3.5 px-5 hover:bg-slate-50/60 transition-colors"
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-slate-400 font-medium">#</span>
-                <span className="text-[15px] font-medium text-slate-800 truncate">
-                  {c.channel_name}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="h-7 w-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 shrink-0 font-semibold text-sm">
+                  #
                 </span>
-                {c.added_at && (
-                  <span className="text-[13px] text-slate-500 hidden sm:inline">
-                    · added {new Date(c.added_at).toLocaleDateString()}
+                <div className="min-w-0">
+                  <span className="text-[14px] font-semibold text-slate-800 truncate block">
+                    {c.channel_name}
                   </span>
-                )}
+                  {c.added_at && (
+                    <span className="text-[11px] text-slate-400">
+                      added {new Date(c.added_at).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
               </div>
               {canManage && (
                 <button
                   onClick={() => handleRemove(c.channel_id)}
                   disabled={removingId === c.channel_id}
-                  className="text-sm text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50"
+                  className="h-7 w-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40"
+                  title="Remove channel"
                 >
-                  {removingId === c.channel_id ? "Removing…" : "Remove"}
+                  {removingId === c.channel_id ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <X className="h-3 w-3" />
+                  )}
                 </button>
               )}
             </li>
@@ -766,6 +798,33 @@ function AddChannelDialog({
 
 /* ----------------------- Members ----------------------- */
 
+function MemberAvatar({ name }: { name: string }) {
+  const initials =
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("") || "?";
+  const palettes: [string, string][] = [
+    ["#ede9fe", "#7c3aed"],
+    ["#dbeafe", "#1d4ed8"],
+    ["#dcfce7", "#15803d"],
+    ["#fef9c3", "#a16207"],
+    ["#fce7f3", "#be185d"],
+    ["#e0f2fe", "#0369a1"],
+  ];
+  const [bg, color] = palettes[name.charCodeAt(0) % palettes.length];
+  return (
+    <span
+      className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+      style={{ background: bg, color }}
+    >
+      {initials}
+    </span>
+  );
+}
+
 function MembersTab({
   projectId,
   canManage,
@@ -821,13 +880,22 @@ function MembersTab({
 
   return (
     <div>
-      <div className="px-4 py-3.5 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
-          <UsersIcon className="h-3.5 w-3.5 text-slate-400" />
-          {members ? `${members.length} ${members.length === 1 ? "member" : "members"}` : "Members"}
-        </h2>
+      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+            <UsersIcon className="h-3.5 w-3.5 text-purple-500" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-slate-800 leading-none">Members</h2>
+            {members !== null && (
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {members.length} {members.length === 1 ? "member" : "members"}
+              </p>
+            )}
+          </div>
+        </div>
         {canManage && (
-          <Button size="sm" onClick={() => setAdding(true)}>
+          <Button size="sm" variant="outline" onClick={() => setAdding(true)}>
             <UserPlus className="h-3.5 w-3.5 mr-1.5" />
             Add member
           </Button>
@@ -845,32 +913,43 @@ function MembersTab({
           No members yet.
         </div>
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-slate-50">
           {members.map((m) => (
             <li
               key={m.user_id}
-              className="flex items-center justify-between gap-3 py-4 px-4 sm:px-6 flex-wrap"
+              className="flex items-center gap-3 py-3.5 px-5 hover:bg-slate-50/60 transition-colors"
             >
+              <MemberAvatar name={m.name} />
               <div className="min-w-0 flex-1">
-                <div className="text-[15px] font-medium text-slate-800 truncate">{m.name}</div>
-                <div className="text-[13px] text-slate-400 mt-0.5 truncate">{m.email}</div>
+                <div className="text-[14px] font-semibold text-slate-800 truncate leading-snug">{m.name}</div>
+                <div className="text-[12px] text-slate-400 mt-0.5 truncate">{m.email}</div>
               </div>
-              <Badge variant="outline" className="shrink-0">
+              <Badge
+                variant="outline"
+                className={`shrink-0 text-[11px] font-semibold ${
+                  m.project_role === "team_lead"
+                    ? "border-indigo-200 text-indigo-700 bg-indigo-50"
+                    : "border-slate-200 text-slate-600 bg-slate-50"
+                }`}
+              >
                 {m.project_role === "team_lead" ? "Team Lead" : "Employee"}
               </Badge>
               {canManage && (
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Button variant="outline" size="sm" onClick={() => setEditingMember(m)}>
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <button
+                    onClick={() => setEditingMember(m)}
+                    className="h-7 w-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                    title="Edit role"
+                  >
                     <Pencil className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
+                  </button>
+                  <button
                     onClick={() => setConfirmRemove(m)}
+                    className="h-7 w-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                    title="Remove member"
                   >
                     <X className="h-3 w-3" />
-                  </Button>
+                  </button>
                 </div>
               )}
             </li>
