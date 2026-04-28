@@ -161,26 +161,26 @@ function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: Cha
     >
       {/* Workspace header */}
       <div
-        className="flex items-center justify-between px-4 h-[60px] shrink-0"
+        className="flex items-center justify-between px-3.5 h-[56px] shrink-0"
         style={{ borderBottom: "1px solid var(--slack-divider)", boxShadow: "0 1px 0 rgba(0,0,0,0.15)" }}
       >
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
           <span
             className="font-extrabold truncate"
-            style={{ color: "var(--slack-channels-text-strong)", fontSize: "16px", letterSpacing: "-0.01em" }}
+            style={{ color: "var(--slack-channels-text-strong)", fontSize: "15.5px", letterSpacing: "-0.02em" }}
           >
             {workspaceName}
           </span>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-80" />
+          <ChevronDown className="h-3 w-3 shrink-0 opacity-70" />
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <button
             type="button"
             className="h-7 w-7 rounded-md flex items-center justify-center hover:bg-white/10 transition-colors"
             aria-label="Notifications"
             title="Notifications"
           >
-            <Bell className="h-3.5 w-3.5" />
+            <Bell className="h-3.5 w-3.5 opacity-80" />
           </button>
           {onCloseMobile && (
             <button
@@ -273,14 +273,20 @@ function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: Cha
                       to={`${projectBase}/$projectId`}
                       params={{ projectId: p.id }}
                       onClick={onCloseMobile}
-                      className="flex items-center gap-1.5 pl-5 pr-2 h-7 rounded-md text-[13.5px] no-underline transition-colors"
+                      className="flex items-center gap-1.5 pl-6 pr-2 h-7 rounded-md text-[13.5px] no-underline transition-colors"
                       style={{
-                        background: isActive ? "var(--slack-channels-active)" : "transparent",
+                        background: isActive ? "rgba(255,255,255,0.18)" : "transparent",
                         color: isActive ? "#fff" : "var(--slack-channels-text)",
-                        fontWeight: isActive ? 700 : 400,
+                        fontWeight: isActive ? 600 : 400,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) e.currentTarget.style.background = "transparent";
                       }}
                     >
-                      <Hash className="h-[13px] w-[13px] opacity-80 shrink-0" />
+                      <Hash className="h-[13px] w-[13px] opacity-70 shrink-0" />
                       <span className="truncate">{p.name}</span>
                     </Link>
                   );

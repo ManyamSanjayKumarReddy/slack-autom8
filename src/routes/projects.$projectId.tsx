@@ -58,8 +58,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { isOneOf } from "@/lib/roles";
 import { projectColor, projectInitials } from "@/lib/project-colors";
+import { nameToGradient, nameInitials } from "@/lib/avatar-colors";
 import { GenerateProjectSummaryDialog } from "@/components/summaries/GenerateProjectSummaryDialog";
 import { SlackStyleFeed, type FeedRow } from "@/components/summaries/SlackStyleFeed";
+import { SlackMessageComposer } from "@/components/summaries/SlackMessageComposer";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -376,41 +378,37 @@ function OverviewTab({
           )}
         </div>
 
-        <div className="border-t border-border mx-6" />
-
-        {/* Stat pills grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-7 pt-5">
-          <div className="rounded-xl bg-muted/50 border border-border px-5 py-5">
-            <div className="text-[11.5px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Manager</div>
-            <div className="flex flex-col gap-1.5">
-              <span className={`text-[15px] font-semibold leading-snug ${project.manager_name ? "text-foreground" : "italic text-muted-foreground"}`}>
-                {project.manager_name || "Unassigned"}
-              </span>
-              {isAdmin && (
-                <button
-                  onClick={() => setAssigning(true)}
-                  className="text-[12px] text-indigo-500 hover:text-indigo-700 transition-colors font-medium text-left w-fit"
-                >
-                  {project.manager_id ? "change" : "assign"}
-                </button>
-              )}
+        {/* Stats — Slack channel-info panel style: no heavy boxes, just label + value */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-5 px-7 py-6 border-t border-border">
+          <div>
+            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Manager</div>
+            <div className={`text-[14px] font-medium leading-snug ${project.manager_name ? "text-foreground" : "italic text-muted-foreground"}`}>
+              {project.manager_name || "Unassigned"}
             </div>
+            {isAdmin && (
+              <button
+                onClick={() => setAssigning(true)}
+                className="text-[11.5px] text-primary hover:underline mt-0.5 font-medium"
+              >
+                {project.manager_id ? "change" : "assign"}
+              </button>
+            )}
           </div>
 
-          <div className="rounded-xl bg-muted/50 border border-border px-5 py-5">
-            <div className="text-[11.5px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Members</div>
-            <div className="text-[26px] font-bold text-foreground leading-none">{project.member_count ?? 0}</div>
+          <div>
+            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Members</div>
+            <div className="text-[22px] font-bold text-foreground leading-none">{project.member_count ?? 0}</div>
           </div>
 
-          <div className="rounded-xl bg-muted/50 border border-border px-5 py-5">
-            <div className="text-[11.5px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Channels</div>
-            <div className="text-[26px] font-bold text-foreground leading-none">{project.channel_count ?? 0}</div>
+          <div>
+            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Channels</div>
+            <div className="text-[22px] font-bold text-foreground leading-none">{project.channel_count ?? 0}</div>
           </div>
 
           {project.created_at && (
-            <div className="rounded-xl bg-muted/50 border border-border px-5 py-5">
-              <div className="text-[11.5px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Created</div>
-              <div className="text-[15px] font-semibold text-foreground">{new Date(project.created_at).toLocaleDateString()}</div>
+            <div>
+              <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Created</div>
+              <div className="text-[14px] font-medium text-foreground">{new Date(project.created_at).toLocaleDateString()}</div>
             </div>
           )}
         </div>
@@ -827,28 +825,12 @@ function AddChannelDialog({
 /* ----------------------- Members ----------------------- */
 
 function MemberAvatar({ name }: { name: string }) {
-  const initials =
-    name
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase() ?? "")
-      .join("") || "?";
-  const palettes: [string, string][] = [
-    ["rgba(139,92,246,0.2)", "#a78bfa"],
-    ["rgba(59,130,246,0.2)", "#60a5fa"],
-    ["rgba(16,185,129,0.2)", "#34d399"],
-    ["rgba(245,158,11,0.2)", "#fbbf24"],
-    ["rgba(236,72,153,0.2)", "#f472b6"],
-    ["rgba(14,165,233,0.2)", "#38bdf8"],
-  ];
-  const [bg, color] = palettes[name.charCodeAt(0) % palettes.length];
   return (
     <span
-      className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-      style={{ background: bg, color }}
+      className="h-9 w-9 rounded-md flex items-center justify-center text-[11px] font-bold text-white shrink-0 select-none"
+      style={{ background: nameToGradient(name), boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }}
     >
-      {initials}
+      {nameInitials(name)}
     </span>
   );
 }
@@ -945,38 +927,40 @@ function MembersTab({
           {members.map((m) => (
             <li
               key={m.user_id}
-              className="flex items-center gap-3.5 py-4 px-6 hover:bg-muted/30 transition-colors min-h-[60px]"
+              className="group/member flex items-center gap-3 py-3.5 px-6 hover:bg-muted/20 transition-colors"
             >
               <MemberAvatar name={m.name} />
               <div className="min-w-0 flex-1">
-                <div className="text-[15px] font-semibold text-foreground truncate leading-snug">{m.name}</div>
-                <div className="text-[13px] text-muted-foreground mt-0.5 truncate">{m.email}</div>
+                <div className="text-[14px] font-semibold text-foreground truncate leading-snug">{m.name}</div>
+                {/* Email — smaller and muted, not as prominent */}
+                <div className="text-[11px] text-muted-foreground/60 mt-0.5 truncate">{m.email}</div>
               </div>
-              <Badge
-                variant="outline"
-                className={`shrink-0 text-[12px] font-semibold px-3 py-1 ${
+              {/* Role badge — subtle outlined chip */}
+              <span
+                className={`shrink-0 text-[10.5px] font-semibold px-2 py-0.5 rounded-full border ${
                   m.project_role === "team_lead"
-                    ? "border-indigo-200 text-indigo-700 bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:bg-indigo-950/50"
-                    : "border-border text-muted-foreground bg-muted"
+                    ? "border-primary/30 text-primary bg-primary/8"
+                    : "border-border text-muted-foreground"
                 }`}
               >
                 {m.project_role === "team_lead" ? "Team Lead" : "Employee"}
-              </Badge>
+              </span>
+              {/* Edit/remove — hidden until hover, Slack-style */}
               {canManage && (
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover/member:opacity-100 transition-opacity">
                   <button
                     onClick={() => setEditingMember(m)}
-                    className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                     title="Edit role"
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    <Pencil className="h-3 w-3" />
                   </button>
                   <button
                     onClick={() => setConfirmRemove(m)}
-                    className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                    className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                     title="Remove member"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
               )}
@@ -1519,7 +1503,10 @@ function SummariesSection({
           </p>
         </div>
       ) : (
-        <SlackStyleFeed rows={rows} />
+        <>
+          <SlackStyleFeed rows={rows} />
+          <SlackMessageComposer placeholder={`Add a note to ${scope === "personal" ? "my summaries" : "project summaries"}…`} />
+        </>
       )}
 
       {generateOpen && (
