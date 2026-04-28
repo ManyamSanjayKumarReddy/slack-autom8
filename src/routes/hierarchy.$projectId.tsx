@@ -234,7 +234,7 @@ function Inner() {
         type="button"
         onClick={() => navigate({ to: "/hierarchy" })}
         className="inline-flex items-center gap-1.5 text-xs font-semibold transition-colors hover:opacity-80"
-        style={{ color: "#6366f1" }}
+        style={{ color: "#1264a3" }}
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         All projects
@@ -245,7 +245,7 @@ function Inner() {
         className="rounded-2xl px-5 sm:px-8 py-5 sm:py-7 relative overflow-hidden border"
         style={{
           background: `linear-gradient(135deg, ${from}15 0%, ${to}10 55%, #f6f8fc 100%)`,
-          borderColor: "#e0e7ff",
+          borderColor: "#c8dff0",
         }}
       >
         <div className="relative flex items-start justify-between gap-4 flex-wrap">
@@ -273,14 +273,14 @@ function Inner() {
           {rows.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
               <div className="rounded-xl px-3 py-2 flex items-center gap-2"
-                style={{ background: "#fff", border: "1px solid #e0e7ff" }}>
-                <BarChart3 className="h-3.5 w-3.5" style={{ color: "#6366f1" }} />
-                <span className="font-semibold" style={{ fontSize: "12.5px", color: "#4338ca" }}>
+                style={{ background: "#fff", border: "1px solid #c8dff0" }}>
+                <BarChart3 className="h-3.5 w-3.5" style={{ color: "#1264a3" }} />
+                <span className="font-semibold" style={{ fontSize: "12.5px", color: "#0b4f7e" }}>
                   {projectCount} project
                 </span>
               </div>
               <div className="rounded-xl px-3 py-2 flex items-center gap-2"
-                style={{ background: "#fff", border: "1px solid #e0e7ff" }}>
+                style={{ background: "#fff", border: "1px solid #c8dff0" }}>
                 <Users className="h-3.5 w-3.5" style={{ color: "#8b5cf6" }} />
                 <span className="font-semibold" style={{ fontSize: "12.5px", color: "#6d28d9" }}>
                   {personalCount} personal
@@ -303,7 +303,7 @@ function Inner() {
               <button key={key} type="button" onClick={() => applyQuick(key)}
                 className="rounded-full px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[34px]"
                 style={active
-                  ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
+                  ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
                   : { background: "#f1f5f9", color: "#475569" }}>
                 {label}
               </button>
@@ -317,8 +317,8 @@ function Inner() {
               <button type="button"
                 className="inline-flex items-center gap-2 rounded-full px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all min-h-[34px]"
                 style={activeQuick === "custom"
-                  ? { background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.35)" }
-                  : { background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}>
+                  ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
+                  : { background: "#e8f1f8", color: "#0b4f7e", border: "1px solid #c8dff0" }}>
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {formatRange(range)}
               </button>
@@ -343,7 +343,7 @@ function Inner() {
 
         <button type="button" onClick={() => fetchData()} disabled={loading || !range?.from}
           className="sm:ml-auto w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-all disabled:opacity-50 min-h-[34px]"
-          style={{ background: "#6366f1", color: "#fff", boxShadow: "0 2px 8px rgba(99,102,241,0.3)" }}>
+          style={{ background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.3)" }}>
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
           {loading ? "Loading…" : "Apply"}
         </button>
@@ -352,7 +352,7 @@ function Inner() {
       {/* Results */}
       {loading && !project ? (
         <div className="rounded-2xl bg-white p-16 text-center" style={{ border: "1px solid #e2e8f0" }}>
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" style={{ color: "#6366f1" }} />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" style={{ color: "#1264a3" }} />
           <p style={{ fontSize: "14px", color: "#64748b" }}>Loading summaries…</p>
         </div>
       ) : notFound || !project || rows.length === 0 ? (
@@ -368,7 +368,7 @@ function Inner() {
             to="/projects/$projectId"
             params={{ projectId }}
             className="inline-flex items-center gap-1.5 mt-4 text-xs font-semibold no-underline"
-            style={{ color: "#6366f1" }}
+            style={{ color: "#1264a3" }}
           >
             Go to project →
           </Link>

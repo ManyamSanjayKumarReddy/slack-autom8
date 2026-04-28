@@ -45,7 +45,7 @@ function avatarFor(row: FeedRow): { letters: string; gradient: string } {
   if (row.type === "project") {
     return {
       letters: projectInitials(row.member_name ?? "PJ"),
-      gradient: "linear-gradient(135deg, #6366f1, #4f46e5)",
+      gradient: "linear-gradient(135deg, #1264a3, #0f5289)",
     };
   }
   return {
@@ -145,7 +145,7 @@ function FeedMessage({
           {row.member_role === "team_lead" && (
             <span
               className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded"
-              style={{ background: "#eef2ff", color: "#4338ca" }}
+              style={{ background: "#e8f1f8", color: "#0b4f7e" }}
             >
               LEAD
             </span>
@@ -153,7 +153,7 @@ function FeedMessage({
           {row.type === "project" && (
             <span
               className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded"
-              style={{ background: "#eef2ff", color: "#4338ca" }}
+              style={{ background: "#e8f1f8", color: "#0b4f7e" }}
             >
               <BarChart3 className="h-2.5 w-2.5" /> TEAM
             </span>

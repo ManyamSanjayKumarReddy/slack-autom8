@@ -81,21 +81,21 @@ function ProfilePage() {
           <div
             className="rounded-2xl px-5 sm:px-8 py-5 sm:py-7 relative overflow-hidden border"
             style={{
-              background: "linear-gradient(135deg, #eef2ff 0%, #f5f7ff 55%, #f6f8fc 100%)",
-              borderColor: "#e0e7ff",
+              background: "linear-gradient(135deg, #e8f1f8 0%, #f0f7fc 55%, #f6f8fc 100%)",
+              borderColor: "#c8dff0",
             }}
           >
             <div
               className="absolute right-[-40px] top-[-50px] h-[200px] w-[200px] rounded-full pointer-events-none"
-              style={{ background: "radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)" }}
+              style={{ background: "radial-gradient(circle, rgba(18,100,163,0.14) 0%, transparent 70%)" }}
             />
             <div className="relative flex items-center gap-5 flex-wrap">
               {/* Avatar */}
               <div
                 className="h-16 w-16 rounded-2xl flex items-center justify-center text-xl font-extrabold text-white shrink-0"
                 style={{
-                  background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                  boxShadow: "0 4px 14px rgba(99,102,241,0.4)",
+                  background: "linear-gradient(135deg, #8b5cf6 0%, #1264a3 100%)",
+                  boxShadow: "0 4px 14px rgba(18,100,163,0.4)",
                 }}
               >
                 {initials(user.name, user.email)}
@@ -155,7 +155,7 @@ function ProfilePage() {
               <Link
                 to="/projects"
                 className="inline-flex items-center gap-1 no-underline shrink-0 hover:opacity-80 transition-opacity"
-                style={{ fontSize: "12px", fontWeight: 600, color: "#6366f1" }}
+                style={{ fontSize: "12px", fontWeight: 600, color: "#1264a3" }}
               >
                 Browse projects
                 <ArrowRight className="h-3 w-3" />
@@ -171,7 +171,7 @@ function ProfilePage() {
                 <Link
                   to="/projects"
                   className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[13px] font-semibold no-underline transition-opacity hover:opacity-80"
-                  style={{ background: "#eef2ff", color: "#4338ca", border: "1px solid #e0e7ff" }}
+                  style={{ background: "#e8f1f8", color: "#0b4f7e", border: "1px solid #c8dff0" }}
                 >
                   Browse projects
                   <ArrowRight className="h-3.5 w-3.5" />
