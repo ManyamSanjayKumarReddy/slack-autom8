@@ -128,7 +128,7 @@ function ProfilePage() {
             </div>
             <dl className="divide-y divide-border">
               {[
-                { label: "User ID", value: <span className="font-mono text-xs break-all">{user.id}</span> },
+                { label: "Username", value: <span className="font-mono text-xs break-all">{user.username}</span> },
                 { label: "Display name", value: user.name || "—" },
                 { label: "Email", value: user.email || "—" },
                 { label: "Workspace role", value: <RoleBadge role={user.role} size="xs" /> },

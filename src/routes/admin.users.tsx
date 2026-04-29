@@ -52,7 +52,7 @@ import {
 } from "@/components/ui/select";
 
 interface AdminUser {
-  id: string;
+  username: string;
   name: string;
   email: string;
   role: Role;
@@ -136,7 +136,7 @@ function Inner() {
     if (!pendingDelete) return;
     setDeleting(true);
     try {
-      const res = await apiFetch(`/admin/users/${pendingDelete.id}`, { method: "DELETE" });
+      const res = await apiFetch(`/admin/users/${pendingDelete.username}`, { method: "DELETE" });
       if (!res.ok) {
         await handleApiError(res, "Failed to delete user");
         return;
@@ -208,9 +208,9 @@ function Inner() {
             {/* Mobile cards */}
             <ul className="md:hidden divide-y divide-border">
               {users.map((u) => {
-                const isMe = me?.id === u.id;
+                const isMe = me?.username === u.username;
                 return (
-                  <li key={u.id} className="p-4 space-y-2.5">
+                  <li key={u.username} className="p-4 space-y-2.5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-sm font-semibold text-foreground truncate">
@@ -280,9 +280,9 @@ function Inner() {
                 </TableHeader>
                 <TableBody>
                   {users.map((u) => {
-                    const isMe = me?.id === u.id;
+                    const isMe = me?.username === u.username;
                     return (
-                      <TableRow key={u.id}>
+                      <TableRow key={u.username}>
                         <TableCell className="px-6 text-sm font-medium text-foreground">
                           {u.name || "Unnamed"}
                           {isMe && (
@@ -440,7 +440,7 @@ function ChangeRoleDialog({
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiFetch(`/admin/users/${user.id}`);
+        const res = await apiFetch(`/admin/users/${user.username}`);
         if (!cancelled && res.ok) {
           const data = (await res.json()) as { projects?: ProjectMembership[] };
           setMemberships(data.projects ?? []);
@@ -452,12 +452,12 @@ function ChangeRoleDialog({
     return () => {
       cancelled = true;
     };
-  }, [user.id]);
+  }, [user.username]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const res = await apiFetch(`/admin/users/${user.id}/role`, {
+      const res = await apiFetch(`/admin/users/${user.username}/role`, {
         method: "PUT",
         body: JSON.stringify({ role }),
       });
@@ -567,12 +567,12 @@ function RenameUsernameDialog({
   onOpenChange: (o: boolean) => void;
   onSaved: () => void;
 }) {
-  const [newUsername, setNewUsername] = useState(user.id);
+  const [newUsername, setNewUsername] = useState(user.username);
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const isUnchanged = newUsername === user.id;
+  const isUnchanged = newUsername === user.username;
   const isValid = /^[a-z][a-z0-9-]*$/.test(newUsername) && newUsername.length >= 2;
 
   useEffect(() => {
@@ -584,7 +584,7 @@ function RenameUsernameDialog({
     const timer = setTimeout(async () => {
       try {
         const res = await apiFetch(
-          `/admin/users/${user.id}/username/check?new_username=${encodeURIComponent(newUsername)}`,
+          `/admin/users/${user.username}/username/check?new_username=${encodeURIComponent(newUsername)}`,
         );
         if (res.ok) {
           const data = (await res.json()) as { available: boolean };
@@ -597,12 +597,12 @@ function RenameUsernameDialog({
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [newUsername, isUnchanged, isValid, user.id]);
+  }, [newUsername, isUnchanged, isValid, user.username]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const res = await apiFetch(`/admin/users/${user.id}/username`, {
+      const res = await apiFetch(`/admin/users/${user.username}/username`, {
         method: "PUT",
         body: JSON.stringify({ new_username: newUsername }),
       });
@@ -636,7 +636,7 @@ function RenameUsernameDialog({
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-muted-foreground">Current username</label>
             <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm font-mono text-muted-foreground">
-              {user.id}
+              {user.username}
             </div>
           </div>
           <div className="space-y-1.5">
@@ -736,7 +736,7 @@ function UserSummariesDialog({
     (async () => {
       setLoading(true);
       try {
-        const res = await apiFetch(`/summaries/user/${user.id}`);
+        const res = await apiFetch(`/summaries/user/${user.username}`);
         if (!res.ok) {
           await handleApiError(res, "Failed to load summaries");
           if (!cancelled) setSummaries([]);
@@ -763,7 +763,7 @@ function UserSummariesDialog({
       }
     })();
     return () => { cancelled = true; };
-  }, [user.id]);
+  }, [user.username]);
 
   const handleDelete = async (s: UserPersonalSummary) => {
     if (!s.project_id) return;

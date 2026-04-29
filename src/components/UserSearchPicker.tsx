@@ -3,7 +3,7 @@ import { Loader2, Search } from "lucide-react";
 import { apiFetch } from "@/lib/auth";
 
 export interface SearchUser {
-  id: string;
+  username: string;
   name: string;
   email: string;
   role: string;
@@ -55,7 +55,7 @@ export function UserSearchPicker({
     };
   }, [q, role]);
 
-  const filtered = (results ?? []).filter((u) => !excludeIds.includes(u.id));
+  const filtered = (results ?? []).filter((u) => !excludeIds.includes(u.username));
 
   return (
     <div className="space-y-2">
@@ -84,7 +84,7 @@ export function UserSearchPicker({
         ) : (
           <ul className="divide-y divide-border">
             {filtered.map((u) => (
-              <li key={u.id}>
+              <li key={u.username}>
                 <button
                   onClick={() => onSelect(u)}
                   className="w-full text-left px-3 py-2.5 hover:bg-secondary transition-colors"

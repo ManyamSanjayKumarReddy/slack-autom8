@@ -264,12 +264,12 @@ function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: Cha
                 </div>
               ) : (
                 filtered.map((p) => {
-                  const isActive = activeProjectId === p.id;
+                  const isActive = activeProjectId === p.slug;
                   return (
                     <Link
-                      key={p.id}
+                      key={p.slug}
                       to={`${projectBase}/$projectId`}
-                      params={{ projectId: p.id }}
+                      params={{ projectId: p.slug }}
                       onClick={onCloseMobile}
                       className="flex items-center gap-1.5 pl-6 pr-2 h-7 rounded-md text-[13.5px] no-underline transition-colors"
                       style={{

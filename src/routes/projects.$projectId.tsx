@@ -433,9 +433,9 @@ function OverviewTab({
               placeholder="Search managers…"
               onSelect={async (u) => {
                 try {
-                  const res = await apiFetch(`/projects/${project.id}/manager`, {
+                  const res = await apiFetch(`/projects/${project.slug}/manager`, {
                     method: "PUT",
-                    body: JSON.stringify({ manager_id: u.id }),
+                    body: JSON.stringify({ manager_id: u.username }),
                   });
                   if (!res.ok) {
                     await handleApiError(res, "Failed to assign manager");
@@ -461,7 +461,7 @@ function OverviewTab({
             setRenamingSlug(false);
             onChanged();
             invalidateProjectsCache();
-            if (newSlug !== project.id) {
+            if (newSlug !== project.slug) {
               window.history.replaceState(null, "", `/projects/${newSlug}`);
               window.location.reload();
             }
@@ -493,7 +493,7 @@ function EditProjectDialog({
     }
     setSubmitting(true);
     try {
-      const res = await apiFetch(`/projects/${project.id}`, {
+      const res = await apiFetch(`/projects/${project.slug}`, {
         method: "PUT",
         body: JSON.stringify({ name: name.trim(), description: description.trim() }),
       });
@@ -1065,7 +1065,7 @@ function AddMemberDialog({
     try {
       const res = await apiFetch(`/projects/${projectId}/members`, {
         method: "POST",
-        body: JSON.stringify({ user_id: pending.id, project_role: role }),
+        body: JSON.stringify({ user_id: pending.username, project_role: role }),
       });
       if (!res.ok) {
         await handleApiError(res, "Failed to add member");
@@ -1727,12 +1727,12 @@ function RenameSlugDialog({
   onOpenChange: (o: boolean) => void;
   onSaved: (newSlug: string) => void;
 }) {
-  const [newSlug, setNewSlug] = useState(project.id);
+  const [newSlug, setNewSlug] = useState(project.slug);
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const isUnchanged = newSlug === project.id;
+  const isUnchanged = newSlug === project.slug;
   const isValid = /^[a-z][a-z0-9-]*$/.test(newSlug) && newSlug.length >= 2;
 
   useEffect(() => {
@@ -1744,7 +1744,7 @@ function RenameSlugDialog({
     const timer = setTimeout(async () => {
       try {
         const res = await apiFetch(
-          `/projects/${project.id}/slug/check?new_slug=${encodeURIComponent(newSlug)}`,
+          `/projects/${project.slug}/slug/check?new_slug=${encodeURIComponent(newSlug)}`,
         );
         if (res.ok) {
           const data = (await res.json()) as { available: boolean };
@@ -1757,12 +1757,12 @@ function RenameSlugDialog({
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [newSlug, isUnchanged, isValid, project.id]);
+  }, [newSlug, isUnchanged, isValid, project.slug]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const res = await apiFetch(`/projects/${project.id}/slug`, {
+      const res = await apiFetch(`/projects/${project.slug}/slug`, {
         method: "PUT",
         body: JSON.stringify({ new_slug: newSlug }),
       });
@@ -1795,7 +1795,7 @@ function RenameSlugDialog({
           <div className="space-y-1.5">
             <Label>Current slug</Label>
             <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm font-mono text-muted-foreground">
-              {project.id}
+              {project.slug}
             </div>
           </div>
           <div className="space-y-1.5">

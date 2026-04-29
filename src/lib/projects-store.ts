@@ -6,7 +6,6 @@ export type ProjectRole = "employee" | "team_lead";
 
 export interface Project {
   slug: string;
-  id?: string;
   name: string;
   description?: string;
   member_count?: number;

@@ -3,7 +3,7 @@ import { apiFetch } from "@/lib/auth";
 import type { Role } from "@/lib/roles";
 
 export interface UserInfo {
-  id: string;
+  username: string;
   name: string;
   email: string;
   role: Role;
