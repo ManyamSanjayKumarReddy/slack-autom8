@@ -1280,6 +1280,7 @@ function SummariesSection({
   const [project, setProject] = useState<HierarchyProject | null>(null);
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchData = async (r?: DateRange) => {
     const active = r ?? range;
@@ -1379,6 +1380,25 @@ function SummariesSection({
     if (user) fetchData({ from: today, to: today });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, user?.role]);
+
+  const handleDeleteSummary = async (row: FeedRow) => {
+    setDeletingId(row.id);
+    try {
+      const res = await apiFetch(`/summaries/projects/${projectId}/personal/${row.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        await handleApiError(res, "Failed to delete summary");
+        return;
+      }
+      toast.success("Summary deleted");
+      await fetchData();
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const allRows = project ? flattenProject(project) : [];
   // Filter rows by current scope: personal vs project
@@ -1504,7 +1524,11 @@ function SummariesSection({
         </div>
       ) : (
         <>
-          <SlackStyleFeed rows={rows} />
+          <SlackStyleFeed
+            rows={rows}
+            onDelete={scope === "personal" ? handleDeleteSummary : undefined}
+            deletingId={deletingId}
+          />
           <SlackMessageComposer placeholder={scope === "personal" && user?.name ? `What ${user.name} has done last week` : "What has the team done last week?"} />
         </>
       )}
