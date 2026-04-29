@@ -385,7 +385,7 @@ function SummaryCard({
         <StructuredProjectSummary text={text} collapsible={false} />
       ) : (
         <div
-          className={`text-sm text-foreground leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-2 [&_p]:mt-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-semibold [&_a]:text-primary [&_a]:underline ${
+          className={`text-sm text-foreground leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-2 [&_p]:mt-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-semibold [&_em]:italic [&_a]:text-primary [&_a]:underline ${
             expanded ? "" : "line-clamp-3"
           }`}
         >
