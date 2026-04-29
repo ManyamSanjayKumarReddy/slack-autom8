@@ -1,9 +1,19 @@
 import { useState } from "react";
 import { format, isToday, isYesterday } from "date-fns";
-import { Sparkles, PenLine } from "lucide-react";
+import { Sparkles, PenLine, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { nameToGradient, nameInitials } from "@/lib/avatar-colors";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export interface FeedRow {
   id: string;
@@ -52,8 +62,17 @@ function avatarFor(row: FeedRow): { letters: string; gradient: string } {
   return { letters: nameInitials(name), gradient: nameToGradient(name) };
 }
 
-export function SlackStyleFeed({ rows }: { rows: FeedRow[] }) {
+export function SlackStyleFeed({
+  rows,
+  onDelete,
+  deletingId,
+}: {
+  rows: FeedRow[];
+  onDelete?: (row: FeedRow) => void;
+  deletingId?: string | null;
+}) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [pendingDelete, setPendingDelete] = useState<FeedRow | null>(null);
 
   const toggle = (key: string) =>
     setExpanded((prev) => {
@@ -71,30 +90,63 @@ export function SlackStyleFeed({ rows }: { rows: FeedRow[] }) {
   const sortedDates = Array.from(groups.keys()).sort((a, b) => (a > b ? -1 : 1));
 
   return (
-    <div className="rounded-2xl bg-card overflow-hidden border border-border">
-      {sortedDates.map((date) => {
-        const items = groups
-          .get(date)!
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        return (
-          <div key={date}>
-            <div className="slack-feed-divider">
-              <span>{fmtDateBucket(date)}</span>
+    <>
+      <div className="rounded-2xl bg-card overflow-hidden border border-border">
+        {sortedDates.map((date) => {
+          const items = groups
+            .get(date)!
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          return (
+            <div key={date}>
+              <div className="slack-feed-divider">
+                <span>{fmtDateBucket(date)}</span>
+              </div>
+              <div>
+                {items.map((row) => (
+                  <FeedMessage
+                    key={row.rowKey}
+                    row={row}
+                    expanded={expanded.has(row.rowKey)}
+                    onToggle={() => toggle(row.rowKey)}
+                    onDeleteRequest={onDelete && row.type === "personal" ? () => setPendingDelete(row) : undefined}
+                    deleting={deletingId === row.id}
+                  />
+                ))}
+              </div>
             </div>
-            <div>
-              {items.map((row) => (
-                <FeedMessage
-                  key={row.rowKey}
-                  row={row}
-                  expanded={expanded.has(row.rowKey)}
-                  onToggle={() => toggle(row.rowKey)}
-                />
-              ))}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(o) => { if (!o) setPendingDelete(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this summary?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This personal summary will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (pendingDelete && onDelete) {
+                  onDelete(pendingDelete);
+                  setPendingDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -102,10 +154,14 @@ function FeedMessage({
   row,
   expanded,
   onToggle,
+  onDeleteRequest,
+  deleting,
 }: {
   row: FeedRow;
   expanded: boolean;
   onToggle: () => void;
+  onDeleteRequest?: () => void;
+  deleting?: boolean;
 }) {
   const av = avatarFor(row);
   const isLong = row.summary_text.length > TRUNCATE_CHARS;
@@ -170,10 +226,24 @@ function FeedMessage({
           <span className="text-[11px] text-muted-foreground/40">
             · {row.message_count} {row.message_count === 1 ? "msg" : "msgs"}
           </span>
+
+          {/* Delete button — personal only, hover-reveal */}
+          {onDeleteRequest && (
+            <button
+              type="button"
+              onClick={onDeleteRequest}
+              disabled={deleting}
+              className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive disabled:opacity-40 focus-visible:opacity-100 focus-visible:outline-none"
+              title="Delete summary"
+              aria-label="Delete summary"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Markdown body — always visible, optionally truncated */}
-        <div className={MD}>
+        <div className={`${MD} ${deleting ? "opacity-50" : ""}`}>
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {isLong && !expanded
               ? row.summary_text.slice(0, TRUNCATE_CHARS) + "…"
