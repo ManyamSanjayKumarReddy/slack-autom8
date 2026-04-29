@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { ScrollText, Trash2, Pencil, Loader2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
@@ -125,8 +125,6 @@ function Inner() {
   const [hasPrevious, setHasPrevious] = useState(false);
 
   const [editing, setEditing] = useState<AdminUser | null>(null);
-  const [viewSummaries, setViewSummaries] = useState<AdminUser | null>(null);
-  const [renamingUser, setRenamingUser] = useState<AdminUser | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AdminUser | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -229,20 +227,6 @@ function Inner() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <button
-                        onClick={() => setViewSummaries(u)}
-                        className="rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors inline-flex items-center justify-center gap-1.5"
-                      >
-                        <ScrollText className="h-3.5 w-3.5" />
-                        Summaries
-                      </button>
-                      <button
-                        onClick={() => setRenamingUser(u)}
-                        className="rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors inline-flex items-center justify-center gap-1.5"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Rename
-                      </button>
-                      <button
                         onClick={() => setEditing(u)}
                         disabled={isMe}
                         className="rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -304,20 +288,6 @@ function Inner() {
                         <TableCell className="text-right pr-6">
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => setViewSummaries(u)}
-                              className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors inline-flex items-center gap-1.5"
-                            >
-                              <ScrollText className="h-3.5 w-3.5" />
-                              Summaries
-                            </button>
-                            <button
-                              onClick={() => setRenamingUser(u)}
-                              className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors inline-flex items-center gap-1.5"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                              Rename
-                            </button>
-                            <button
                               onClick={() => setEditing(u)}
                               disabled={isMe}
                               className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -365,21 +335,6 @@ function Inner() {
           user={editing}
           onOpenChange={(o) => { if (!o) setEditing(null); }}
           onSaved={() => fetchUsers()}
-        />
-      )}
-
-      {viewSummaries && (
-        <UserSummariesDialog
-          user={viewSummaries}
-          onOpenChange={(o) => { if (!o) setViewSummaries(null); }}
-        />
-      )}
-
-      {renamingUser && (
-        <RenameUsernameDialog
-          user={renamingUser}
-          onOpenChange={(o) => { if (!o) setRenamingUser(null); }}
-          onSaved={() => { setRenamingUser(null); fetchUsers(); }}
         />
       )}
 
@@ -553,231 +508,3 @@ function ChangeRoleDialog({
   );
 }
 
-// ─── Types mirrored from hierarchy API ───────────────────────────────────────
-// ─── RenameUsernameDialog ────────────────────────────────────────────────────
-
-function RenameUsernameDialog({
-  user,
-  onOpenChange,
-  onSaved,
-}: {
-  user: AdminUser;
-  onOpenChange: (o: boolean) => void;
-  onSaved: () => void;
-}) {
-  const [newUsername, setNewUsername] = useState(user.username);
-  const [checking, setChecking] = useState(false);
-  const [available, setAvailable] = useState<boolean | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  const isUnchanged = newUsername === user.username;
-  const isValid = /^[a-z][a-z0-9-]*$/.test(newUsername) && newUsername.length >= 2;
-
-  useEffect(() => {
-    if (isUnchanged || !isValid) {
-      setAvailable(null);
-      return;
-    }
-    setChecking(true);
-    const timer = setTimeout(async () => {
-      try {
-        const res = await apiFetch(
-          `/admin/users/${user.username}/username/check?new_username=${encodeURIComponent(newUsername)}`,
-        );
-        if (res.ok) {
-          const data = (await res.json()) as { available: boolean };
-          setAvailable(data.available);
-        }
-      } catch {
-        // ignore
-      } finally {
-        setChecking(false);
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [newUsername, isUnchanged, isValid, user.username]);
-
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    try {
-      const res = await apiFetch(`/admin/users/${user.username}/username`, {
-        method: "PUT",
-        body: JSON.stringify({ new_username: newUsername }),
-      });
-      if (!res.ok) {
-        await handleApiError(res, "Failed to rename user");
-        return;
-      }
-      toast.success("Username updated.");
-      onSaved();
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const canSubmit = !isUnchanged && isValid && available === true && !submitting;
-
-  return (
-    <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Rename username</DialogTitle>
-          <DialogDescription>
-            Change the login username for{" "}
-            <span className="font-medium text-foreground">{user.name || user.email}</span>.
-            Lowercase letters, numbers, and hyphens only.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-1">
-          <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-muted-foreground">Current username</label>
-            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm font-mono text-muted-foreground">
-              {user.username}
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <label htmlFor="new-uname" className="block text-xs font-medium text-muted-foreground">
-              New username
-            </label>
-            <div className="relative">
-              <input
-                id="new-uname"
-                value={newUsername}
-                onChange={(e) => {
-                  setAvailable(null);
-                  setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
-                }}
-                disabled={submitting}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-mono shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
-              />
-              {checking && (
-                <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />
-              )}
-            </div>
-            {!isUnchanged && !isValid && newUsername.length > 0 && (
-              <p className="text-xs text-muted-foreground">
-                Must start with a letter; only lowercase letters, numbers, and hyphens allowed.
-              </p>
-            )}
-            {!isUnchanged && isValid && !checking && available === true && (
-              <p className="text-xs text-emerald-600">✓ Username available</p>
-            )}
-            {!isUnchanged && isValid && !checking && available === false && (
-              <p className="text-xs text-destructive">✗ Username already taken</p>
-            )}
-          </div>
-        </div>
-        <DialogFooter>
-          <button
-            onClick={() => onOpenChange(false)}
-            disabled={submitting}
-            className="inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
-          >
-            {submitting ? "Saving…" : "Rename"}
-          </button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ─── UserSummariesDialog ──────────────────────────────────────────────────────
-// The API does not expose a cross-project summaries endpoint for a specific user.
-// We fetch the user's project memberships and link admins to each project's
-// Summaries tab where they can filter by that member.
-
-function UserSummariesDialog({
-  user,
-  onOpenChange,
-}: {
-  user: AdminUser;
-  onOpenChange: (o: boolean) => void;
-}) {
-  const [memberships, setMemberships] = useState<ProjectMembership[] | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const res = await apiFetch(`/admin/users/${user.username}`);
-        if (!cancelled && res.ok) {
-          const data = (await res.json()) as { projects?: ProjectMembership[] };
-          setMemberships(data.projects ?? []);
-        } else if (!cancelled) {
-          setMemberships([]);
-        }
-      } catch {
-        if (!cancelled) setMemberships([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [user.username]);
-
-  const displayName = user.name || user.email;
-
-  return (
-    <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ScrollText className="h-4 w-4 text-muted-foreground" />
-            {displayName}'s Summaries
-          </DialogTitle>
-          <DialogDescription>
-            Open a project and use the Summaries tab to view or filter by this member's summaries.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="min-h-0">
-          {loading ? (
-            <div className="space-y-2 py-2">
-              {[0, 1, 2].map((i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : !memberships || memberships.length === 0 ? (
-            <div className="py-10 text-center space-y-1.5">
-              <p className="text-sm font-medium text-foreground">Not in any projects</p>
-              <p className="text-xs text-muted-foreground">
-                {displayName} has no project memberships yet.
-              </p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-              {memberships.map((m) => (
-                <li key={m.project_id} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-foreground truncate">{m.project_name}</div>
-                    <div className="text-xs text-muted-foreground capitalize">
-                      {m.project_role === "team_lead" ? "Team Lead" : "Member"}
-                    </div>
-                  </div>
-                  <a
-                    href={`/projects/${m.project_id}`}
-                    className="shrink-0 inline-flex items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors no-underline"
-                  >
-                    <ScrollText className="h-3 w-3" />
-                    View
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
