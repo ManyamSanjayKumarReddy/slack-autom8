@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   LayoutDashboard,
   FolderKanban,
-  GitBranch,
   UserCog,
   Settings2,
   Menu,
@@ -33,7 +32,6 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard, allowed: ["employee", "team_lead", "manager", "admin"] },
   { to: "/projects", label: "Projects", icon: FolderKanban, allowed: ["employee", "team_lead", "manager", "admin"] },
-  { to: "/hierarchy", label: "Summary Report", icon: GitBranch, allowed: ["employee", "team_lead", "manager", "admin"] },
   { to: "/admin/users", label: "User Management", icon: UserCog, allowed: ["admin"] },
   { to: "/admin/settings", label: "Settings", icon: Settings2, allowed: ["admin"] },
 ];
@@ -146,9 +144,7 @@ function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: Cha
   const [openDirect, setOpenDirect] = useState(true);
   const [filter, setFilter] = useState("");
 
-  // Decide whether project links go to /projects/:id or /hierarchy/:id based on current section
-  const onSummaryReport = location.pathname.startsWith("/hierarchy");
-  const projectBase = onSummaryReport ? "/hierarchy" : "/projects";
+  const projectBase = "/projects";
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -315,7 +311,7 @@ function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: Cha
           {openDirect && (
             <div className="mt-0.5 space-y-px">
               {NAV.filter((n) => (role ? isOneOf(role, n.allowed) : false))
-                .filter((n) => n.to !== "/dashboard" && n.to !== "/projects" && n.to !== "/hierarchy")
+                .filter((n) => n.to !== "/dashboard" && n.to !== "/projects")
                 .map((item) => {
                   const Icon = item.icon;
                   const active =

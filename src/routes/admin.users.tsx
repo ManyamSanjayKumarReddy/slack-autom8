@@ -2,8 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import type { DateRange } from "react-day-picker";
-import { CalendarIcon, RefreshCw, ChevronDown, Users, ScrollText, Trash2 } from "lucide-react";
+import { ScrollText, Trash2 } from "lucide-react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
@@ -11,12 +10,9 @@ import { RoleGate } from "@/components/RoleGate";
 import { RoleBadge } from "@/components/RoleBadge";
 import { useCurrentUser } from "@/lib/user-store";
 import { ROLE_LABEL, ROLE_OPTIONS, type Role } from "@/lib/roles";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { SlackStyleFeed, type FeedRow } from "@/components/summaries/SlackStyleFeed";
 import {
   PaginationControls,
   type PaginatedResponse,
@@ -104,7 +100,6 @@ function AdminUsersPage() {
 
         <RoleGate allowed={["admin"]}>
           <Inner />
-          <UserSummariesSection />
         </RoleGate>
       </div>
     </AppShell>
@@ -481,274 +476,6 @@ function ChangeRoleDialog({
 }
 
 // ─── Types mirrored from hierarchy API ───────────────────────────────────────
-interface PersonalSummary {
-  id: string;
-  summary_text: string;
-  message_count: number;
-  is_auto_generated?: boolean;
-  created_at: string;
-}
-interface HierarchyMember {
-  user_id: string;
-  user_name: string;
-  project_role: "employee" | "team_lead";
-  personal_summaries: PersonalSummary[];
-}
-interface HierarchyDate {
-  project_summaries: PersonalSummary[];
-  members: HierarchyMember[];
-}
-interface HierarchyProject {
-  project_id: string;
-  project_name: string;
-  dates: Record<string, HierarchyDate>;
-}
-interface HierarchyResponse {
-  projects: HierarchyProject[];
-}
-
-type QuickKey = "today" | "yesterday" | "last7" | "last30" | "custom";
-
-function formatRange(r: DateRange | undefined): string {
-  if (!r?.from) return "Pick dates";
-  if (!r.to || r.from.toDateString() === r.to.toDateString())
-    return format(r.from, "MMM d, yyyy");
-  return `${format(r.from, "MMM d")} – ${format(r.to, "MMM d, yyyy")}`;
-}
-
-function UserSummariesSection() {
-  const today = new Date();
-  const [range, setRange] = useState<DateRange | undefined>({ from: today, to: today });
-  const [activeQuick, setActiveQuick] = useState<QuickKey>("today");
-  const [calOpen, setCalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [rows, setRows] = useState<FeedRow[] | null>(null);
-  const [notFound, setNotFound] = useState(false);
-
-  // User filter
-  const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>("all");
-  const [userPickerOpen, setUserPickerOpen] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await apiFetch("/admin/users?page=1&page_size=200");
-        if (res.ok) {
-          const data = (await res.json()) as PaginatedResponse<AdminUser>;
-          setAllUsers(data.results ?? []);
-        }
-      } catch { /* ignore */ }
-    })();
-  }, []);
-
-  const fetchSummaries = async (r?: DateRange) => {
-    const active = r ?? range;
-    setLoading(true);
-    setNotFound(false);
-    try {
-      const params = new URLSearchParams();
-      if (active?.from) params.set("from_date", format(active.from, "yyyy-MM-dd"));
-      if (active?.to) params.set("to_date", format(active.to, "yyyy-MM-dd"));
-      const res = await apiFetch(`/summaries/hierarchy?${params.toString()}`);
-      if (!res.ok) { setRows([]); setNotFound(true); return; }
-      const data = (await res.json()) as HierarchyResponse;
-      const flat: FeedRow[] = [];
-      for (const proj of data.projects) {
-        for (const [date, d] of Object.entries(proj.dates)) {
-          for (const s of d.project_summaries) {
-            flat.push({ ...s, date, type: "project", rowKey: `ps-${proj.project_id}-${date}-${s.id}` });
-          }
-          for (const m of d.members) {
-            for (const s of m.personal_summaries) {
-              flat.push({
-                ...s,
-                date,
-                type: "personal",
-                member_name: m.user_name,
-                member_role: m.project_role,
-                rowKey: `u-${m.user_id}-${proj.project_id}-${date}-${s.id}`,
-              });
-            }
-          }
-        }
-      }
-      flat.sort((a, b) => {
-        if (a.date !== b.date) return a.date > b.date ? -1 : 1;
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
-      setRows(flat);
-      if (flat.length === 0) setNotFound(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyQuick = (key: QuickKey) => {
-    setActiveQuick(key);
-    const end = new Date();
-    let r: DateRange;
-    if (key === "today") {
-      r = { from: new Date(), to: new Date() };
-    } else if (key === "yesterday") {
-      const y = new Date(); y.setDate(y.getDate() - 1);
-      r = { from: y, to: y };
-    } else if (key === "last7") {
-      const s = new Date(); s.setDate(s.getDate() - 6);
-      r = { from: s, to: end };
-    } else {
-      const s = new Date(); s.setDate(s.getDate() - 29);
-      r = { from: s, to: end };
-    }
-    setRange(r);
-    fetchSummaries(r);
-  };
-
-  const selectedUser = selectedUserId === "all" ? null : allUsers.find(u => u.id === selectedUserId);
-  const filteredRows = (rows ?? []).filter(r => {
-    if (selectedUserId === "all") return true;
-    if (!selectedUser) return true;
-    return r.member_name === selectedUser.name;
-  });
-
-  const QUICK: { key: QuickKey; label: string }[] = [
-    { key: "today", label: "Today" },
-    { key: "yesterday", label: "Yesterday" },
-    { key: "last7", label: "Last 7 days" },
-    { key: "last30", label: "Last 30 days" },
-    { key: "custom", label: "Custom" },
-  ];
-
-  return (
-    <div className="space-y-4">
-      {/* Section header */}
-      <div className="flex items-center gap-2">
-        <Users className="h-4 w-4 text-muted-foreground" />
-        <h2 className="font-semibold text-foreground" style={{ fontSize: "15px" }}>
-          User Summaries
-        </h2>
-      </div>
-
-      {/* Controls row */}
-      <div className="flex flex-wrap gap-2 items-center">
-        {/* Quick filters */}
-        <div className="flex gap-1 flex-wrap">
-          {QUICK.map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => key !== "custom" ? applyQuick(key) : undefined}
-              className={`px-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors ${
-                activeQuick === key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card border border-border text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Calendar picker */}
-        <Popover open={calOpen} onOpenChange={setCalOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[12.5px] font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
-              {formatRange(range)}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="range"
-              selected={range}
-              onSelect={(r) => {
-                setRange(r);
-                setActiveQuick("custom");
-                if (r?.from && r?.to && r.from.getTime() !== r.to.getTime()) setCalOpen(false);
-              }}
-              numberOfMonths={2}
-              disabled={{ after: today }}
-              initialFocus
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
-
-        {/* User filter */}
-        <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[12.5px] font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              {selectedUser ? selectedUser.name : "All users"}
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56 p-1" align="start">
-            <div className="max-h-60 overflow-y-auto">
-              <button
-                type="button"
-                onClick={() => { setSelectedUserId("all"); setUserPickerOpen(false); }}
-                className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors ${selectedUserId === "all" ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}
-              >
-                All users
-              </button>
-              {allUsers.map(u => (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() => { setSelectedUserId(u.id); setUserPickerOpen(false); }}
-                  className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors ${selectedUserId === u.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}
-                >
-                  <div className="font-medium truncate">{u.name || "Unnamed"}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{u.email}</div>
-                </button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {/* Fetch button */}
-        <button
-          type="button"
-          onClick={() => fetchSummaries()}
-          disabled={loading || !range?.from}
-          className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[12.5px] font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          {loading ? "Loading…" : "Load"}
-        </button>
-      </div>
-
-      {/* Content */}
-      {loading ? (
-        <div className="space-y-3">
-          {[0, 1, 2].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
-        </div>
-      ) : rows === null ? (
-        <div className="rounded-2xl border border-border bg-card px-6 py-12 text-center">
-          <p className="text-[14px] text-muted-foreground">
-            Select a date range and click <span className="font-semibold text-foreground">Load</span> to view summaries.
-          </p>
-        </div>
-      ) : notFound || filteredRows.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card px-6 py-12 text-center">
-          <p className="text-[14px] font-semibold text-foreground mb-1">No summaries found</p>
-          <p className="text-[13px] text-muted-foreground">
-            {selectedUserId !== "all" ? `${selectedUser?.name ?? "This user"} has no summaries in this range.` : "No summaries exist for this date range."}
-          </p>
-        </div>
-      ) : (
-        <SlackStyleFeed rows={filteredRows} />
-      )}
-    </div>
-  );
-}
-
 // ─── UserSummariesDialog ──────────────────────────────────────────────────────
 
 interface UserPersonalSummary {
