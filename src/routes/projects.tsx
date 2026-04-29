@@ -218,7 +218,7 @@ function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
       to="/projects/$projectId"
-      params={{ projectId: project.id }}
+      params={{ projectId: project.slug }}
       className="group rounded-2xl bg-card flex flex-col gap-4 transition-all hover:-translate-y-0.5 hover:shadow-lg no-underline overflow-hidden border border-border"
       style={{
         boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)",

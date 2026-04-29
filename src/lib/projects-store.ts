@@ -5,14 +5,14 @@ import type { PaginatedResponse } from "@/components/PaginationControls";
 export type ProjectRole = "employee" | "team_lead";
 
 export interface Project {
-  id: string;
+  slug: string;
+  id?: string;
   name: string;
   description?: string;
   member_count?: number;
   channel_count?: number;
   manager_id?: string | null;
   manager_name?: string | null;
-  /** Current user's project-scoped role (when returned by list/me). */
   my_role?: ProjectRole;
   created_at?: string;
 }
