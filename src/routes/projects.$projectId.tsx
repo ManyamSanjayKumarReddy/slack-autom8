@@ -339,6 +339,7 @@ function OverviewTab({
   onDelete: () => void;
 }) {
   const [assigning, setAssigning] = useState(false);
+  const [renamingSlug, setRenamingSlug] = useState(false);
 
   return (
     <div className="pt-5 pb-2">
@@ -361,6 +362,13 @@ function OverviewTab({
                 title="Edit project"
               >
                 <Pencil className="h-[17px] w-[17px]" />
+              </button>
+              <button
+                onClick={() => setRenamingSlug(true)}
+                className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                title="Rename project slug"
+              >
+                <Hash className="h-[17px] w-[17px]" />
               </button>
               {isAdmin && (
                 <button
@@ -443,6 +451,22 @@ function OverviewTab({
             />
           </DialogContent>
         </Dialog>
+      )}
+
+      {renamingSlug && (
+        <RenameSlugDialog
+          project={project}
+          onOpenChange={(o) => { if (!o) setRenamingSlug(false); }}
+          onSaved={(newSlug) => {
+            setRenamingSlug(false);
+            onChanged();
+            invalidateProjectsCache();
+            if (newSlug !== project.id) {
+              window.history.replaceState(null, "", `/projects/${newSlug}`);
+              window.location.reload();
+            }
+          }}
+        />
       )}
     </div>
   );
@@ -1689,5 +1713,131 @@ function SummariesSection({
         />
       )}
     </div>
+  );
+}
+
+/* ─── RenameSlugDialog ──────────────────────────────────────────────────────── */
+
+function RenameSlugDialog({
+  project,
+  onOpenChange,
+  onSaved,
+}: {
+  project: ProjectDetail;
+  onOpenChange: (o: boolean) => void;
+  onSaved: (newSlug: string) => void;
+}) {
+  const [newSlug, setNewSlug] = useState(project.id);
+  const [checking, setChecking] = useState(false);
+  const [available, setAvailable] = useState<boolean | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const isUnchanged = newSlug === project.id;
+  const isValid = /^[a-z][a-z0-9-]*$/.test(newSlug) && newSlug.length >= 2;
+
+  useEffect(() => {
+    if (isUnchanged || !isValid) {
+      setAvailable(null);
+      return;
+    }
+    setChecking(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await apiFetch(
+          `/projects/${project.id}/slug/check?new_slug=${encodeURIComponent(newSlug)}`,
+        );
+        if (res.ok) {
+          const data = (await res.json()) as { available: boolean };
+          setAvailable(data.available);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setChecking(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [newSlug, isUnchanged, isValid, project.id]);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const res = await apiFetch(`/projects/${project.id}/slug`, {
+        method: "PUT",
+        body: JSON.stringify({ new_slug: newSlug }),
+      });
+      if (!res.ok) {
+        await handleApiError(res, "Failed to rename slug");
+        return;
+      }
+      toast.success("Project slug updated.");
+      onSaved(newSlug);
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const canSubmit = !isUnchanged && isValid && available === true && !submitting;
+
+  return (
+    <Dialog open onOpenChange={(o) => !submitting && onOpenChange(o)}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Rename project slug</DialogTitle>
+          <DialogDescription>
+            The slug is used in all project URLs. Renaming it will redirect you to the new URL.
+            Lowercase letters, numbers, and hyphens only.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 py-1">
+          <div className="space-y-1.5">
+            <Label>Current slug</Label>
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm font-mono text-muted-foreground">
+              {project.id}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="new-slug">New slug</Label>
+            <div className="relative">
+              <Input
+                id="new-slug"
+                value={newSlug}
+                onChange={(e) => {
+                  setAvailable(null);
+                  setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                }}
+                disabled={submitting}
+                className="font-mono"
+              />
+              {checking && (
+                <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />
+              )}
+            </div>
+            {!isUnchanged && !isValid && newSlug.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Must start with a letter; only lowercase letters, numbers, and hyphens.
+              </p>
+            )}
+            {!isUnchanged && isValid && !checking && available === true && (
+              <p className="text-xs text-emerald-600">✓ Slug available</p>
+            )}
+            {!isUnchanged && isValid && !checking && available === false && (
+              <p className="text-xs text-destructive">✗ Slug already in use</p>
+            )}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={!canSubmit}>
+            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {submitting ? "Saving…" : "Rename"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
