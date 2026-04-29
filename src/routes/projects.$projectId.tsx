@@ -26,7 +26,6 @@ import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
 import { useCurrentUser } from "@/lib/user-store";
 import { invalidateProjectsCache, type ProjectRole } from "@/lib/projects-store";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -232,7 +231,7 @@ function ProjectDetailPage() {
 
 /* ----------------------- Slack-style Tab Bar ----------------------- */
 
-type ProjectTabKey = "overview" | "summaries";
+type ProjectTabKey = "overview" | "user-summaries" | "project-summaries";
 
 function ProjectTabs({
   project,
@@ -257,9 +256,16 @@ function ProjectTabs({
 }) {
   const [activeTab, setActiveTab] = useState<ProjectTabKey>("overview");
 
+  const isTeamLead = projectRole === "team_lead";
+  const isManagerOrAdminRole = isOneOf(userRole, ["manager", "admin"]);
+  const canAccessProjectSummaries = isTeamLead || isManagerOrAdminRole;
+
   const tabs: { key: ProjectTabKey; label: string; icon: typeof LayoutGrid }[] = [
     { key: "overview", label: "Overview", icon: LayoutGrid },
-    { key: "summaries", label: "Summaries", icon: FileText },
+    { key: "user-summaries", label: "User Summaries", icon: FileText },
+    ...(canAccessProjectSummaries
+      ? [{ key: "project-summaries" as ProjectTabKey, label: "Project Summaries", icon: Sparkles }]
+      : []),
   ];
 
   return (
@@ -309,8 +315,22 @@ function ProjectTabs({
         </>
       )}
 
-      {activeTab === "summaries" && (
-        <SummariesSection projectId={projectId} userRole={userRole} projectRole={projectRole} />
+      {activeTab === "user-summaries" && (
+        <SummariesSection
+          projectId={projectId}
+          userRole={userRole}
+          projectRole={projectRole}
+          scope="personal"
+        />
+      )}
+
+      {activeTab === "project-summaries" && (
+        <SummariesSection
+          projectId={projectId}
+          userRole={userRole}
+          projectRole={projectRole}
+          scope="project"
+        />
       )}
     </div>
   );
@@ -1071,6 +1091,18 @@ function AddMemberDialog({
         body: JSON.stringify({ username: pending.username, role: role }),
       });
       if (!res.ok) {
+        if (res.status === 422) {
+          try {
+            const err = await res.json();
+            const detail = Array.isArray(err.detail)
+              ? err.detail.map((e: { msg: string }) => e.msg).join("; ")
+              : (typeof err.detail === "string" ? err.detail : "Validation error. Ensure the user is an employee.");
+            toast.error(detail);
+          } catch {
+            toast.error("Failed to add member: invalid request.");
+          }
+          return;
+        }
         await handleApiError(res, "Failed to add member");
         return;
       }
@@ -1091,7 +1123,8 @@ function AddMemberDialog({
         </DialogHeader>
         {!pending ? (
           <UserSearchPicker
-            placeholder="Search users…"
+            role="employee"
+            placeholder="Search employees…"
             excludeIds={excluded}
             onSelect={(u) => setPending(u)}
           />
@@ -1269,17 +1302,18 @@ function fmtRange(r: DateRange | undefined): string {
 }
 
 type QuickKey = "today" | "yesterday" | "last7" | "last30" | "custom";
-type SummaryTab = "user" | "project";
 type TypeFilter = "all" | "auto" | "manual";
 
 function SummariesSection({
   projectId,
   userRole,
   projectRole,
+  scope,
 }: {
   projectId: string;
   userRole: string | undefined;
   projectRole: ProjectRole | undefined;
+  scope: "personal" | "project";
 }) {
   const isMobile = useIsMobile();
 
@@ -1289,15 +1323,12 @@ function SummariesSection({
   const isManagerOrAdmin = userRole === "manager" || userRole === "admin";
   // employee, team_lead, manager, admin can generate personal summaries
   const canGeneratePersonal = isEmployee || isTeamLead || isManagerOrAdmin;
-  // team_lead, manager, admin can access project summaries tab
-  const canAccessProjectTab = isTeamLead || isManagerOrAdmin;
   // team_lead, manager, admin can generate project summaries
   const canGenerateProject = isTeamLead || isManagerOrAdmin;
   // team_lead, manager, admin see member filter on user tab
   const canFilterByMember = isTeamLead || isManagerOrAdmin;
 
-  // Tabs, filters, date range
-  const [tab, setTab] = useState<SummaryTab>("user");
+  // Filters, date range
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("auto");
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [memberPickerOpen, setMemberPickerOpen] = useState(false);
@@ -1346,12 +1377,10 @@ function SummariesSection({
   }, []);
 
   const fetchData = async (opts?: {
-    tab?: SummaryTab;
     typeFilter?: TypeFilter;
     memberIds?: string[];
     range?: DateRange;
   }) => {
-    const activeTab = opts?.tab ?? tab;
     const activeType = opts?.typeFilter ?? typeFilter;
     const activeMemIds = opts?.memberIds ?? memberIds;
     const activeRange = opts?.range ?? range;
@@ -1359,7 +1388,7 @@ function SummariesSection({
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.set("summary_scope", activeTab === "user" ? "personal" : "project");
+      params.set("scope", scope);
       if (activeType !== "all") params.set("type", activeType);
       for (const id of activeMemIds) params.append("member_id", id);
       if (activeRange?.from) params.set("from_date", format(activeRange.from, "yyyy-MM-dd"));
@@ -1463,13 +1492,6 @@ function SummariesSection({
     fetchData({ range: r });
   };
 
-  const handleTabChange = (newTab: SummaryTab) => {
-    setTab(newTab);
-    setTypeFilter("auto");
-    setMemberIds([]);
-    fetchData({ tab: newTab, typeFilter: "auto", memberIds: [] });
-  };
-
   const handleTypeChange = (t: TypeFilter) => {
     setTypeFilter(t);
     fetchData({ typeFilter: t });
@@ -1509,7 +1531,7 @@ function SummariesSection({
   };
 
   const isPolling = taskId !== null;
-  const canGenerateCurrent = tab === "user" ? canGeneratePersonal : canGenerateProject;
+  const canGenerateCurrent = scope === "personal" ? canGeneratePersonal : canGenerateProject;
 
   const TYPE_OPTS: { value: TypeFilter; label: string }[] = [
     { value: "all", label: "All" },
@@ -1526,20 +1548,9 @@ function SummariesSection({
 
   return (
     <div className="space-y-4">
-      {/* Header: sub-tabs + generate button */}
+      {/* Header: generate button + usage */}
       <div className="flex items-center justify-between gap-3 flex-wrap py-3">
-        <div className="flex items-center gap-2">
-          {canAccessProjectTab ? (
-            <Tabs value={tab} onValueChange={(v) => handleTabChange(v as SummaryTab)}>
-              <TabsList>
-                <TabsTrigger value="user">User Summaries</TabsTrigger>
-                <TabsTrigger value="project">Project Summaries</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          ) : (
-            <h3 className="text-base font-semibold text-foreground">User Summaries</h3>
-          )}
-        </div>
+        <div className="flex items-center gap-2" />
         <div className="flex items-center gap-2 flex-wrap">
           {/* Usage pill */}
           {usage && (
@@ -1574,7 +1585,7 @@ function SummariesSection({
               ) : (
                 <Sparkles className="h-4 w-4 mr-1.5" />
               )}
-              {tab === "user" ? "Generate My Summary" : "Generate Project Summary"}
+              {scope === "personal" ? "Generate My Summary" : "Generate Project Summary"}
             </Button>
           )}
         </div>
@@ -1690,8 +1701,8 @@ function SummariesSection({
             ))}
           </div>
 
-          {/* Member filter — only on user tab for team_lead / manager / admin */}
-          {tab === "user" && canFilterByMember && members.length > 0 && (
+          {/* Member filter — only on personal scope for team_lead / manager / admin */}
+          {scope === "personal" && canFilterByMember && members.length > 0 && (
             <Popover open={memberPickerOpen} onOpenChange={setMemberPickerOpen}>
               <PopoverTrigger asChild>
                 <button
@@ -1785,7 +1796,7 @@ function SummariesSection({
           open={generateOpen}
           onOpenChange={setGenerateOpen}
           projectId={projectId}
-          scope={tab === "user" ? "personal" : "project"}
+          scope={scope}
           onStarted={(tid) => setTaskId(tid)}
         />
       )}

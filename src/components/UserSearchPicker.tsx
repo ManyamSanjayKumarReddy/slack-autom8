@@ -55,7 +55,9 @@ export function UserSearchPicker({
     };
   }, [q, role]);
 
-  const filtered = (results ?? []).filter((u) => !excludeIds.includes(u.username));
+  const filtered = (results ?? [])
+    .filter((u) => !excludeIds.includes(u.username))
+    .filter((u) => !role || u.role === role);
 
   return (
     <div className="space-y-2">
