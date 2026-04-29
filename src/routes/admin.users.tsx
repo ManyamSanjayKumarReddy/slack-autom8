@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import type { DateRange } from "react-day-picker";
-import { CalendarIcon, RefreshCw, ChevronDown, Users } from "lucide-react";
+import { CalendarIcon, RefreshCw, ChevronDown, Users, ScrollText } from "lucide-react";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
 import { AppShell } from "@/components/AppShell";
@@ -14,6 +14,8 @@ import { ROLE_LABEL, ROLE_OPTIONS, type Role } from "@/lib/roles";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { SlackStyleFeed, type FeedRow } from "@/components/summaries/SlackStyleFeed";
 import {
   PaginationControls,
@@ -120,6 +122,7 @@ function Inner() {
   const [hasPrevious, setHasPrevious] = useState(false);
 
   const [editing, setEditing] = useState<AdminUser | null>(null);
+  const [viewSummaries, setViewSummaries] = useState<AdminUser | null>(null);
 
   useEffect(() => {
     document.title = "User Management — Slack Summarizer";
@@ -199,13 +202,22 @@ function Inner() {
                       </div>
                       <div>Joined {fmt(u.created_at)}</div>
                     </div>
-                    <button
-                      onClick={() => setEditing(u)}
-                      disabled={isMe}
-                      className="w-full rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isMe ? "Cannot change own role" : "Change Role"}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setViewSummaries(u)}
+                        className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors inline-flex items-center justify-center gap-1.5"
+                      >
+                        <ScrollText className="h-3.5 w-3.5" />
+                        Summaries
+                      </button>
+                      <button
+                        onClick={() => setEditing(u)}
+                        disabled={isMe}
+                        className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isMe ? "Cannot change own role" : "Change Role"}
+                      </button>
+                    </div>
                   </li>
                 );
               })}
@@ -250,13 +262,22 @@ function Inner() {
                           {fmt(u.created_at)}
                         </TableCell>
                         <TableCell className="text-right pr-6">
-                          <button
-                            onClick={() => setEditing(u)}
-                            disabled={isMe}
-                            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Change Role
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => setViewSummaries(u)}
+                              className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors inline-flex items-center gap-1.5"
+                            >
+                              <ScrollText className="h-3.5 w-3.5" />
+                              Summaries
+                            </button>
+                            <button
+                              onClick={() => setEditing(u)}
+                              disabled={isMe}
+                              className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Change Role
+                            </button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -291,6 +312,15 @@ function Inner() {
             if (!o) setEditing(null);
           }}
           onSaved={() => fetchUsers()}
+        />
+      )}
+
+      {viewSummaries && (
+        <UserSummariesDialog
+          user={viewSummaries}
+          onOpenChange={(o) => {
+            if (!o) setViewSummaries(null);
+          }}
         />
       )}
     </>
@@ -706,5 +736,150 @@ function UserSummariesSection() {
         <SlackStyleFeed rows={filteredRows} />
       )}
     </div>
+  );
+}
+
+// ─── UserSummariesDialog ──────────────────────────────────────────────────────
+
+interface UserPersonalSummary {
+  id: string;
+  summary_text: string;
+  message_count: number;
+  is_auto_generated?: boolean;
+  created_at: string;
+  from_date?: string;
+  to_date?: string;
+  project_id?: string;
+  project_name?: string;
+}
+
+interface UserSummariesResponse {
+  total?: number;
+  summaries?: UserPersonalSummary[];
+  // some backends return grouped_by_date
+  grouped_by_date?: Record<string, UserPersonalSummary[]>;
+}
+
+const MD_INLINE =
+  "text-[13.5px] leading-relaxed text-foreground " +
+  "[&_p]:mt-1 [&_strong]:font-semibold [&_em]:italic " +
+  "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ol]:list-decimal [&_ol]:pl-5 " +
+  "[&_a]:text-primary [&_a]:underline";
+
+function UserSummariesDialog({
+  user,
+  onOpenChange,
+}: {
+  user: AdminUser;
+  onOpenChange: (o: boolean) => void;
+}) {
+  const [summaries, setSummaries] = useState<UserPersonalSummary[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await apiFetch(`/summaries/user/${user.id}`);
+        if (!res.ok) {
+          await handleApiError(res, "Failed to load summaries");
+          if (!cancelled) setSummaries([]);
+          return;
+        }
+        const data = (await res.json()) as UserSummariesResponse;
+        if (cancelled) return;
+        if (Array.isArray(data.summaries)) {
+          setSummaries(data.summaries);
+        } else if (data.grouped_by_date) {
+          const flat = Object.values(data.grouped_by_date).flat();
+          flat.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          setSummaries(flat);
+        } else {
+          setSummaries([]);
+        }
+      } catch {
+        if (!cancelled) {
+          toast.error("Network error loading summaries.");
+          setSummaries([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user.id]);
+
+  const displayName = user.name || user.email;
+
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ScrollText className="h-4 w-4 text-muted-foreground" />
+            {displayName}'s Summaries
+          </DialogTitle>
+          <DialogDescription>
+            All personal summaries generated by this user across all projects.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto min-h-0 -mx-6 px-6">
+          {loading ? (
+            <div className="space-y-3 py-2">
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : !summaries || summaries.length === 0 ? (
+            <div className="py-12 text-center space-y-2">
+              <div className="text-2xl">📄</div>
+              <p className="text-sm font-medium text-foreground">No summaries yet</p>
+              <p className="text-xs text-muted-foreground">
+                {displayName} hasn't generated any personal summaries.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3 py-2">
+              {summaries.map((s) => (
+                <div
+                  key={s.id}
+                  className="rounded-xl border border-border bg-secondary/30 p-4 space-y-2"
+                >
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(s.created_at), "MMM d, yyyy 'at' h:mm a")}
+                    </span>
+                    {s.project_name && (
+                      <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground font-medium">
+                        {s.project_name}
+                      </span>
+                    )}
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+                        s.is_auto_generated
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                          : "border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-400"
+                      }`}
+                    >
+                      {s.is_auto_generated ? "Auto" : "Manual"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {s.message_count} messages
+                    </span>
+                  </div>
+                  <div className={MD_INLINE}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {s.summary_text}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
