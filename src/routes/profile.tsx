@@ -19,6 +19,8 @@ export const Route = createFileRoute("/profile")({
 
 interface ProjectMembership {
   project_id: string;
+  /** Slug used for routing — present when backend has migrated to slug-based IDs */
+  project_slug?: string;
   project_name: string;
   project_role: "employee" | "team_lead";
   joined_at?: string;
@@ -201,7 +203,7 @@ function ProfilePage() {
                       </div>
                       <Link
                         to="/projects/$projectId"
-                        params={{ projectId: m.project_id }}
+                        params={{ projectId: m.project_slug ?? m.project_id }}
                         className="truncate flex-1 no-underline transition-colors hover:text-primary text-foreground"
                         style={{ fontSize: "13.5px", fontWeight: 500 }}
                       >

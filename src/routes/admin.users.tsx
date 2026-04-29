@@ -152,7 +152,7 @@ function Inner() {
   };
 
   useEffect(() => {
-    document.title = "User Management — Slack Summarizer";
+    document.title = "User Management — Slack Autom8";
   }, []);
 
   const fetchUsers = async (p = page, s = pageSize) => {
