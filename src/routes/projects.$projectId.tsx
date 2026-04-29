@@ -69,7 +69,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { UserSearchPicker, type SearchUser } from "@/components/UserSearchPicker";
 
 interface ProjectDetail {
-  id: string;
+  slug: string;
   name: string;
   description?: string;
   member_count?: number;
@@ -87,10 +87,10 @@ interface ProjectChannel {
 }
 
 interface ProjectMember {
-  user_id: string;
+  username: string;
   name: string;
   email: string;
-  project_role: ProjectRole;
+  role: ProjectRole;
   joined_at?: string;
 }
 
@@ -310,18 +310,13 @@ function ProjectTabs({
       )}
 
       {activeTab === "summaries" && (
-        <SummariesSection
-          projectId={projectId}
-          userRole={userRole}
-          projectRole={projectRole}
-        />
+        <SummariesSection projectId={projectId} userRole={userRole} projectRole={projectRole} />
       )}
     </div>
   );
 }
 
 /* ----------------------- Overview ----------------------- */
-
 
 function OverviewTab({
   project,
@@ -349,7 +344,9 @@ function OverviewTab({
         <div className="flex items-start gap-4 px-7 pt-7 pb-6">
           <div className="flex-1 min-w-0">
             {project.description ? (
-              <p className="text-[16px] text-foreground/80 leading-relaxed">{project.description}</p>
+              <p className="text-[16px] text-foreground/80 leading-relaxed">
+                {project.description}
+              </p>
             ) : (
               <p className="text-[16px] italic text-muted-foreground">No description provided.</p>
             )}
@@ -386,8 +383,12 @@ function OverviewTab({
         {/* Stats — Slack channel-info panel style: no heavy boxes, just label + value */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-5 px-7 py-6 border-t border-border">
           <div>
-            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Manager</div>
-            <div className={`text-[14px] font-medium leading-snug ${project.manager_name ? "text-foreground" : "italic text-muted-foreground"}`}>
+            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+              Manager
+            </div>
+            <div
+              className={`text-[14px] font-medium leading-snug ${project.manager_name ? "text-foreground" : "italic text-muted-foreground"}`}
+            >
               {project.manager_name || "Unassigned"}
             </div>
             {isAdmin && (
@@ -401,19 +402,31 @@ function OverviewTab({
           </div>
 
           <div>
-            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Members</div>
-            <div className="text-[22px] font-bold text-foreground leading-none">{project.member_count ?? 0}</div>
+            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+              Members
+            </div>
+            <div className="text-[22px] font-bold text-foreground leading-none">
+              {project.member_count ?? 0}
+            </div>
           </div>
 
           <div>
-            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Channels</div>
-            <div className="text-[22px] font-bold text-foreground leading-none">{project.channel_count ?? 0}</div>
+            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+              Channels
+            </div>
+            <div className="text-[22px] font-bold text-foreground leading-none">
+              {project.channel_count ?? 0}
+            </div>
           </div>
 
           {project.created_at && (
             <div>
-              <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Created</div>
-              <div className="text-[14px] font-medium text-foreground">{new Date(project.created_at).toLocaleDateString()}</div>
+              <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                Created
+              </div>
+              <div className="text-[14px] font-medium text-foreground">
+                {new Date(project.created_at).toLocaleDateString()}
+              </div>
             </div>
           )}
         </div>
@@ -424,9 +437,7 @@ function OverviewTab({
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Assign manager</DialogTitle>
-              <DialogDescription>
-                Search for a user with the manager role.
-              </DialogDescription>
+              <DialogDescription>Search for a user with the manager role.</DialogDescription>
             </DialogHeader>
             <UserSearchPicker
               role="manager"
@@ -456,7 +467,9 @@ function OverviewTab({
       {renamingSlug && (
         <RenameSlugDialog
           project={project}
-          onOpenChange={(o) => { if (!o) setRenamingSlug(false); }}
+          onOpenChange={(o) => {
+            if (!o) setRenamingSlug(false);
+          }}
           onSaved={(newSlug) => {
             setRenamingSlug(false);
             onChanged();
@@ -572,9 +585,7 @@ function ChannelsTab({
       const data = (await res.json()) as
         | { channels?: ProjectChannel[]; results?: ProjectChannel[] }
         | ProjectChannel[];
-      const list = Array.isArray(data)
-        ? data
-        : (data.channels ?? data.results ?? []);
+      const list = Array.isArray(data) ? data : (data.channels ?? data.results ?? []);
       setChannels(list);
     } finally {
       setLoading(false);
@@ -771,9 +782,7 @@ function AddChannelDialog({
     }
   };
 
-  const filtered = (channels ?? []).filter((c) =>
-    c.name.toLowerCase().includes(q.toLowerCase()),
-  );
+  const filtered = (channels ?? []).filter((c) => c.name.toLowerCase().includes(q.toLowerCase()));
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
@@ -800,18 +809,13 @@ function AddChannelDialog({
               {filtered.map((c) => {
                 const inProject = existingIds.has(c.id);
                 return (
-                  <li
-                    key={c.id}
-                    className="flex items-center justify-between gap-3 px-3 py-2.5"
-                  >
+                  <li key={c.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-foreground truncate">
                         {c.is_private ? "🔒 " : "# "}
                         {c.name}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {c.num_members} members
-                      </div>
+                      <div className="text-xs text-muted-foreground">{c.num_members} members</div>
                     </div>
                     {inProject ? (
                       <Badge variant="outline" className="shrink-0">
@@ -894,7 +898,7 @@ function MembersTab({
 
   const handleRemove = async (m: ProjectMember) => {
     try {
-      const res = await apiFetch(`/projects/${projectId}/members/${m.user_id}`, {
+      const res = await apiFetch(`/projects/${projectId}/members/${m.username}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -940,31 +944,33 @@ function MembersTab({
           ))}
         </div>
       ) : !members || members.length === 0 ? (
-        <div className="p-12 text-center text-sm text-muted-foreground">
-          No members yet.
-        </div>
+        <div className="p-12 text-center text-sm text-muted-foreground">No members yet.</div>
       ) : (
         <ul className="divide-y divide-border">
           {members.map((m) => (
             <li
-              key={m.user_id}
+              key={m.username}
               className="group/member flex items-center gap-3 py-3.5 px-6 hover:bg-muted/20 transition-colors"
             >
               <MemberAvatar name={m.name} />
               <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-semibold text-foreground truncate leading-snug">{m.name}</div>
+                <div className="text-[14px] font-semibold text-foreground truncate leading-snug">
+                  {m.name}
+                </div>
                 {/* Email — smaller and muted, not as prominent */}
-                <div className="text-[11px] text-muted-foreground/60 mt-0.5 truncate">{m.email}</div>
+                <div className="text-[11px] text-muted-foreground/60 mt-0.5 truncate">
+                  {m.email}
+                </div>
               </div>
               {/* Role badge — subtle outlined chip */}
               <span
                 className={`shrink-0 text-[10.5px] font-semibold px-2 py-0.5 rounded-full border ${
-                  m.project_role === "team_lead"
+                  m.role === "team_lead"
                     ? "border-primary/30 text-primary bg-primary/8"
                     : "border-border text-muted-foreground"
                 }`}
               >
-                {m.project_role === "team_lead" ? "Team Lead" : "Employee"}
+                {m.role === "team_lead" ? "Team Lead" : "Employee"}
               </span>
               {/* Edit/remove — hidden until hover, Slack-style */}
               {canManage && (
@@ -1014,10 +1020,7 @@ function MembersTab({
         />
       )}
 
-      <AlertDialog
-        open={confirmRemove !== null}
-        onOpenChange={(o) => !o && setConfirmRemove(null)}
-      >
+      <AlertDialog open={confirmRemove !== null} onOpenChange={(o) => !o && setConfirmRemove(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this member?</AlertDialogTitle>
@@ -1057,7 +1060,7 @@ function AddMemberDialog({
   const [pending, setPending] = useState<SearchUser | null>(null);
   const [role, setRole] = useState<ProjectRole>("employee");
   const [submitting, setSubmitting] = useState(false);
-  const excluded = existing.map((m) => m.user_id);
+  const excluded = existing.map((m) => m.username);
 
   const handleConfirm = async () => {
     if (!pending) return;
@@ -1065,7 +1068,7 @@ function AddMemberDialog({
     try {
       const res = await apiFetch(`/projects/${projectId}/members`, {
         method: "POST",
-        body: JSON.stringify({ user_id: pending.username, project_role: role }),
+        body: JSON.stringify({ username: pending.username, role: role }),
       });
       if (!res.ok) {
         await handleApiError(res, "Failed to add member");
@@ -1084,9 +1087,7 @@ function AddMemberDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add member</DialogTitle>
-          <DialogDescription>
-            Search for a user, then choose their project role.
-          </DialogDescription>
+          <DialogDescription>Search for a user, then choose their project role.</DialogDescription>
         </DialogHeader>
         {!pending ? (
           <UserSearchPicker
@@ -1138,15 +1139,15 @@ function EditMemberRoleDialog({
   onOpenChange: (o: boolean) => void;
   onSaved: () => void;
 }) {
-  const [role, setRole] = useState<ProjectRole>(member.project_role);
+  const [role, setRole] = useState<ProjectRole>(member.role);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const res = await apiFetch(`/projects/${projectId}/members/${member.user_id}/role`, {
+      const res = await apiFetch(`/projects/${projectId}/members/${member.username}/role`, {
         method: "PUT",
-        body: JSON.stringify({ project_role: role }),
+        body: JSON.stringify({ role: role }),
       });
       if (!res.ok) {
         await handleApiError(res, "Failed to update role");
@@ -1165,9 +1166,7 @@ function EditMemberRoleDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Change project role</DialogTitle>
-          <DialogDescription>
-            Update {member.name}'s role within this project.
-          </DialogDescription>
+          <DialogDescription>Update {member.name}'s role within this project.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
@@ -1187,7 +1186,7 @@ function EditMemberRoleDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting || role === member.project_role}>
+          <Button onClick={handleSubmit} disabled={submitting || role === member.role}>
             {submitting ? "Saving…" : "Save"}
           </Button>
         </DialogFooter>
@@ -1265,8 +1264,7 @@ function mapToFeedRow(item: UnifiedSummaryItem, date: string): FeedRow {
 
 function fmtRange(r: DateRange | undefined): string {
   if (!r?.from) return "Pick dates";
-  if (!r.to || r.from.toDateString() === r.to.toDateString())
-    return format(r.from, "MMM d, yyyy");
+  if (!r.to || r.from.toDateString() === r.to.toDateString()) return format(r.from, "MMM d, yyyy");
   return `${format(r.from, "MMM d")} – ${format(r.to, "MMM d, yyyy")}`;
 }
 
@@ -1341,7 +1339,9 @@ function SummariesSection({
   // Fetch usage on mount
   useEffect(() => {
     apiFetch("/summaries/usage")
-      .then(async (res) => { if (res.ok) setUsage(await res.json()); })
+      .then(async (res) => {
+        if (res.ok) setUsage(await res.json());
+      })
       .catch(() => {});
   }, []);
 
@@ -1406,8 +1406,11 @@ function SummariesSection({
     const poll = async () => {
       try {
         const res = await apiFetch(`/summaries/tasks/${taskId}`);
-        if (!res.ok) { setTaskId(null); return; }
-        const result = await res.json() as {
+        if (!res.ok) {
+          setTaskId(null);
+          return;
+        }
+        const result = (await res.json()) as {
           task_id: string;
           status: "processing" | "done" | "failed";
           error?: string;
@@ -1416,7 +1419,11 @@ function SummariesSection({
           setTaskId(null);
           toast.success("Summary ready");
           await fetchData();
-          apiFetch("/summaries/usage").then(async (r) => { if (r.ok) setUsage(await r.json()); }).catch(() => {});
+          apiFetch("/summaries/usage")
+            .then(async (r) => {
+              if (r.ok) setUsage(await r.json());
+            })
+            .catch(() => {});
         } else if (result.status === "failed") {
           setTaskId(null);
           toast.error(result.error ?? "Summary generation failed.");
@@ -1428,7 +1435,9 @@ function SummariesSection({
       }
     };
     taskTimer.current = setTimeout(poll, 3500);
-    return () => { if (taskTimer.current) clearTimeout(taskTimer.current); };
+    return () => {
+      if (taskTimer.current) clearTimeout(taskTimer.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId]);
 
@@ -1438,13 +1447,16 @@ function SummariesSection({
     if (key === "today") {
       r = { from: new Date(), to: new Date() };
     } else if (key === "yesterday") {
-      const y = new Date(); y.setDate(y.getDate() - 1);
+      const y = new Date();
+      y.setDate(y.getDate() - 1);
       r = { from: y, to: y };
     } else if (key === "last7") {
-      const s = new Date(); s.setDate(s.getDate() - 6);
+      const s = new Date();
+      s.setDate(s.getDate() - 6);
       r = { from: s, to: new Date() };
     } else {
-      const s = new Date(); s.setDate(s.getDate() - 29);
+      const s = new Date();
+      s.setDate(s.getDate() - 29);
       r = { from: s, to: new Date() };
     }
     setRange(r);
@@ -1464,9 +1476,7 @@ function SummariesSection({
   };
 
   const handleMemberToggle = (id: string) => {
-    const next = memberIds.includes(id)
-      ? memberIds.filter((x) => x !== id)
-      : [...memberIds, id];
+    const next = memberIds.includes(id) ? memberIds.filter((x) => x !== id) : [...memberIds, id];
     setMemberIds(next);
     fetchData({ memberIds: next });
   };
@@ -1480,9 +1490,10 @@ function SummariesSection({
   const handleDelete = async (row: FeedRow) => {
     setDeletingId(row.id);
     try {
-      const endpoint = row.type === "personal"
-        ? `/summaries/projects/${projectId}/personal/${row.id}`
-        : `/summaries/projects/${projectId}/project/${row.id}`;
+      const endpoint =
+        row.type === "personal"
+          ? `/summaries/projects/${projectId}/personal/${row.id}`
+          : `/summaries/projects/${projectId}/project/${row.id}`;
       const res = await apiFetch(endpoint, { method: "DELETE" });
       if (!res.ok) {
         await handleApiError(res, "Failed to delete summary");
@@ -1537,13 +1548,22 @@ function SummariesSection({
               style={{
                 borderColor: usage.remaining === 0 ? "rgba(239,68,68,0.4)" : "var(--color-border)",
                 background: usage.remaining === 0 ? "rgba(239,68,68,0.08)" : "var(--muted)",
-                color: usage.remaining === 0 ? "#ef4444" : usage.remaining <= 2 ? "#f59e0b" : "var(--muted-foreground)",
+                color:
+                  usage.remaining === 0
+                    ? "#ef4444"
+                    : usage.remaining <= 2
+                      ? "#f59e0b"
+                      : "var(--muted-foreground)",
               }}
             >
               <Zap className="h-3 w-3" />
               <span>
-                {usage.remaining === 0 ? "No generations left" : `${usage.remaining} generation${usage.remaining === 1 ? "" : "s"} left`}
-                <span className="opacity-60 ml-1">({usage.used_this_week}/{usage.weekly_limit})</span>
+                {usage.remaining === 0
+                  ? "No generations left"
+                  : `${usage.remaining} generation${usage.remaining === 1 ? "" : "s"} left`}
+                <span className="opacity-60 ml-1">
+                  ({usage.used_this_week}/{usage.weekly_limit})
+                </span>
               </span>
             </div>
           )}
@@ -1570,11 +1590,21 @@ function SummariesSection({
           {QUICK_PICKS.map(({ label, key }) => {
             const active = activeQuick === key;
             return (
-              <button key={key} type="button" onClick={() => applyQuick(key)}
+              <button
+                key={key}
+                type="button"
+                onClick={() => applyQuick(key)}
                 className="rounded-full px-4 py-2 text-sm font-semibold transition-all min-h-[36px]"
-                style={active
-                  ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
-                  : { background: "var(--pill-inactive-bg)", color: "var(--pill-inactive-color)" }}>
+                style={
+                  active
+                    ? {
+                        background: "#1264a3",
+                        color: "#fff",
+                        boxShadow: "0 2px 8px rgba(18,100,163,0.35)",
+                      }
+                    : { background: "var(--pill-inactive-bg)", color: "var(--pill-inactive-color)" }
+                }
+              >
                 {label}
               </button>
             );
@@ -1582,17 +1612,31 @@ function SummariesSection({
           <div className="hidden sm:block w-px h-5 mx-1 shrink-0 bg-border" />
           <Popover open={calOpen} onOpenChange={setCalOpen}>
             <PopoverTrigger asChild>
-              <button type="button"
+              <button
+                type="button"
                 className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all min-h-[36px]"
-                style={activeQuick === "custom"
-                  ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
-                  : { background: "var(--cal-btn-inactive-bg)", color: "var(--cal-btn-inactive-color)", border: "1px solid var(--cal-btn-inactive-border)" }}>
+                style={
+                  activeQuick === "custom"
+                    ? {
+                        background: "#1264a3",
+                        color: "#fff",
+                        boxShadow: "0 2px 8px rgba(18,100,163,0.35)",
+                      }
+                    : {
+                        background: "var(--cal-btn-inactive-bg)",
+                        color: "var(--cal-btn-inactive-color)",
+                        border: "1px solid var(--cal-btn-inactive-border)",
+                      }
+                }
+              >
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {fmtRange(range)}
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 max-w-[calc(100vw-2rem)]" align="start">
-              <Calendar mode="range" selected={range}
+              <Calendar
+                mode="range"
+                selected={range}
                 onSelect={(r) => {
                   setRange(r);
                   setActiveQuick("custom");
@@ -1600,14 +1644,27 @@ function SummariesSection({
                 }}
                 numberOfMonths={isMobile ? 1 : 2}
                 disabled={{ after: today }}
-                initialFocus className="p-3 pointer-events-auto"
+                initialFocus
+                className="p-3 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
-          <button type="button" onClick={() => fetchData()} disabled={loading || !range?.from}
+          <button
+            type="button"
+            onClick={() => fetchData()}
+            disabled={loading || !range?.from}
             className="sm:ml-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 min-h-[36px]"
-            style={{ background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.3)" }}>
-            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            style={{
+              background: "#1264a3",
+              color: "#fff",
+              boxShadow: "0 2px 8px rgba(18,100,163,0.3)",
+            }}
+          >
+            {loading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5" />
+            )}
             {loading ? "Loading…" : "Apply"}
           </button>
         </div>
@@ -1622,9 +1679,11 @@ function SummariesSection({
                 type="button"
                 onClick={() => handleTypeChange(value)}
                 className="rounded-md px-3 py-1 text-xs font-semibold transition-colors"
-                style={typeFilter === value
-                  ? { background: "#1264a3", color: "#fff" }
-                  : { color: "var(--muted-foreground)", background: "transparent" }}
+                style={
+                  typeFilter === value
+                    ? { background: "#1264a3", color: "#fff" }
+                    : { color: "var(--muted-foreground)", background: "transparent" }
+                }
               >
                 {label}
               </button>
@@ -1635,34 +1694,46 @@ function SummariesSection({
           {tab === "user" && canFilterByMember && members.length > 0 && (
             <Popover open={memberPickerOpen} onOpenChange={setMemberPickerOpen}>
               <PopoverTrigger asChild>
-                <button type="button"
+                <button
+                  type="button"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
                 >
                   {memberIds.length === 0
                     ? "All members"
                     : memberIds.length === 1
-                      ? (members.find((m) => m.user_id === memberIds[0])?.name ?? "1 member")
+                      ? (members.find((m) => m.username === memberIds[0])?.name ?? "1 member")
                       : `${memberIds.length} members`}
                   <ChevronDown className="h-3 w-3 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-52 p-1" align="start">
                 <div className="max-h-56 overflow-y-auto">
-                  <button type="button" onClick={handleClearMembers}
-                    className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors ${memberIds.length === 0 ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}>
+                  <button
+                    type="button"
+                    onClick={handleClearMembers}
+                    className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors ${memberIds.length === 0 ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}
+                  >
                     All members
                   </button>
                   {members.map((m) => {
-                    const checked = memberIds.includes(m.user_id);
+                    const checked = memberIds.includes(m.username);
                     return (
-                      <button key={m.user_id} type="button" onClick={() => handleMemberToggle(m.user_id)}
-                        className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors flex items-start gap-2 ${checked ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}>
-                        <span className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded border flex items-center justify-center text-[10px] ${checked ? "bg-primary border-primary text-white" : "border-muted-foreground/40"}`}>
+                      <button
+                        key={m.username}
+                        type="button"
+                        onClick={() => handleMemberToggle(m.username)}
+                        className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors flex items-start gap-2 ${checked ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}
+                      >
+                        <span
+                          className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded border flex items-center justify-center text-[10px] ${checked ? "bg-primary border-primary text-white" : "border-muted-foreground/40"}`}
+                        >
                           {checked && "✓"}
                         </span>
                         <span className="min-w-0">
                           <div className="font-medium truncate">{m.name}</div>
-                          <div className="text-[11px] text-muted-foreground capitalize">{m.project_role === "team_lead" ? "Team Lead" : "Member"}</div>
+                          <div className="text-[11px] text-muted-foreground capitalize">
+                            {m.role === "team_lead" ? "Team Lead" : "Member"}
+                          </div>
                         </span>
                       </button>
                     );
@@ -1683,24 +1754,30 @@ function SummariesSection({
 
       {/* Feed */}
       {loading ? (
-        <div className="rounded-2xl bg-card p-16 text-center" style={{ border: "1px solid var(--color-border)" }}>
+        <div
+          className="rounded-2xl bg-card p-16 text-center"
+          style={{ border: "1px solid var(--color-border)" }}
+        >
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" style={{ color: "#1264a3" }} />
-          <p className="text-muted-foreground" style={{ fontSize: "14px" }}>Loading summaries…</p>
+          <p className="text-muted-foreground" style={{ fontSize: "14px" }}>
+            Loading summaries…
+          </p>
         </div>
       ) : !hasData ? (
-        <div className="rounded-2xl bg-card p-16 text-center" style={{ border: "2px dashed var(--color-border)" }}>
+        <div
+          className="rounded-2xl bg-card p-16 text-center"
+          style={{ border: "2px dashed var(--color-border)" }}
+        >
           <FileSearch className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
-          <p className="font-semibold mb-1 text-foreground" style={{ fontSize: "15px" }}>No summaries found</p>
+          <p className="font-semibold mb-1 text-foreground" style={{ fontSize: "15px" }}>
+            No summaries found
+          </p>
           <p className="text-muted-foreground" style={{ fontSize: "13px" }}>
             Try a different date range or filter, or generate a summary above.
           </p>
         </div>
       ) : (
-        <SlackStyleFeed
-          rows={rows}
-          onDelete={handleDelete}
-          deletingId={deletingId}
-        />
+        <SlackStyleFeed rows={rows} onDelete={handleDelete} deletingId={deletingId} />
       )}
 
       {generateOpen && (
@@ -1829,7 +1906,12 @@ function RenameSlugDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={submitting}
+          >
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit}>
