@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { AlertCircle, CalendarIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/auth";
 import { handleApiError } from "@/lib/api-helpers";
@@ -50,12 +50,14 @@ export function GenerateProjectSummaryDialog({
   const [context, setContext] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [calOpen, setCalOpen] = useState(false);
+  const [rateLimitMsg, setRateLimitMsg] = useState<string | null>(null);
   const lastOpen = useRef(false);
 
   useEffect(() => {
     if (open && !lastOpen.current) {
       setDateRange({ from: new Date(), to: new Date() });
       setContext("");
+      setRateLimitMsg(null);
     }
     lastOpen.current = open;
   }, [open]);
@@ -79,6 +81,16 @@ export function GenerateProjectSummaryDialog({
 
       const res = await apiFetch(path, { method: "POST", body: JSON.stringify(body) });
       if (!res.ok) {
+        if (res.status === 429) {
+          let detail = "Daily summary limit reached. Resets at midnight UTC.";
+          try {
+            const data = await res.json();
+            if (typeof data?.detail === "string") detail = data.detail;
+          } catch { /* ignore */ }
+          setRateLimitMsg(detail);
+          setSubmitting(false);
+          return;
+        }
         await handleApiError(
           res,
           scope === "personal" ? "Failed to start summary" : "Failed to start project summary",
@@ -201,11 +213,18 @@ export function GenerateProjectSummaryDialog({
           </div>
         </div>
 
+        {rateLimitMsg && (
+          <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/8 px-3.5 py-3 text-sm text-destructive">
+            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+            <span>{rateLimitMsg}</span>
+          </div>
+        )}
+
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting || !dateRange?.from}>
+          <Button onClick={handleSubmit} disabled={submitting || !dateRange?.from || rateLimitMsg !== null}>
             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {submitting ? "Starting…" : "Generate"}
           </Button>

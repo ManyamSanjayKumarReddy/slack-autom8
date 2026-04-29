@@ -27,7 +27,7 @@ const MD =
   "[&_p]:mt-1.5 [&_p]:leading-[1.5] " +
   "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5 [&_ul]:mt-1 " +
   "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-0.5 [&_ol]:mt-1 " +
-  "[&_strong]:font-semibold " +
+  "[&_strong]:font-semibold [&_em]:italic " +
   "[&_a]:text-primary [&_a]:underline " +
   "[&_code]:bg-muted [&_code]:rounded [&_code]:px-1 [&_code]:text-[12.5px]";
 
