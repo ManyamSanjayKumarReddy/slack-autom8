@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import {
@@ -17,6 +17,8 @@ import {
   CalendarIcon,
   RefreshCw,
   FileSearch,
+  ChevronDown,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
@@ -61,7 +63,6 @@ import { projectColor, projectInitials } from "@/lib/project-colors";
 import { nameToGradient, nameInitials } from "@/lib/avatar-colors";
 import { GenerateProjectSummaryDialog } from "@/components/summaries/GenerateProjectSummaryDialog";
 import { SlackStyleFeed, type FeedRow } from "@/components/summaries/SlackStyleFeed";
-import { SlackMessageComposer } from "@/components/summaries/SlackMessageComposer";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -146,10 +147,6 @@ function ProjectDetailPage() {
   const isManagerOrAdmin = isOneOf(user?.role, ["manager", "admin"]);
   const isTeamLead = project?.my_role === "team_lead";
   const canManage = isManagerOrAdmin;
-  // Admins and managers do NOT have personal summaries — only employees do.
-  const hasPersonalSummaries = user?.role === "employee";
-  // Project summaries: admin, manager, and project team_leads.
-  const canGenerateProjectSummary = isManagerOrAdmin || isTeamLead;
 
   const handleDelete = async () => {
     try {
@@ -190,8 +187,8 @@ function ProjectDetailPage() {
         isAdmin={isAdmin}
         canManage={canManage}
         fetchProject={fetchProject}
-        hasPersonalSummaries={hasPersonalSummaries}
-        canGenerateProjectSummary={canGenerateProjectSummary}
+        userRole={user?.role}
+        projectRole={project?.my_role}
         onEdit={() => setEditing(true)}
         onDelete={() => setConfirmDelete(true)}
       />
@@ -243,8 +240,8 @@ function ProjectTabs({
   isAdmin,
   canManage,
   fetchProject,
-  hasPersonalSummaries,
-  canGenerateProjectSummary,
+  userRole,
+  projectRole,
   onEdit,
   onDelete,
 }: {
@@ -253,8 +250,8 @@ function ProjectTabs({
   isAdmin: boolean;
   canManage: boolean;
   fetchProject: () => void;
-  hasPersonalSummaries: boolean;
-  canGenerateProjectSummary: boolean;
+  userRole: string | undefined;
+  projectRole: ProjectRole | undefined;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -315,8 +312,8 @@ function ProjectTabs({
       {activeTab === "summaries" && (
         <SummariesSection
           projectId={projectId}
-          hasPersonalSummaries={hasPersonalSummaries}
-          canGenerateProjectSummary={canGenerateProjectSummary}
+          userRole={userRole}
+          projectRole={projectRole}
         />
       )}
     </div>
@@ -1177,60 +1174,72 @@ function EditMemberRoleDialog({
 
 /* ----------------------- Summaries ----------------------- */
 
-/* ----- Hierarchy types & helpers (mirrored from hierarchy.$projectId.tsx) ----- */
-interface PersonalSummary {
+// Unified list API response types
+interface UnifiedSummaryItem {
+  kind: "personal" | "project";
   id: string;
+  user_id?: string;
+  user_name?: string;
+  triggered_by_id?: string;
+  triggered_by_name?: string;
   summary_text: string;
   message_count: number;
-  is_auto_generated?: boolean;
+  channel_ids?: string[];
+  from_date?: string;
+  to_date?: string;
   created_at: string;
-}
-interface HierarchyMember {
-  user_id: string;
-  user_name: string;
-  project_role: "employee" | "team_lead";
-  personal_summaries: PersonalSummary[];
-}
-interface HierarchyDate {
-  project_summaries: PersonalSummary[];
-  members: HierarchyMember[];
-}
-interface HierarchyProject {
-  project_id: string;
-  project_name: string;
-  dates: Record<string, HierarchyDate>;
-}
-interface HierarchyResponse {
-  projects: HierarchyProject[];
+  is_auto_generated?: boolean;
 }
 
-function flattenProject(project: HierarchyProject): FeedRow[] {
-  const rows: FeedRow[] = [];
-  for (const [date, d] of Object.entries(project.dates)) {
-    for (const s of d.project_summaries) {
-      rows.push({ ...s, date, type: "project", rowKey: `project-${date}-${s.id}` });
-    }
-    for (const m of d.members) {
-      for (const s of m.personal_summaries) {
-        rows.push({
-          ...s,
-          date,
-          type: "personal",
-          member_name: m.user_name,
-          member_role: m.project_role,
-          rowKey: `personal-${m.user_id}-${date}-${s.id}`,
-        });
-      }
-    }
+interface UsageInfo {
+  used_this_week: number;
+  weekly_limit: number;
+  remaining: number;
+}
+
+interface UnifiedListResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
+  results?: UnifiedSummaryItem[];
+  project_id?: string;
+  project_name?: string;
+  usage?: UsageInfo;
+  grouped_by_date?: Record<string, UnifiedSummaryItem[]>;
+}
+
+function mapToFeedRow(item: UnifiedSummaryItem, date: string): FeedRow {
+  const rowKey = `${item.kind}-${item.id}-${date}`;
+  if (item.kind === "personal") {
+    return {
+      id: item.id,
+      rowKey,
+      date,
+      created_at: item.created_at,
+      summary_text: item.summary_text,
+      message_count: item.message_count,
+      is_auto_generated: item.is_auto_generated,
+      type: "personal",
+      member_name: item.user_name,
+    };
   }
-  return rows.sort((a, b) => {
-    if (a.date !== b.date) return a.date > b.date ? -1 : 1;
-    if (a.type !== b.type) return a.type === "project" ? -1 : 1;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
+  return {
+    id: item.id,
+    rowKey,
+    date,
+    created_at: item.created_at,
+    summary_text: item.summary_text,
+    message_count: item.message_count,
+    is_auto_generated: item.is_auto_generated,
+    type: "project",
+    member_name: item.triggered_by_name,
+  };
 }
 
-function formatRange(r: DateRange | undefined): string {
+function fmtRange(r: DateRange | undefined): string {
   if (!r?.from) return "Pick dates";
   if (!r.to || r.from.toDateString() === r.to.toDateString())
     return format(r.from, "MMM d, yyyy");
@@ -1238,126 +1247,169 @@ function formatRange(r: DateRange | undefined): string {
 }
 
 type QuickKey = "today" | "yesterday" | "last7" | "last30" | "custom";
+type SummaryTab = "user" | "project";
+type TypeFilter = "all" | "auto" | "manual";
 
 function SummariesSection({
   projectId,
-  hasPersonalSummaries,
-  canGenerateProjectSummary,
+  userRole,
+  projectRole,
 }: {
   projectId: string;
-  hasPersonalSummaries: boolean;
-  canGenerateProjectSummary: boolean;
+  userRole: string | undefined;
+  projectRole: ProjectRole | undefined;
 }) {
-  const { user } = useCurrentUser();
-  const isEmployee = user?.role === "employee";
   const isMobile = useIsMobile();
 
-  // Default scope: personal if user has it, otherwise project.
-  const initialScope: "personal" | "project" = hasPersonalSummaries
-    ? "personal"
-    : "project";
-  const [scope, setScope] = useState<"personal" | "project">(initialScope);
-  const [generateOpen, setGenerateOpen] = useState(false);
-  const [polling, setPolling] = useState(false);
+  // Role-based capability flags
+  const isEmployee = userRole === "employee";
+  const isTeamLead = projectRole === "team_lead";
+  const isManagerOrAdmin = userRole === "manager" || userRole === "admin";
+  // employee + team_lead can generate personal summaries
+  const canGeneratePersonal = isEmployee || isTeamLead;
+  // team_lead, manager, admin can access project summaries tab
+  const canAccessProjectTab = isTeamLead || isManagerOrAdmin;
+  // team_lead, manager, admin can generate project summaries
+  const canGenerateProject = isTeamLead || isManagerOrAdmin;
+  // team_lead, manager, admin see member filter on user tab
+  const canFilterByMember = isTeamLead || isManagerOrAdmin;
 
-  // If a user can't access the current scope, snap to the allowed one.
-  useEffect(() => {
-    if (scope === "personal" && !hasPersonalSummaries) setScope("project");
-    if (scope === "project" && !canGenerateProjectSummary && hasPersonalSummaries) {
-      setScope("personal");
-    }
-  }, [scope, hasPersonalSummaries, canGenerateProjectSummary]);
+  // Tabs, filters, date range
+  const [tab, setTab] = useState<SummaryTab>("user");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [memberId, setMemberId] = useState<string>("all");
+  const [memberPickerOpen, setMemberPickerOpen] = useState(false);
+  const [members, setMembers] = useState<ProjectMember[]>([]);
 
-  const showTabs = hasPersonalSummaries && canGenerateProjectSummary;
-  const canGenerateCurrent =
-    scope === "personal" ? hasPersonalSummaries : canGenerateProjectSummary;
-
-  // Date-filtered feed (mirrors hierarchy.$projectId.tsx)
   const today = new Date();
   const [range, setRange] = useState<DateRange | undefined>({ from: today, to: today });
   const [activeQuick, setActiveQuick] = useState<QuickKey>("today");
   const [calOpen, setCalOpen] = useState(false);
-  const [project, setProject] = useState<HierarchyProject | null>(null);
+
+  // Data
+  const [rows, setRows] = useState<FeedRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [notFound, setNotFound] = useState(false);
+  const [hasData, setHasData] = useState(false);
+  const [usage, setUsage] = useState<UsageInfo | null>(null);
+
+  // Generate + polling
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const taskTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Delete
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const fetchData = async (r?: DateRange) => {
-    const active = r ?? range;
+  // Load project members for member filter (team_lead / manager / admin)
+  useEffect(() => {
+    if (!canFilterByMember) return;
+    apiFetch(`/projects/${projectId}/members`)
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          setMembers(Array.isArray(data) ? data : (data.results ?? []));
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  // Fetch usage on mount
+  useEffect(() => {
+    apiFetch("/summaries/usage")
+      .then(async (res) => { if (res.ok) setUsage(await res.json()); })
+      .catch(() => {});
+  }, []);
+
+  const fetchData = async (opts?: {
+    tab?: SummaryTab;
+    typeFilter?: TypeFilter;
+    memberId?: string;
+    range?: DateRange;
+  }) => {
+    const activeTab = opts?.tab ?? tab;
+    const activeType = opts?.typeFilter ?? typeFilter;
+    const activeMemId = opts?.memberId ?? memberId;
+    const activeRange = opts?.range ?? range;
+
     setLoading(true);
-    setNotFound(false);
     try {
       const params = new URLSearchParams();
-      if (active?.from) params.set("from_date", format(active.from, "yyyy-MM-dd"));
-      if (active?.to) params.set("to_date", format(active.to, "yyyy-MM-dd"));
+      params.set("scope", activeTab === "user" ? "personal" : "project");
+      if (activeType !== "all") params.set("type", activeType);
+      if (activeMemId !== "all") params.set("member_id", activeMemId);
+      if (activeRange?.from) params.set("from_date", format(activeRange.from, "yyyy-MM-dd"));
+      if (activeRange?.to) params.set("to_date", format(activeRange.to, "yyyy-MM-dd"));
+      params.set("page_size", "50");
 
-      if (isEmployee) {
-        const [sumRes, projRes] = await Promise.all([
-          apiFetch(`/summaries/projects/${projectId}/personal?${params.toString()}`),
-          apiFetch(`/projects/${projectId}`),
-        ]);
-        if (!sumRes.ok) {
-          setProject(null);
-          setNotFound(true);
-          return;
-        }
-        const sumData = (await sumRes.json()) as {
-          project_id: string;
-          grouped_by_date: Record<string, PersonalSummary[]>;
-        };
-        let projectName = "Project";
-        if (projRes.ok) {
-          try {
-            const p = (await projRes.json()) as { name?: string };
-            if (p?.name) projectName = p.name;
-          } catch {
-            // ignore
-          }
-        }
-        const memberName = user?.name || user?.email || "You";
-        const memberId = user?.id || "me";
-        const dates: Record<string, HierarchyDate> = {};
-        for (const [date, items] of Object.entries(sumData.grouped_by_date ?? {})) {
-          dates[date] = {
-            project_summaries: [],
-            members: [
-              {
-                user_id: memberId,
-                user_name: memberName,
-                project_role: "employee",
-                personal_summaries: items,
-              },
-            ],
-          };
-        }
-        const adapted: HierarchyProject = {
-          project_id: projectId,
-          project_name: projectName,
-          dates,
-        };
-        setProject(adapted);
-        if (Object.keys(dates).length === 0) setNotFound(true);
-        return;
-      }
-
-      const res = await apiFetch(`/summaries/hierarchy?${params.toString()}`);
+      const res = await apiFetch(`/summaries/projects/${projectId}?${params}`);
       if (!res.ok) {
-        setProject(null);
-        setNotFound(true);
+        await handleApiError(res, "Failed to load summaries");
+        setRows([]);
+        setHasData(false);
         return;
       }
-      const data = (await res.json()) as HierarchyResponse;
-      const found = data.projects.find((p) => p.project_id === projectId) ?? null;
-      setProject(found);
-      if (!found) setNotFound(true);
+      const json = (await res.json()) as UnifiedListResponse;
+      if (json.usage) setUsage(json.usage);
+
+      const flat: FeedRow[] = [];
+      for (const [date, items] of Object.entries(json.grouped_by_date ?? {})) {
+        for (const item of items) flat.push(mapToFeedRow(item, date));
+      }
+      flat.sort((a, b) => {
+        if (a.date !== b.date) return a.date > b.date ? -1 : 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      setRows(flat);
+      setHasData(flat.length > 0);
+    } catch {
+      setRows([]);
+      setHasData(false);
     } finally {
       setLoading(false);
     }
   };
 
+  // Initial fetch
+  useEffect(() => {
+    fetchData({ range: { from: today, to: today } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  // Task polling
+  useEffect(() => {
+    if (!taskId) return;
+    const poll = async () => {
+      try {
+        const res = await apiFetch(`/summaries/tasks/${taskId}`);
+        if (!res.ok) { setTaskId(null); return; }
+        const result = await res.json() as {
+          task_id: string;
+          status: "processing" | "done" | "failed";
+          error?: string;
+        };
+        if (result.status === "done") {
+          setTaskId(null);
+          toast.success("Summary ready");
+          await fetchData();
+          apiFetch("/summaries/usage").then(async (r) => { if (r.ok) setUsage(await r.json()); }).catch(() => {});
+        } else if (result.status === "failed") {
+          setTaskId(null);
+          toast.error(result.error ?? "Summary generation failed.");
+        } else {
+          taskTimer.current = setTimeout(poll, 3500);
+        }
+      } catch {
+        taskTimer.current = setTimeout(poll, 3500);
+      }
+    };
+    taskTimer.current = setTimeout(poll, 3500);
+    return () => { if (taskTimer.current) clearTimeout(taskTimer.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId]);
+
   const applyQuick = (key: QuickKey) => {
     setActiveQuick(key);
-    const end = new Date();
     let r: DateRange;
     if (key === "today") {
       r = { from: new Date(), to: new Date() };
@@ -1366,27 +1418,40 @@ function SummariesSection({
       r = { from: y, to: y };
     } else if (key === "last7") {
       const s = new Date(); s.setDate(s.getDate() - 6);
-      r = { from: s, to: end };
+      r = { from: s, to: new Date() };
     } else {
       const s = new Date(); s.setDate(s.getDate() - 29);
-      r = { from: s, to: end };
+      r = { from: s, to: new Date() };
     }
     setRange(r);
-    fetchData(r);
+    fetchData({ range: r });
   };
 
-  // Initial + on user/projectId change
-  useEffect(() => {
-    if (user) fetchData({ from: today, to: today });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, user?.role]);
+  const handleTabChange = (newTab: SummaryTab) => {
+    setTab(newTab);
+    setTypeFilter("all");
+    setMemberId("all");
+    fetchData({ tab: newTab, typeFilter: "all", memberId: "all" });
+  };
 
-  const handleDeleteSummary = async (row: FeedRow) => {
+  const handleTypeChange = (t: TypeFilter) => {
+    setTypeFilter(t);
+    fetchData({ typeFilter: t });
+  };
+
+  const handleMemberChange = (id: string) => {
+    setMemberId(id);
+    setMemberPickerOpen(false);
+    fetchData({ memberId: id });
+  };
+
+  const handleDelete = async (row: FeedRow) => {
     setDeletingId(row.id);
     try {
-      const res = await apiFetch(`/summaries/projects/${projectId}/personal/${row.id}`, {
-        method: "DELETE",
-      });
+      const endpoint = row.type === "personal"
+        ? `/summaries/projects/${projectId}/personal/${row.id}`
+        : `/summaries/projects/${projectId}/project/${row.id}`;
+      const res = await apiFetch(endpoint, { method: "DELETE" });
       if (!res.ok) {
         await handleApiError(res, "Failed to delete summary");
         return;
@@ -1400,9 +1465,15 @@ function SummariesSection({
     }
   };
 
-  const allRows = project ? flattenProject(project) : [];
-  // Filter rows by current scope: personal vs project
-  const rows = allRows.filter((r) => r.type === scope);
+  const selectedMember = memberId !== "all" ? members.find((m) => m.user_id === memberId) : null;
+  const isPolling = taskId !== null;
+  const canGenerateCurrent = tab === "user" ? canGeneratePersonal : canGenerateProject;
+
+  const TYPE_OPTS: { value: TypeFilter; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "auto", label: "Auto" },
+    { value: "manual", label: "Manual" },
+  ];
 
   const QUICK_PICKS: { label: string; key: QuickKey }[] = [
     { label: "Today", key: "today" },
@@ -1413,46 +1484,52 @@ function SummariesSection({
 
   return (
     <div className="space-y-4">
-      {/* Header: scope toggle + actions */}
+      {/* Header: sub-tabs + generate button */}
       <div className="flex items-center justify-between gap-3 flex-wrap py-3">
         <div className="flex items-center gap-2">
-          {showTabs ? (
-            <Tabs value={scope} onValueChange={(v) => setScope(v as "personal" | "project")}>
+          {canAccessProjectTab ? (
+            <Tabs value={tab} onValueChange={(v) => handleTabChange(v as SummaryTab)}>
               <TabsList>
-                <TabsTrigger value="personal">My Summaries</TabsTrigger>
+                <TabsTrigger value="user">User Summaries</TabsTrigger>
                 <TabsTrigger value="project">Project Summaries</TabsTrigger>
               </TabsList>
             </Tabs>
           ) : (
-            <h3 className="text-base font-semibold text-foreground">
-              {scope === "personal" ? "My Summaries" : "Project Summaries"}
-            </h3>
+            <h3 className="text-base font-semibold text-foreground">User Summaries</h3>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Usage pill */}
+          {usage && (
+            <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-3 py-1 text-[12px] font-medium text-muted-foreground">
+              <Zap className="h-3 w-3" />
+              <span>{usage.used_this_week}/{usage.weekly_limit} this week</span>
+            </div>
+          )}
           <Button asChild variant="outline" size="sm">
             <Link to="/hierarchy/$projectId" params={{ projectId }}>
               View all
             </Link>
           </Button>
           {canGenerateCurrent && (
-            <Button onClick={() => setGenerateOpen(true)} disabled={polling}>
-              {polling ? (
+            <Button onClick={() => setGenerateOpen(true)} disabled={isPolling}>
+              {isPolling ? (
                 <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
               ) : (
                 <Sparkles className="h-4 w-4 mr-1.5" />
               )}
-              {scope === "personal" ? "Generate My Summary" : "Generate Project Summary"}
+              {tab === "user" ? "Generate My Summary" : "Generate Project Summary"}
             </Button>
           )}
         </div>
       </div>
 
-      {/* Date filter bar */}
+      {/* Filter bar */}
       <div
-        className="rounded-2xl bg-card px-4 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-2 sm:flex-wrap"
+        className="rounded-2xl bg-card px-4 sm:px-5 py-3 space-y-3"
         style={{ border: "1px solid var(--color-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
       >
+        {/* Row 1: quick date + calendar + apply */}
         <div className="flex items-center gap-2 flex-wrap">
           {QUICK_PICKS.map(({ label, key }) => {
             const active = activeQuick === key;
@@ -1466,9 +1543,7 @@ function SummariesSection({
               </button>
             );
           })}
-
           <div className="hidden sm:block w-px h-5 mx-1 shrink-0 bg-border" />
-
           <Popover open={calOpen} onOpenChange={setCalOpen}>
             <PopoverTrigger asChild>
               <button type="button"
@@ -1477,13 +1552,11 @@ function SummariesSection({
                   ? { background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.35)" }
                   : { background: "var(--cal-btn-inactive-bg)", color: "var(--cal-btn-inactive-color)", border: "1px solid var(--cal-btn-inactive-border)" }}>
                 <CalendarIcon className="h-3.5 w-3.5" />
-                {formatRange(range)}
+                {fmtRange(range)}
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 max-w-[calc(100vw-2rem)]" align="start">
-              <Calendar
-                mode="range"
-                selected={range}
+              <Calendar mode="range" selected={range}
                 onSelect={(r) => {
                   setRange(r);
                   setActiveQuick("custom");
@@ -1491,46 +1564,95 @@ function SummariesSection({
                 }}
                 numberOfMonths={isMobile ? 1 : 2}
                 disabled={{ after: today }}
-                initialFocus
-                className="p-3 pointer-events-auto"
+                initialFocus className="p-3 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
+          <button type="button" onClick={() => fetchData()} disabled={loading || !range?.from}
+            className="sm:ml-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 min-h-[36px]"
+            style={{ background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.3)" }}>
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            {loading ? "Loading…" : "Apply"}
+          </button>
         </div>
 
-        <button type="button" onClick={() => fetchData()} disabled={loading || !range?.from}
-          className="sm:ml-auto w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 min-h-[36px]"
-          style={{ background: "#1264a3", color: "#fff", boxShadow: "0 2px 8px rgba(18,100,163,0.3)" }}>
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-          {loading ? "Loading…" : "Apply"}
-        </button>
+        {/* Row 2: type filter + member filter */}
+        <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-border">
+          {/* Type filter */}
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/40 p-0.5">
+            {TYPE_OPTS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => handleTypeChange(value)}
+                className="rounded-md px-3 py-1 text-xs font-semibold transition-colors"
+                style={typeFilter === value
+                  ? { background: "#1264a3", color: "#fff" }
+                  : { color: "var(--muted-foreground)", background: "transparent" }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Member filter — only on user tab for team_lead / manager / admin */}
+          {tab === "user" && canFilterByMember && members.length > 0 && (
+            <Popover open={memberPickerOpen} onOpenChange={setMemberPickerOpen}>
+              <PopoverTrigger asChild>
+                <button type="button"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+                >
+                  {selectedMember ? selectedMember.name : "All members"}
+                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-52 p-1" align="start">
+                <div className="max-h-56 overflow-y-auto">
+                  <button type="button" onClick={() => handleMemberChange("all")}
+                    className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors ${memberId === "all" ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}>
+                    All members
+                  </button>
+                  {members.map((m) => (
+                    <button key={m.user_id} type="button" onClick={() => handleMemberChange(m.user_id)}
+                      className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors ${memberId === m.user_id ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}>
+                      <div className="font-medium truncate">{m.name}</div>
+                      <div className="text-[11px] text-muted-foreground capitalize">{m.project_role === "team_lead" ? "Team Lead" : "Member"}</div>
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+
+          {/* Generating indicator */}
+          {isPolling && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground ml-auto">
+              <Loader2 className="h-3 w-3 animate-spin" /> Generating…
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Feed */}
-      {loading && !project ? (
+      {loading ? (
         <div className="rounded-2xl bg-card p-16 text-center" style={{ border: "1px solid var(--color-border)" }}>
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" style={{ color: "#1264a3" }} />
           <p className="text-muted-foreground" style={{ fontSize: "14px" }}>Loading summaries…</p>
         </div>
-      ) : notFound || !project || rows.length === 0 ? (
+      ) : !hasData ? (
         <div className="rounded-2xl bg-card p-16 text-center" style={{ border: "2px dashed var(--color-border)" }}>
           <FileSearch className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
-          <p className="font-semibold mb-1 text-foreground" style={{ fontSize: "15px" }}>
-            No summaries found
-          </p>
+          <p className="font-semibold mb-1 text-foreground" style={{ fontSize: "15px" }}>No summaries found</p>
           <p className="text-muted-foreground" style={{ fontSize: "13px" }}>
-            Try a different date range, or generate a summary above.
+            Try a different date range or filter, or generate a summary above.
           </p>
         </div>
       ) : (
-        <>
-          <SlackStyleFeed
-            rows={rows}
-            onDelete={scope === "personal" ? handleDeleteSummary : undefined}
-            deletingId={deletingId}
-          />
-          <SlackMessageComposer placeholder={scope === "personal" && user?.name ? `What ${user.name} has done last week` : "What has the team done last week?"} />
-        </>
+        <SlackStyleFeed
+          rows={rows}
+          onDelete={handleDelete}
+          deletingId={deletingId}
+        />
       )}
 
       {generateOpen && (
@@ -1538,15 +1660,8 @@ function SummariesSection({
           open={generateOpen}
           onOpenChange={setGenerateOpen}
           projectId={projectId}
-          scope={scope}
-          onStarted={() => {
-            setPolling(true);
-            // Re-fetch shortly after to pick up new summary
-            setTimeout(() => {
-              fetchData();
-              setPolling(false);
-            }, 1500);
-          }}
+          scope={tab === "user" ? "personal" : "project"}
+          onStarted={(tid) => setTaskId(tid)}
         />
       )}
     </div>

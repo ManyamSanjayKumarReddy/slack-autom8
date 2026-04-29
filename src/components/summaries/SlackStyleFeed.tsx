@@ -108,7 +108,7 @@ export function SlackStyleFeed({
                     row={row}
                     expanded={expanded.has(row.rowKey)}
                     onToggle={() => toggle(row.rowKey)}
-                    onDeleteRequest={onDelete && row.type === "personal" ? () => setPendingDelete(row) : undefined}
+                    onDeleteRequest={onDelete && !row.is_auto_generated ? () => setPendingDelete(row) : undefined}
                     deleting={deletingId === row.id}
                   />
                 ))}
