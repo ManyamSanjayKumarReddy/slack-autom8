@@ -12,8 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 
 interface Limits {
-  personal_summary_daily_limit: number;
-  project_summary_daily_limit: number;
+  weekly_limit: number;
   updated_at: string;
 }
 
@@ -66,8 +65,7 @@ function LimitsSection() {
   const [limits, setLimits] = useState<Limits | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [personalLimit, setPersonalLimit] = useState("");
-  const [projectLimit, setProjectLimit] = useState("");
+  const [weeklyLimit, setWeeklyLimit] = useState("");
 
   useEffect(() => {
     document.title = "Settings — Slack Summarizer";
@@ -84,8 +82,7 @@ function LimitsSection() {
       }
       const data = (await res.json()) as Limits;
       setLimits(data);
-      setPersonalLimit(String(data.personal_summary_daily_limit));
-      setProjectLimit(String(data.project_summary_daily_limit));
+      setWeeklyLimit(String(data.weekly_limit));
     } catch {
       toast.error("Network error loading limits.");
     } finally {
@@ -94,24 +91,16 @@ function LimitsSection() {
   };
 
   const handleSave = async () => {
-    const personal = parseInt(personalLimit, 10);
-    const project = parseInt(projectLimit, 10);
-    if (isNaN(personal) || personal < 1) {
-      toast.error("Personal limit must be a positive number.");
-      return;
-    }
-    if (isNaN(project) || project < 1) {
-      toast.error("Project limit must be a positive number.");
+    const weekly = parseInt(weeklyLimit, 10);
+    if (isNaN(weekly) || weekly < 1) {
+      toast.error("Weekly limit must be a positive number.");
       return;
     }
     setSaving(true);
     try {
       const res = await apiFetch("/admin/limits", {
         method: "PUT",
-        body: JSON.stringify({
-          personal_summary_daily_limit: personal,
-          project_summary_daily_limit: project,
-        }),
+        body: JSON.stringify({ weekly_limit: weekly }),
       });
       if (!res.ok) {
         await handleApiError(res, "Failed to update limits");
@@ -119,8 +108,7 @@ function LimitsSection() {
       }
       const data = (await res.json()) as Limits;
       setLimits(data);
-      setPersonalLimit(String(data.personal_summary_daily_limit));
-      setProjectLimit(String(data.project_summary_daily_limit));
+      setWeeklyLimit(String(data.weekly_limit));
       toast.success("Limits updated successfully.");
     } catch {
       toast.error("Network error saving limits.");
@@ -129,10 +117,7 @@ function LimitsSection() {
     }
   };
 
-  const isDirty =
-    limits !== null &&
-    (parseInt(personalLimit, 10) !== limits.personal_summary_daily_limit ||
-      parseInt(projectLimit, 10) !== limits.project_summary_daily_limit);
+  const isDirty = limits !== null && parseInt(weeklyLimit, 10) !== limits.weekly_limit;
 
   return (
     <section
@@ -142,53 +127,35 @@ function LimitsSection() {
       <div className="px-4 sm:px-6 py-4 flex items-center gap-2 border-b border-border">
         <Settings2 className="h-4 w-4 text-muted-foreground" />
         <h2 className="font-semibold text-foreground" style={{ fontSize: "13.5px" }}>
-          Daily Summary Limits
+          Weekly Generation Limit
         </h2>
       </div>
 
       {loading ? (
         <div className="p-6 space-y-4">
           <Skeleton className="h-10 w-full max-w-xs" />
-          <Skeleton className="h-10 w-full max-w-xs" />
         </div>
       ) : (
         <div className="p-6 space-y-6">
           <p className="text-sm text-muted-foreground">
-            Set the maximum number of summaries each user can generate per day. Limits reset at midnight UTC.
+            Maximum number of manual summary generations per user per week (personal + project combined).
+            Auto-generated summaries never count against this limit. Resets every Monday at 00:00 UTC.
           </p>
 
-          <div className="grid gap-5 sm:grid-cols-2 max-w-xl">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="personal-limit">Personal summary daily limit</Label>
-              <input
-                id="personal-limit"
-                type="number"
-                min={1}
-                value={personalLimit}
-                onChange={(e) => setPersonalLimit(e.target.value)}
-                disabled={saving}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
-              />
-              <p className="text-xs text-muted-foreground">
-                Max personal summaries per user per day.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="project-limit">Project summary daily limit</Label>
-              <input
-                id="project-limit"
-                type="number"
-                min={1}
-                value={projectLimit}
-                onChange={(e) => setProjectLimit(e.target.value)}
-                disabled={saving}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
-              />
-              <p className="text-xs text-muted-foreground">
-                Max project summaries per user per day.
-              </p>
-            </div>
+          <div className="max-w-xs flex flex-col gap-2">
+            <Label htmlFor="weekly-limit">Weekly generation limit</Label>
+            <input
+              id="weekly-limit"
+              type="number"
+              min={1}
+              value={weeklyLimit}
+              onChange={(e) => setWeeklyLimit(e.target.value)}
+              disabled={saving}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+            />
+            <p className="text-xs text-muted-foreground">
+              Counts personal + project generations together. Minimum: 1.
+            </p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -198,7 +165,7 @@ function LimitsSection() {
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              {saving ? "Saving…" : "Save limits"}
+              {saving ? "Saving…" : "Save limit"}
             </Button>
 
             {limits?.updated_at && (
