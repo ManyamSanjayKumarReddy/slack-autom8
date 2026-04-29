@@ -1321,12 +1321,15 @@ function SummariesSection({
   const isEmployee = userRole === "employee";
   const isTeamLead = projectRole === "team_lead";
   const isManagerOrAdmin = userRole === "manager" || userRole === "admin";
-  // employee, team_lead, manager, admin can generate personal summaries
-  const canGeneratePersonal = isEmployee || isTeamLead || isManagerOrAdmin;
-  // team_lead, manager, admin can generate project summaries
-  const canGenerateProject = isTeamLead || isManagerOrAdmin;
-  // team_lead, manager, admin see member filter on user tab
+
+  // employee + team_lead can generate their own user summary; managers/admins cannot
+  const canGeneratePersonal = isEmployee || isTeamLead;
+  // only managers/admins can generate project summaries; team_lead is view-only
+  const canGenerateProject = isManagerOrAdmin;
+  // team_lead + manager/admin see the member filter on the user summaries tab
   const canFilterByMember = isTeamLead || isManagerOrAdmin;
+  // managers/admins on the user summaries tab see auto-only (no manual)
+  const autoOnlyPersonal = isManagerOrAdmin && scope === "personal";
 
   // Filters, date range
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("auto");
@@ -1381,7 +1384,8 @@ function SummariesSection({
     memberIds?: string[];
     range?: DateRange;
   }) => {
-    const activeType = opts?.typeFilter ?? typeFilter;
+    // managers/admins on the user tab are always locked to auto-only
+    const activeType = autoOnlyPersonal ? "auto" : (opts?.typeFilter ?? typeFilter);
     const activeMemIds = opts?.memberIds ?? memberIds;
     const activeRange = opts?.range ?? range;
 
@@ -1533,11 +1537,14 @@ function SummariesSection({
   const isPolling = taskId !== null;
   const canGenerateCurrent = scope === "personal" ? canGeneratePersonal : canGenerateProject;
 
-  const TYPE_OPTS: { value: TypeFilter; label: string }[] = [
-    { value: "all", label: "All" },
-    { value: "auto", label: "Auto" },
-    { value: "manual", label: "Manual" },
-  ];
+  // Managers/admins can only see auto-generated user summaries, so lock the type filter
+  const TYPE_OPTS: { value: TypeFilter; label: string }[] = autoOnlyPersonal
+    ? [{ value: "auto", label: "Auto" }]
+    : [
+        { value: "all", label: "All" },
+        { value: "auto", label: "Auto" },
+        { value: "manual", label: "Manual" },
+      ];
 
   const QUICK_PICKS: { label: string; key: QuickKey }[] = [
     { label: "Today", key: "today" },
