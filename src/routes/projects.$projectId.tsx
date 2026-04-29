@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
@@ -1276,8 +1276,8 @@ function SummariesSection({
 
   // Tabs, filters, date range
   const [tab, setTab] = useState<SummaryTab>("user");
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-  const [memberId, setMemberId] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("auto");
+  const [memberIds, setMemberIds] = useState<string[]>([]);
   const [memberPickerOpen, setMemberPickerOpen] = useState(false);
   const [members, setMembers] = useState<ProjectMember[]>([]);
 
@@ -1324,12 +1324,12 @@ function SummariesSection({
   const fetchData = async (opts?: {
     tab?: SummaryTab;
     typeFilter?: TypeFilter;
-    memberId?: string;
+    memberIds?: string[];
     range?: DateRange;
   }) => {
     const activeTab = opts?.tab ?? tab;
     const activeType = opts?.typeFilter ?? typeFilter;
-    const activeMemId = opts?.memberId ?? memberId;
+    const activeMemIds = opts?.memberIds ?? memberIds;
     const activeRange = opts?.range ?? range;
 
     setLoading(true);
@@ -1337,7 +1337,7 @@ function SummariesSection({
       const params = new URLSearchParams();
       params.set("scope", activeTab === "user" ? "personal" : "project");
       if (activeType !== "all") params.set("type", activeType);
-      if (activeMemId !== "all") params.set("member_id", activeMemId);
+      for (const id of activeMemIds) params.append("member_id", id);
       if (activeRange?.from) params.set("from_date", format(activeRange.from, "yyyy-MM-dd"));
       if (activeRange?.to) params.set("to_date", format(activeRange.to, "yyyy-MM-dd"));
       params.set("page_size", "50");
@@ -1429,9 +1429,9 @@ function SummariesSection({
 
   const handleTabChange = (newTab: SummaryTab) => {
     setTab(newTab);
-    setTypeFilter("all");
-    setMemberId("all");
-    fetchData({ tab: newTab, typeFilter: "all", memberId: "all" });
+    setTypeFilter("auto");
+    setMemberIds([]);
+    fetchData({ tab: newTab, typeFilter: "auto", memberIds: [] });
   };
 
   const handleTypeChange = (t: TypeFilter) => {
@@ -1439,10 +1439,18 @@ function SummariesSection({
     fetchData({ typeFilter: t });
   };
 
-  const handleMemberChange = (id: string) => {
-    setMemberId(id);
+  const handleMemberToggle = (id: string) => {
+    const next = memberIds.includes(id)
+      ? memberIds.filter((x) => x !== id)
+      : [...memberIds, id];
+    setMemberIds(next);
+    fetchData({ memberIds: next });
+  };
+
+  const handleClearMembers = () => {
+    setMemberIds([]);
     setMemberPickerOpen(false);
-    fetchData({ memberId: id });
+    fetchData({ memberIds: [] });
   };
 
   const handleDelete = async (row: FeedRow) => {
@@ -1465,7 +1473,6 @@ function SummariesSection({
     }
   };
 
-  const selectedMember = memberId !== "all" ? members.find((m) => m.user_id === memberId) : null;
   const isPolling = taskId !== null;
   const canGenerateCurrent = tab === "user" ? canGeneratePersonal : canGenerateProject;
 
@@ -1501,16 +1508,21 @@ function SummariesSection({
         <div className="flex items-center gap-2 flex-wrap">
           {/* Usage pill */}
           {usage && (
-            <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-3 py-1 text-[12px] font-medium text-muted-foreground">
+            <div
+              className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-medium"
+              style={{
+                borderColor: usage.remaining === 0 ? "rgba(239,68,68,0.4)" : "var(--color-border)",
+                background: usage.remaining === 0 ? "rgba(239,68,68,0.08)" : "var(--muted)",
+                color: usage.remaining === 0 ? "#ef4444" : usage.remaining <= 2 ? "#f59e0b" : "var(--muted-foreground)",
+              }}
+            >
               <Zap className="h-3 w-3" />
-              <span>{usage.used_this_week}/{usage.weekly_limit} this week</span>
+              <span>
+                {usage.remaining === 0 ? "No generations left" : `${usage.remaining} generation${usage.remaining === 1 ? "" : "s"} left`}
+                <span className="opacity-60 ml-1">({usage.used_this_week}/{usage.weekly_limit})</span>
+              </span>
             </div>
           )}
-          <Button asChild variant="outline" size="sm">
-            <Link to="/hierarchy/$projectId" params={{ projectId }}>
-              View all
-            </Link>
-          </Button>
           {canGenerateCurrent && (
             <Button onClick={() => setGenerateOpen(true)} disabled={isPolling}>
               {isPolling ? (
@@ -1602,23 +1614,35 @@ function SummariesSection({
                 <button type="button"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
                 >
-                  {selectedMember ? selectedMember.name : "All members"}
+                  {memberIds.length === 0
+                    ? "All members"
+                    : memberIds.length === 1
+                      ? (members.find((m) => m.user_id === memberIds[0])?.name ?? "1 member")
+                      : `${memberIds.length} members`}
                   <ChevronDown className="h-3 w-3 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-52 p-1" align="start">
                 <div className="max-h-56 overflow-y-auto">
-                  <button type="button" onClick={() => handleMemberChange("all")}
-                    className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors ${memberId === "all" ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}>
+                  <button type="button" onClick={handleClearMembers}
+                    className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors ${memberIds.length === 0 ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}>
                     All members
                   </button>
-                  {members.map((m) => (
-                    <button key={m.user_id} type="button" onClick={() => handleMemberChange(m.user_id)}
-                      className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors ${memberId === m.user_id ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}>
-                      <div className="font-medium truncate">{m.name}</div>
-                      <div className="text-[11px] text-muted-foreground capitalize">{m.project_role === "team_lead" ? "Team Lead" : "Member"}</div>
-                    </button>
-                  ))}
+                  {members.map((m) => {
+                    const checked = memberIds.includes(m.user_id);
+                    return (
+                      <button key={m.user_id} type="button" onClick={() => handleMemberToggle(m.user_id)}
+                        className={`w-full text-left px-3 py-2 rounded text-[13px] transition-colors flex items-start gap-2 ${checked ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}>
+                        <span className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded border flex items-center justify-center text-[10px] ${checked ? "bg-primary border-primary text-white" : "border-muted-foreground/40"}`}>
+                          {checked && "✓"}
+                        </span>
+                        <span className="min-w-0">
+                          <div className="font-medium truncate">{m.name}</div>
+                          <div className="text-[11px] text-muted-foreground capitalize">{m.project_role === "team_lead" ? "Team Lead" : "Member"}</div>
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </PopoverContent>
             </Popover>
