@@ -1547,50 +1547,7 @@ function SummariesSection({
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Header: generate button + usage */}
-      <div className="flex items-center justify-between gap-3 flex-wrap py-3">
-        <div className="flex items-center gap-2" />
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Usage pill */}
-          {usage && (
-            <div
-              className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-medium"
-              style={{
-                borderColor: usage.remaining === 0 ? "rgba(239,68,68,0.4)" : "var(--color-border)",
-                background: usage.remaining === 0 ? "rgba(239,68,68,0.08)" : "var(--muted)",
-                color:
-                  usage.remaining === 0
-                    ? "#ef4444"
-                    : usage.remaining <= 2
-                      ? "#f59e0b"
-                      : "var(--muted-foreground)",
-              }}
-            >
-              <Zap className="h-3 w-3" />
-              <span>
-                {usage.remaining === 0
-                  ? "No generations left"
-                  : `${usage.remaining} generation${usage.remaining === 1 ? "" : "s"} left`}
-                <span className="opacity-60 ml-1">
-                  ({usage.used_this_week}/{usage.weekly_limit})
-                </span>
-              </span>
-            </div>
-          )}
-          {canGenerateCurrent && (
-            <Button onClick={() => setGenerateOpen(true)} disabled={isPolling}>
-              {isPolling ? (
-                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4 mr-1.5" />
-              )}
-              {scope === "personal" ? "Generate My Summary" : "Generate Project Summary"}
-            </Button>
-          )}
-        </div>
-      </div>
-
+    <div className="pt-5 space-y-4">
       {/* Filter bar */}
       <div
         className="rounded-2xl bg-card px-4 sm:px-5 py-3 space-y-3"
@@ -1754,12 +1711,49 @@ function SummariesSection({
             </Popover>
           )}
 
-          {/* Generating indicator */}
-          {isPolling && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground ml-auto">
-              <Loader2 className="h-3 w-3 animate-spin" /> Generating…
-            </span>
-          )}
+          {/* Usage pill + generate button — right-aligned */}
+          <div className="ml-auto flex items-center gap-2 flex-wrap">
+            {isPolling && (
+              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" /> Generating…
+              </span>
+            )}
+            {usage && (
+              <div
+                className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-medium"
+                style={{
+                  borderColor: usage.remaining === 0 ? "rgba(239,68,68,0.4)" : "var(--color-border)",
+                  background: usage.remaining === 0 ? "rgba(239,68,68,0.08)" : "var(--muted)",
+                  color:
+                    usage.remaining === 0
+                      ? "#ef4444"
+                      : usage.remaining <= 2
+                        ? "#f59e0b"
+                        : "var(--muted-foreground)",
+                }}
+              >
+                <Zap className="h-3 w-3" />
+                <span>
+                  {usage.remaining === 0
+                    ? "No generations left"
+                    : `${usage.remaining} generation${usage.remaining === 1 ? "" : "s"} left`}
+                  <span className="opacity-60 ml-1">
+                    ({usage.used_this_week}/{usage.weekly_limit})
+                  </span>
+                </span>
+              </div>
+            )}
+            {canGenerateCurrent && (
+              <Button onClick={() => setGenerateOpen(true)} disabled={isPolling}>
+                {isPolling ? (
+                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-1.5" />
+                )}
+                {scope === "personal" ? "Generate My Summary" : "Generate Project Summary"}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
