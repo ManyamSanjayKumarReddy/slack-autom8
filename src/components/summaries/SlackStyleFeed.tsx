@@ -126,7 +126,7 @@ export function SlackStyleFeed({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this summary?</AlertDialogTitle>
             <AlertDialogDescription>
-              This personal summary will be permanently removed.
+              This summary will be permanently removed and cannot be recovered.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

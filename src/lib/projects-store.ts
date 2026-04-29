@@ -23,10 +23,10 @@ export interface ProjectChannel {
 }
 
 export interface ProjectMember {
-  user_id: string;
+  username: string;
   name: string;
   email: string;
-  project_role: ProjectRole;
+  role: ProjectRole;
   joined_at?: string;
 }
 

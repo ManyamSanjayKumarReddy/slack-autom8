@@ -446,7 +446,7 @@ function OverviewTab({
                 try {
                   const res = await apiFetch(`/projects/${project.slug}/manager`, {
                     method: "PUT",
-                    body: JSON.stringify({ manager_id: u.username }),
+                    body: JSON.stringify({ username: u.username }),
                   });
                   if (!res.ok) {
                     await handleApiError(res, "Failed to assign manager");
@@ -966,7 +966,7 @@ function MembersTab({
               <span
                 className={`shrink-0 text-[10.5px] font-semibold px-2 py-0.5 rounded-full border ${
                   m.role === "team_lead"
-                    ? "border-primary/30 text-primary bg-primary/8"
+                    ? "border-primary/30 text-primary bg-primary/10"
                     : "border-border text-muted-foreground"
                 }`}
               >
@@ -1287,8 +1287,8 @@ function SummariesSection({
   const isEmployee = userRole === "employee";
   const isTeamLead = projectRole === "team_lead";
   const isManagerOrAdmin = userRole === "manager" || userRole === "admin";
-  // employee + team_lead can generate personal summaries
-  const canGeneratePersonal = isEmployee || isTeamLead;
+  // employee, team_lead, manager, admin can generate personal summaries
+  const canGeneratePersonal = isEmployee || isTeamLead || isManagerOrAdmin;
   // team_lead, manager, admin can access project summaries tab
   const canAccessProjectTab = isTeamLead || isManagerOrAdmin;
   // team_lead, manager, admin can generate project summaries
@@ -1359,7 +1359,7 @@ function SummariesSection({
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.set("scope", activeTab === "user" ? "personal" : "project");
+      params.set("summary_scope", activeTab === "user" ? "personal" : "project");
       if (activeType !== "all") params.set("type", activeType);
       for (const id of activeMemIds) params.append("member_id", id);
       if (activeRange?.from) params.set("from_date", format(activeRange.from, "yyyy-MM-dd"));

@@ -68,7 +68,7 @@ function LimitsSection() {
   const [weeklyLimit, setWeeklyLimit] = useState("");
 
   useEffect(() => {
-    document.title = "Settings — Slack Summarizer";
+    document.title = "Settings — Slack Autom8";
     fetchLimits();
   }, []);
 
