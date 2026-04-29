@@ -81,17 +81,18 @@ export function GenerateProjectSummaryDialog({
     }
     setSubmitting(true);
     try {
-      const path =
+      const basePath =
         scope === "personal"
           ? `/summaries/projects/${projectId}/personal/generate`
           : `/summaries/projects/${projectId}/generate`;
-      const body: Record<string, string> = {
-        from_date: format(dateRange.from, "yyyy-MM-dd"),
-        to_date: format(dateRange.to ?? dateRange.from, "yyyy-MM-dd"),
-      };
-      if (context.trim()) body.context = context.trim();
 
-      const res = await apiFetch(path, { method: "POST", body: JSON.stringify(body) });
+      // API accepts date + context as query params (no request body)
+      const params = new URLSearchParams();
+      params.set("from_date", format(dateRange.from, "yyyy-MM-dd"));
+      params.set("to_date", format(dateRange.to ?? dateRange.from, "yyyy-MM-dd"));
+      if (context.trim()) params.set("context", context.trim());
+
+      const res = await apiFetch(`${basePath}?${params}`, { method: "POST" });
       if (!res.ok) {
         if (res.status === 429) {
           let detail = "Weekly manual generation limit reached. Resets every Monday at 00:00 UTC.";

@@ -446,7 +446,7 @@ function OverviewTab({
                 try {
                   const res = await apiFetch(`/projects/${project.slug}/manager`, {
                     method: "PUT",
-                    body: JSON.stringify({ manager_id: u.username }),
+                    body: JSON.stringify({ username: u.username }),
                   });
                   if (!res.ok) {
                     await handleApiError(res, "Failed to assign manager");
@@ -1359,7 +1359,7 @@ function SummariesSection({
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.set("scope", activeTab === "user" ? "personal" : "project");
+      params.set("summary_scope", activeTab === "user" ? "personal" : "project");
       if (activeType !== "all") params.set("type", activeType);
       for (const id of activeMemIds) params.append("member_id", id);
       if (activeRange?.from) params.set("from_date", format(activeRange.from, "yyyy-MM-dd"));
