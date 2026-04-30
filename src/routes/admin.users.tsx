@@ -49,11 +49,36 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type ExperienceBand = "beginner" | "intermediate" | "senior";
+
+const EXPERIENCE_BAND_LABEL: Record<ExperienceBand, string> = {
+  beginner: "Beginner",
+  intermediate: "Intermediate",
+  senior: "Senior",
+};
+
+const EXPERIENCE_BAND_EMOJI: Record<ExperienceBand, string> = {
+  beginner: "🟢",
+  intermediate: "🟡",
+  senior: "🔵",
+};
+
+function ExperienceBandBadge({ band }: { band?: ExperienceBand | null }) {
+  if (!band) return <span className="text-xs text-muted-foreground/50 italic">—</span>;
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-medium">
+      <span>{EXPERIENCE_BAND_EMOJI[band]}</span>
+      {EXPERIENCE_BAND_LABEL[band]}
+    </span>
+  );
+}
+
 interface AdminUser {
   username: string;
   name: string;
   email: string;
   role: Role;
+  experience_band?: ExperienceBand | null;
   slack_user_id?: string;
   created_at?: string;
 }
@@ -214,7 +239,10 @@ function Inner() {
                         </div>
                         <div className="text-xs text-muted-foreground truncate">{u.email}</div>
                       </div>
-                      <RoleBadge role={u.role} size="xs" />
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <RoleBadge role={u.role} size="xs" />
+                        <ExperienceBandBadge band={u.experience_band} />
+                      </div>
                     </div>
                     <div className="text-xs text-muted-foreground space-y-0.5">
                       <div>
@@ -255,6 +283,7 @@ function Inner() {
                     <TableHead className="px-6">Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Experience</TableHead>
                     <TableHead>Slack ID</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead className="text-right pr-6">Actions</TableHead>
@@ -278,6 +307,9 @@ function Inner() {
                         </TableCell>
                         <TableCell>
                           <RoleBadge role={u.role} size="xs" />
+                        </TableCell>
+                        <TableCell>
+                          <ExperienceBandBadge band={u.experience_band} />
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground font-mono max-w-[140px] truncate">
                           {u.slack_user_id || "—"}
@@ -384,6 +416,8 @@ function ChangeRoleDialog({
     // team_lead is project-scoped now — fall back to employee in the picker
     user.role === "team_lead" ? "employee" : user.role,
   );
+  const [band, setBand] = useState<ExperienceBand | "">(user.experience_band ?? "");
+  const [savingBand, setSavingBand] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [memberships, setMemberships] = useState<ProjectMembership[] | null>(
     null,
@@ -426,6 +460,25 @@ function ChangeRoleDialog({
     }
   };
 
+  const handleSaveBand = async () => {
+    if (!band) return;
+    setSavingBand(true);
+    try {
+      const res = await apiFetch(`/admin/users/${user.username}/experience-band`, {
+        method: "PUT",
+        body: JSON.stringify({ experience_band: band }),
+      });
+      if (!res.ok) {
+        await handleApiError(res, "Failed to update experience band");
+        return;
+      }
+      toast.success(`Experience band updated to ${EXPERIENCE_BAND_LABEL[band]}`);
+      onSaved();
+    } finally {
+      setSavingBand(false);
+    }
+  };
+
   return (
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent>
@@ -457,6 +510,36 @@ function ChangeRoleDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-muted-foreground">
+              Experience band
+            </label>
+            <div className="flex items-center gap-2">
+              <Select value={band} onValueChange={(v) => setBand(v as ExperienceBand)}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Not set" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(["beginner", "intermediate", "senior"] as ExperienceBand[]).map((b) => (
+                    <SelectItem key={b} value={b}>
+                      {EXPERIENCE_BAND_EMOJI[b]} {EXPERIENCE_BAND_LABEL[b]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <button
+                onClick={handleSaveBand}
+                disabled={savingBand || !band || band === user.experience_band}
+                className="shrink-0 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+              >
+                {savingBand ? "Saving…" : "Save band"}
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Used to calibrate AI summary scoring. Saved independently from workspace role.
+            </p>
           </div>
 
           <div className="space-y-2">

@@ -68,10 +68,41 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UserSearchPicker, type SearchUser } from "@/components/UserSearchPicker";
 
+type ExperienceBand = "beginner" | "intermediate" | "senior";
+type Complexity = "low" | "medium" | "high";
+
+const EXPERIENCE_EMOJI: Record<ExperienceBand, string> = {
+  beginner: "🟢",
+  intermediate: "🟡",
+  senior: "🔵",
+};
+
+const COMPLEXITY_COLORS: Record<Complexity, { text: string; bg: string; border: string }> = {
+  low: { text: "#059669", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.25)" },
+  medium: { text: "#d97706", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.25)" },
+  high: { text: "#dc2626", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)" },
+};
+
+function ComplexityBadge({ complexity }: { complexity?: Complexity | null }) {
+  if (!complexity) return null;
+  const { text, bg, border } = COMPLEXITY_COLORS[complexity];
+  const label = complexity.charAt(0).toUpperCase() + complexity.slice(1);
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+      style={{ color: text, background: bg, border: `1px solid ${border}` }}
+    >
+      {complexity === "low" ? "🟢" : complexity === "medium" ? "🟡" : "🔴"} {label} complexity
+    </span>
+  );
+}
+
 interface ProjectDetail {
   slug: string;
   name: string;
   description?: string;
+  complexity?: Complexity;
+  context?: string;
   member_count?: number;
   channel_count?: number;
   manager_id?: string | null;
@@ -92,6 +123,7 @@ interface ProjectMember {
   email: string;
   workspace_role: string;
   project_role: ProjectRole;
+  experience_band?: ExperienceBand | null;
   joined_at?: string;
 }
 
@@ -372,6 +404,11 @@ function OverviewTab({
             ) : (
               <p className="text-[16px] italic text-muted-foreground">No description provided.</p>
             )}
+            {project.complexity && (
+              <div className="mt-3">
+                <ComplexityBadge complexity={project.complexity} />
+              </div>
+            )}
           </div>
           {canManage && (
             <div className="flex items-center gap-1 shrink-0 -mt-0.5">
@@ -453,6 +490,11 @@ function OverviewTab({
           )}
         </div>
       </div>
+
+      {/* Project Intelligence — manager/admin only */}
+      {canManage && (
+        <ProjectIntelligenceSection project={project} onSaved={onChanged} />
+      )}
 
       {assigning && (
         <Dialog open onOpenChange={(o) => !o && setAssigning(false)}>
@@ -575,6 +617,111 @@ function EditProjectDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/* ----------------------- Project Intelligence ----------------------- */
+
+function ProjectIntelligenceSection({
+  project,
+  onSaved,
+}: {
+  project: ProjectDetail;
+  onSaved: () => void;
+}) {
+  const [complexity, setComplexity] = useState<Complexity | "">(project.complexity ?? "");
+  const [context, setContext] = useState(project.context ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const isDirty =
+    complexity !== (project.complexity ?? "") || context !== (project.context ?? "");
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const body: Record<string, string> = {};
+      if (complexity) body.complexity = complexity;
+      body.context = context.trim();
+
+      const res = await apiFetch(`/projects/${project.slug}/intelligence`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        await handleApiError(res, "Failed to update project intelligence");
+        return;
+      }
+      toast.success("Project intelligence updated.");
+      onSaved();
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="rounded-2xl bg-card border border-border overflow-hidden mb-6"
+      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+    >
+      <div className="px-7 py-4 border-b border-border flex items-center gap-2">
+        <Sparkles className="h-4 w-4 text-muted-foreground" />
+        <h3 className="font-semibold text-foreground" style={{ fontSize: "13.5px" }}>
+          Project Intelligence
+        </h3>
+      </div>
+      <div className="px-7 py-5 space-y-5">
+        <p className="text-[13px] text-muted-foreground">
+          Help the AI generate more accurate summaries by setting the project complexity and context.
+        </p>
+
+        {/* Complexity */}
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Complexity
+          </Label>
+          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 p-0.5 w-fit h-9">
+            {(["low", "medium", "high"] as Complexity[]).map((c) => (
+              <button
+                key={c}
+                type="button"
+                disabled={saving}
+                onClick={() => setComplexity(c)}
+                className="rounded-md px-4 py-1 text-sm font-semibold transition-colors h-full disabled:opacity-50 capitalize"
+                style={
+                  complexity === c
+                    ? { background: "#1264a3", color: "#fff" }
+                    : { color: "var(--muted-foreground)", background: "transparent" }
+                }
+              >
+                {c === "low" ? "🟢" : c === "medium" ? "🟡" : "🔴"} {c.charAt(0).toUpperCase() + c.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Context */}
+        <div className="space-y-2">
+          <Label htmlFor="pi-context" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Project Context
+          </Label>
+          <Textarea
+            id="pi-context"
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
+            placeholder="Describe what this project does, its goals, and key tech stack. This helps the AI generate more accurate summaries."
+            disabled={saving}
+            rows={3}
+          />
+        </div>
+
+        <Button onClick={handleSave} disabled={saving || !isDirty}>
+          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {saving ? "Saving…" : "Save Intelligence"}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -979,21 +1126,28 @@ function MembersTab({
                 <div className="text-[14px] font-semibold text-foreground truncate leading-snug">
                   {m.name}
                 </div>
-                {/* Email — smaller and muted, not as prominent */}
                 <div className="text-[11px] text-muted-foreground/60 mt-0.5 truncate">
                   {m.email}
                 </div>
               </div>
-              {/* Role badge — subtle outlined chip */}
-              <span
-                className={`shrink-0 text-[10.5px] font-semibold px-2 py-0.5 rounded-full border ${
-                  m.project_role === "team_lead"
-                    ? "border-primary/30 text-primary bg-primary/10"
-                    : "border-border text-muted-foreground"
-                }`}
-              >
-                {m.project_role === "team_lead" ? "Team Lead" : "Employee"}
-              </span>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                {/* Role badge */}
+                <span
+                  className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-full border ${
+                    m.project_role === "team_lead"
+                      ? "border-primary/30 text-primary bg-primary/10"
+                      : "border-border text-muted-foreground"
+                  }`}
+                >
+                  {m.project_role === "team_lead" ? "Team Lead" : "Employee"}
+                </span>
+                {/* Experience band badge */}
+                {m.experience_band && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {EXPERIENCE_EMOJI[m.experience_band]} {m.experience_band.charAt(0).toUpperCase() + m.experience_band.slice(1)}
+                  </span>
+                )}
+              </div>
               {/* Edit/remove — hidden until hover, Slack-style */}
               {canManage && (
                 <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover/member:opacity-100 transition-opacity">
@@ -1254,6 +1408,12 @@ interface UnifiedSummaryItem {
   to_date?: string;
   created_at: string;
   is_auto_generated?: boolean;
+  tasks_done?: string[];
+  tasks_pending?: string[];
+  blockers?: string[];
+  shore_meter?: number;
+  shore_label?: string;
+  shore_reason?: string;
 }
 
 interface UsageInfo {
@@ -1279,6 +1439,14 @@ interface UnifiedListResponse {
 
 function mapToFeedRow(item: UnifiedSummaryItem, date: string): FeedRow {
   const rowKey = `${item.kind}-${item.id}-${date}`;
+  const structured = {
+    tasks_done: item.tasks_done,
+    tasks_pending: item.tasks_pending,
+    blockers: item.blockers,
+    shore_meter: item.shore_meter,
+    shore_label: item.shore_label,
+    shore_reason: item.shore_reason,
+  };
   if (item.kind === "personal") {
     return {
       id: item.id,
@@ -1290,6 +1458,7 @@ function mapToFeedRow(item: UnifiedSummaryItem, date: string): FeedRow {
       is_auto_generated: item.is_auto_generated,
       type: "personal",
       member_name: item.user_name,
+      ...structured,
     };
   }
   return {
@@ -1302,6 +1471,7 @@ function mapToFeedRow(item: UnifiedSummaryItem, date: string): FeedRow {
     is_auto_generated: item.is_auto_generated,
     type: "project",
     member_name: item.triggered_by_name,
+    ...structured,
   };
 }
 
