@@ -66,10 +66,12 @@ export function SlackStyleFeed({
   rows,
   onDelete,
   deletingId,
+  isAdmin,
 }: {
   rows: FeedRow[];
   onDelete?: (row: FeedRow) => void;
   deletingId?: string | null;
+  isAdmin?: boolean;
 }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [pendingDelete, setPendingDelete] = useState<FeedRow | null>(null);
@@ -108,7 +110,7 @@ export function SlackStyleFeed({
                     row={row}
                     expanded={expanded.has(row.rowKey)}
                     onToggle={() => toggle(row.rowKey)}
-                    onDeleteRequest={onDelete && !row.is_auto_generated ? () => setPendingDelete(row) : undefined}
+                    onDeleteRequest={onDelete && (isAdmin || !row.is_auto_generated) ? () => setPendingDelete(row) : undefined}
                     deleting={deletingId === row.id}
                   />
                 ))}
