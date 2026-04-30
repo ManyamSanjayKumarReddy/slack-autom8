@@ -279,7 +279,7 @@ function LogsSection() {
       .then(async (res) => {
         if (res.ok) {
           const data = await res.json();
-          setProjects(data.items ?? data ?? []);
+          setProjects(data.results ?? (Array.isArray(data) ? data : []));
         }
       })
       .catch(() => {});
@@ -390,7 +390,7 @@ function LogsSection() {
           <div className="p-6 space-y-3">
             {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
           </div>
-        ) : !logs?.items?.length ? (
+        ) : !logs?.results?.length ? (
           <div className="p-12 text-center">
             <ClipboardList className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
             <p className="font-semibold text-foreground mb-1" style={{ fontSize: "15px" }}>
@@ -415,7 +415,7 @@ function LogsSection() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {logs.items.map((log) => (
+                  {logs.results.map((log) => (
                     <TableRow
                       key={log.id}
                       className="cursor-pointer hover:bg-muted/40"
