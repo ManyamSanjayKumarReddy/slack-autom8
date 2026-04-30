@@ -820,7 +820,7 @@ function AddChannelDialog({
           placeholder="Search channels…"
           autoFocus
         />
-        <div className="flex-1 overflow-y-auto rounded-lg border border-border">
+        <div className="flex-1 overflow-y-auto thin-scroll rounded-lg border border-border">
           {loading ? (
             <div className="p-6 text-center text-sm text-muted-foreground">Loading…</div>
           ) : filtered.length === 0 ? (
@@ -1634,7 +1634,7 @@ function SummariesSection({
             type="button"
             onClick={() => fetchData()}
             disabled={loading || !range?.from}
-            className="sm:ml-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 min-h-[36px]"
+            className="ml-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 min-h-[36px]"
             style={{
               background: "#1264a3",
               color: "#fff",
@@ -1651,7 +1651,7 @@ function SummariesSection({
         </div>
 
         {/* Row 2: type filter + member filter */}
-        <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-border">
+        <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-border min-w-0">
           {/* Type filter */}
           <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/40 p-0.5">
             {TYPE_OPTS.map(({ value, label }) => (
@@ -1688,7 +1688,7 @@ function SummariesSection({
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-52 p-1" align="start">
-                <div className="max-h-56 overflow-y-auto">
+                <div className="max-h-56 overflow-y-auto thin-scroll">
                   <button
                     type="button"
                     onClick={handleClearMembers}
@@ -1724,8 +1724,8 @@ function SummariesSection({
             </Popover>
           )}
 
-          {/* Usage pill + generate button — right-aligned */}
-          <div className="ml-auto flex items-center gap-2 flex-wrap">
+          {/* Usage pill + generate button — right-aligned on sm+, full-width on mobile */}
+          <div className="sm:ml-auto flex items-center gap-2 flex-wrap w-full sm:w-auto">
             {isPolling && (
               <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Loader2 className="h-3 w-3 animate-spin" /> Generating…
@@ -1757,7 +1757,11 @@ function SummariesSection({
               </div>
             )}
             {canGenerateCurrent && (
-              <Button onClick={() => setGenerateOpen(true)} disabled={isPolling}>
+              <Button
+                onClick={() => setGenerateOpen(true)}
+                disabled={isPolling || (usage?.remaining === 0)}
+                className="w-full sm:w-auto"
+              >
                 {isPolling ? (
                   <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
                 ) : (

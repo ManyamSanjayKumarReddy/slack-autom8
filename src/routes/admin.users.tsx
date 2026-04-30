@@ -470,7 +470,7 @@ function ChangeRoleDialog({
                 No project memberships.
               </div>
             ) : (
-              <ul className="rounded-md border border-border divide-y divide-border max-h-40 overflow-y-auto">
+              <ul className="rounded-md border border-border divide-y divide-border max-h-40 overflow-y-auto thin-scroll">
                 {memberships.map((m) => (
                   <li
                     key={m.project_id}

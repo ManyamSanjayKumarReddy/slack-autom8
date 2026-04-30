@@ -465,6 +465,23 @@ tr[role="button"]:focus-visible {
   background: rgba(255,255,255,0.2);
 }
 
+/* Thin scrollbar for light-surface areas (dialogs, popovers, cards) */
+.thin-scroll::-webkit-scrollbar { width: 4px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.28);
+}
+.dark .thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+}
+.dark .thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.28);
+}
+
 /* Slack-feed: sticky date dividers — exact Slack style */
 .slack-feed-divider {
   position: sticky;
