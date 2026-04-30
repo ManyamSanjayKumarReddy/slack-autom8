@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format, isToday, isYesterday } from "date-fns";
-import { Sparkles, PenLine, Trash2 } from "lucide-react";
+import { Sparkles, PenLine, Trash2, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { nameToGradient, nameInitials } from "@/lib/avatar-colors";
@@ -26,6 +26,13 @@ export interface FeedRow {
   type: "project" | "personal";
   member_name?: string;
   member_role?: "employee" | "team_lead";
+  // Structured summary fields (new summaries only — [] on older ones)
+  tasks_done?: string[];
+  tasks_pending?: string[];
+  blockers?: string[];
+  shore_meter?: number;
+  shore_label?: string;
+  shore_reason?: string;
 }
 
 // Headers match body size, just bold — no size inflation
@@ -60,6 +67,75 @@ function avatarFor(row: FeedRow): { letters: string; gradient: string } {
   }
   const name = row.member_name || "?";
   return { letters: nameInitials(name), gradient: nameToGradient(name) };
+}
+
+/* ── ShoreMeter ─────────────────────────────────────────────── */
+
+function shoreColor(score: number): { bar: string; text: string; bg: string } {
+  if (score <= 30) return { bar: "#ef4444", text: "#dc2626", bg: "rgba(239,68,68,0.08)" };
+  if (score <= 60) return { bar: "#f59e0b", text: "#d97706", bg: "rgba(245,158,11,0.08)" };
+  if (score <= 85) return { bar: "#10b981", text: "#059669", bg: "rgba(16,185,129,0.08)" };
+  return { bar: "#8b5cf6", text: "#7c3aed", bg: "rgba(139,92,246,0.08)" };
+}
+
+function ShoreMeter({ score, label, reason }: { score: number; label: string; reason?: string }) {
+  const { bar, text, bg } = shoreColor(score);
+  return (
+    <div
+      className="mt-2.5 rounded-lg px-3 py-2.5"
+      style={{ background: bg, border: `1px solid ${bar}28` }}
+    >
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: text }}>
+          ShoreMeter
+        </span>
+        <span className="text-[13px] font-bold" style={{ color: text }}>
+          {score} — {label}
+        </span>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-black/10 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{ width: `${Math.min(100, score)}%`, background: bar }}
+        />
+      </div>
+      {reason && (
+        <p className="mt-1.5 text-[11.5px] text-muted-foreground leading-snug">{reason}</p>
+      )}
+    </div>
+  );
+}
+
+/* ── Structured sections ───────────────────────────────────── */
+
+function StructuredSection({
+  icon,
+  title,
+  items,
+  iconColor,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  items: string[];
+  iconColor: string;
+}) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="mt-2.5">
+      <div className="flex items-center gap-1.5 mb-1" style={{ color: iconColor }}>
+        {icon}
+        <span className="text-[12px] font-semibold">{title}</span>
+      </div>
+      <ul className="space-y-0.5 pl-0.5">
+        {items.map((item, i) => (
+          <li key={i} className="flex items-start gap-1.5 text-[13px] text-foreground">
+            <span className="mt-[3px] shrink-0 text-[10px]" style={{ color: iconColor }}>●</span>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export function SlackStyleFeed({
@@ -169,6 +245,11 @@ function FeedMessage({
   const isLong = row.summary_text.length > TRUNCATE_CHARS;
   const displayName = row.type === "project" ? "Project Summary" : (row.member_name || "Member");
 
+  const hasStructured =
+    (row.tasks_done && row.tasks_done.length > 0) ||
+    (row.tasks_pending && row.tasks_pending.length > 0) ||
+    (row.blockers && row.blockers.length > 0);
+
   return (
     <div className="slack-msg group flex gap-3 px-5 sm:px-6 py-3 border-b border-border last:border-b-0">
       <div
@@ -229,7 +310,7 @@ function FeedMessage({
             · {row.message_count} {row.message_count === 1 ? "msg" : "msgs"}
           </span>
 
-          {/* Delete button — personal only, hover-reveal */}
+          {/* Delete button — hover-reveal */}
           {onDeleteRequest && (
             <button
               type="button"
@@ -262,6 +343,42 @@ function FeedMessage({
           >
             {expanded ? "Show less" : "Show more"}
           </button>
+        )}
+
+        {/* Structured sections — only shown when expanded or text is short */}
+        {(!isLong || expanded) && (
+          <>
+            {hasStructured && (
+              <div className="mt-3 space-y-1 pl-0 border-t border-border pt-3">
+                <StructuredSection
+                  icon={<CheckCircle2 className="h-3.5 w-3.5" />}
+                  title="Tasks Done"
+                  items={row.tasks_done ?? []}
+                  iconColor="#10b981"
+                />
+                <StructuredSection
+                  icon={<Clock className="h-3.5 w-3.5" />}
+                  title="Pending"
+                  items={row.tasks_pending ?? []}
+                  iconColor="#f59e0b"
+                />
+                <StructuredSection
+                  icon={<AlertTriangle className="h-3.5 w-3.5" />}
+                  title="Blockers"
+                  items={row.blockers ?? []}
+                  iconColor="#ef4444"
+                />
+              </div>
+            )}
+
+            {row.shore_meter !== undefined && row.shore_label && (
+              <ShoreMeter
+                score={row.shore_meter}
+                label={row.shore_label}
+                reason={row.shore_reason}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

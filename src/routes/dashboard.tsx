@@ -261,11 +261,28 @@ function ProjectCard({ project }: { project: Project }) {
             >
               {project.name}
             </h3>
-            {project.my_role && (
-              <Badge variant="outline" className="mt-1 text-[10px] px-1.5 py-0.5">
-                {project.my_role === "team_lead" ? "Team Lead" : "Member"}
-              </Badge>
-            )}
+            <div className="flex flex-wrap gap-1 mt-1">
+              {project.my_role && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
+                  {project.my_role === "team_lead" ? "Team Lead" : "Member"}
+                </Badge>
+              )}
+              {project.complexity && (
+                <span
+                  className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border"
+                  style={
+                    project.complexity === "low"
+                      ? { color: "#059669", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)" }
+                      : project.complexity === "medium"
+                      ? { color: "#d97706", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)" }
+                      : { color: "#dc2626", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }
+                  }
+                >
+                  {project.complexity === "low" ? "🟢" : project.complexity === "medium" ? "🟡" : "🔴"}{" "}
+                  {project.complexity.charAt(0).toUpperCase() + project.complexity.slice(1)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

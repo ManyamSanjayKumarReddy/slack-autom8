@@ -8,6 +8,8 @@ export interface Project {
   slug: string;
   name: string;
   description?: string;
+  complexity?: "low" | "medium" | "high";
+  context?: string;
   member_count?: number;
   channel_count?: number;
   manager_id?: string | null;
