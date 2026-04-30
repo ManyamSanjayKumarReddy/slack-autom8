@@ -1398,7 +1398,7 @@ function SummariesSection({
     try {
       const params = new URLSearchParams();
       params.set("scope", scope);
-      if (activeType !== "all") params.set("type", activeType);
+      params.set("type", activeType);
       for (const id of activeMemIds) params.append("member_id", id);
       if (activeRange?.from) params.set("from_date", format(activeRange.from, "yyyy-MM-dd"));
       if (activeRange?.to) params.set("to_date", format(activeRange.to, "yyyy-MM-dd"));
