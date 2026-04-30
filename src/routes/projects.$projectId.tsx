@@ -1330,11 +1330,10 @@ function SummariesSection({
   // team_lead + manager/admin see the member filter on the user summaries tab
   const canFilterByMember = isTeamLead || isManagerOrAdmin;
   // Lock the type filter to "auto" only when:
-  //   - manager on the user summaries tab (managers see only auto user summaries, not manual)
+  //   - manager or admin on the user summaries tab (they see only auto user summaries)
   //   - team_lead on the project summaries tab (team leads see only auto project summaries)
-  // Admin is NOT locked — admin can see all summaries on all tabs
   const autoOnly =
-    (userRole === "manager" && scope === "personal") ||
+    (isManagerOrAdmin && scope === "personal") ||
     (isTeamLead && scope === "project");
 
   // Filters, date range
