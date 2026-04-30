@@ -1320,6 +1320,7 @@ function SummariesSection({
   // Role-based capability flags
   const isEmployee = userRole === "employee";
   const isTeamLead = projectRole === "team_lead";
+  const isAdmin = userRole === "admin";
   const isManagerOrAdmin = userRole === "manager" || userRole === "admin";
 
   // employee + team_lead can generate their own user summary; managers/admins cannot
@@ -1328,8 +1329,12 @@ function SummariesSection({
   const canGenerateProject = isManagerOrAdmin;
   // team_lead + manager/admin see the member filter on the user summaries tab
   const canFilterByMember = isTeamLead || isManagerOrAdmin;
-  // managers/admins on the user summaries tab see auto-only (no manual)
-  const autoOnlyPersonal = isManagerOrAdmin && scope === "personal";
+  // Lock the type filter to "auto" only when:
+  //   - manager or admin on the user summaries tab (they see only auto user summaries)
+  //   - team_lead on the project summaries tab (team leads see only auto project summaries)
+  const autoOnly =
+    (isManagerOrAdmin && scope === "personal") ||
+    (isTeamLead && scope === "project");
 
   // Filters, date range
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("auto");
@@ -1384,8 +1389,8 @@ function SummariesSection({
     memberIds?: string[];
     range?: DateRange;
   }) => {
-    // managers/admins on the user tab are always locked to auto-only
-    const activeType = autoOnlyPersonal ? "auto" : (opts?.typeFilter ?? typeFilter);
+    // lock to auto when role/scope combination restricts manual visibility
+    const activeType = autoOnly ? "auto" : (opts?.typeFilter ?? typeFilter);
     const activeMemIds = opts?.memberIds ?? memberIds;
     const activeRange = opts?.range ?? range;
 
@@ -1537,8 +1542,8 @@ function SummariesSection({
   const isPolling = taskId !== null;
   const canGenerateCurrent = scope === "personal" ? canGeneratePersonal : canGenerateProject;
 
-  // Managers/admins can only see auto-generated user summaries, so lock the type filter
-  const TYPE_OPTS: { value: TypeFilter; label: string }[] = autoOnlyPersonal
+  // Lock type filter to auto-only when the current role+scope combination restricts visibility
+  const TYPE_OPTS: { value: TypeFilter; label: string }[] = autoOnly
     ? [{ value: "auto", label: "Auto" }]
     : [
         { value: "all", label: "All" },
@@ -1725,7 +1730,7 @@ function SummariesSection({
                 <Loader2 className="h-3 w-3 animate-spin" /> Generating…
               </span>
             )}
-            {usage && (
+            {usage && canGenerateCurrent && (
               <div
                 className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-medium"
                 style={{
@@ -1789,7 +1794,7 @@ function SummariesSection({
           </p>
         </div>
       ) : (
-        <SlackStyleFeed rows={rows} onDelete={handleDelete} deletingId={deletingId} />
+        <SlackStyleFeed rows={rows} onDelete={handleDelete} deletingId={deletingId} isAdmin={isAdmin} />
       )}
 
       {generateOpen && (
