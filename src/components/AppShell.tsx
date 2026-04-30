@@ -5,6 +5,7 @@ import {
   FolderKanban,
   UserCog,
   Settings2,
+  ClipboardList,
   Menu,
   X,
   LogOut,
@@ -47,6 +48,7 @@ const NAV: NavItem[] = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard, allowed: ["employee", "team_lead", "manager", "admin"] },
   { to: "/projects", label: "Projects", icon: FolderKanban, allowed: ["employee", "team_lead", "manager", "admin"] },
   { to: "/admin/users", label: "User Management", icon: UserCog, allowed: ["admin"] },
+  { to: "/admin/auto-summary-logs", label: "Summary Logs", icon: ClipboardList, allowed: ["admin"] },
   { to: "/admin/settings", label: "Settings", icon: Settings2, allowed: ["admin"] },
 ];
 

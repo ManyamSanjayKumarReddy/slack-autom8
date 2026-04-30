@@ -19,6 +19,7 @@ import {
   FileSearch,
   ChevronDown,
   Zap,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, isAuthenticated } from "@/lib/auth";
@@ -1092,12 +1093,14 @@ function AddMemberDialog({
         body: JSON.stringify({ username: pending.username, role: role }),
       });
       if (!res.ok) {
-        if (res.status === 422) {
+        if (res.status === 400 || res.status === 422) {
           try {
             const err = await res.json();
-            const detail = Array.isArray(err.detail)
-              ? err.detail.map((e: { msg: string }) => e.msg).join("; ")
-              : (typeof err.detail === "string" ? err.detail : "Validation error. Ensure the user is an employee.");
+            const detail = typeof err.detail === "string"
+              ? err.detail
+              : Array.isArray(err.detail)
+                ? err.detail.map((e: { msg: string }) => e.msg).join("; ")
+                : "Validation error. Ensure the user is an employee.";
             toast.error(detail);
           } catch {
             toast.error("Failed to add member: invalid request.");
@@ -1184,6 +1187,11 @@ function EditMemberRoleDialog({
         body: JSON.stringify({ role: role }),
       });
       if (!res.ok) {
+        if (res.status === 400) {
+          const err = await res.json().catch(() => null);
+          toast.error(typeof err?.detail === "string" ? err.detail : "Cannot assign this role. Check the team lead constraint.");
+          return;
+        }
         await handleApiError(res, "Failed to update role");
         return;
       }
@@ -1252,6 +1260,7 @@ interface UsageInfo {
   used_this_week: number;
   weekly_limit: number;
   remaining: number;
+  resets_at_ist?: string;
 }
 
 interface UnifiedListResponse {
@@ -1338,7 +1347,7 @@ function SummariesSection({
     (isTeamLead && scope === "project");
 
   // Filters, date range
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("auto");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [memberPickerOpen, setMemberPickerOpen] = useState(false);
   const [members, setMembers] = useState<ProjectMember[]>([]);
@@ -1358,6 +1367,8 @@ function SummariesSection({
   const [generateOpen, setGenerateOpen] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
   const taskTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollAttemptsRef = useRef(0);
+  const [generationTimedOut, setGenerationTimedOut] = useState(false);
 
   // Delete
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -1439,44 +1450,50 @@ function SummariesSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  // Task polling
+  // Task polling — 3 s interval, max 100 attempts (5 min frontend guard)
   useEffect(() => {
     if (!taskId) return;
+    pollAttemptsRef.current = 0;
+    setGenerationTimedOut(false);
+
     const poll = async () => {
+      pollAttemptsRef.current += 1;
+      if (pollAttemptsRef.current > 100) {
+        setTaskId(null);
+        setGenerationTimedOut(true);
+        return;
+      }
       try {
         const res = await apiFetch(`/summaries/tasks/${taskId}`);
-        if (!res.ok) {
-          setTaskId(null);
-          return;
-        }
+        if (!res.ok) { setTaskId(null); return; }
         const result = (await res.json()) as {
           task_id: string;
-          status: "processing" | "done" | "failed";
+          status: "processing" | "done" | "failed" | "timeout";
           error?: string;
         };
         if (result.status === "done") {
           setTaskId(null);
+          setGenerationTimedOut(false);
           toast.success("Summary ready");
           await fetchData();
           apiFetch("/summaries/usage")
-            .then(async (r) => {
-              if (r.ok) setUsage(await r.json());
-            })
+            .then(async (r) => { if (r.ok) setUsage(await r.json()); })
             .catch(() => {});
         } else if (result.status === "failed") {
           setTaskId(null);
           toast.error(result.error ?? "Summary generation failed.");
+        } else if (result.status === "timeout") {
+          setTaskId(null);
+          setGenerationTimedOut(true);
         } else {
-          taskTimer.current = setTimeout(poll, 3500);
+          taskTimer.current = setTimeout(poll, 3000);
         }
       } catch {
-        taskTimer.current = setTimeout(poll, 3500);
+        taskTimer.current = setTimeout(poll, 3000);
       }
     };
-    taskTimer.current = setTimeout(poll, 3500);
-    return () => {
-      if (taskTimer.current) clearTimeout(taskTimer.current);
-    };
+    taskTimer.current = setTimeout(poll, 3000);
+    return () => { if (taskTimer.current) clearTimeout(taskTimer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId]);
 
@@ -1732,28 +1749,31 @@ function SummariesSection({
               </span>
             )}
             {usage && canGenerateCurrent && (
-              <div
-                className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-medium"
-                style={{
-                  borderColor: usage.remaining === 0 ? "rgba(239,68,68,0.4)" : "var(--color-border)",
-                  background: usage.remaining === 0 ? "rgba(239,68,68,0.08)" : "var(--muted)",
-                  color:
-                    usage.remaining === 0
-                      ? "#ef4444"
-                      : usage.remaining <= 2
-                        ? "#f59e0b"
-                        : "var(--muted-foreground)",
-                }}
-              >
-                <Zap className="h-3 w-3" />
-                <span>
-                  {usage.remaining === 0
-                    ? "No generations left"
-                    : `${usage.remaining} generation${usage.remaining === 1 ? "" : "s"} left`}
-                  <span className="opacity-60 ml-1">
-                    ({usage.used_this_week}/{usage.weekly_limit})
+              <div className="flex flex-col items-end gap-0.5">
+                <div
+                  className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-medium"
+                  title={usage.resets_at_ist ? `Resets on ${usage.resets_at_ist}` : undefined}
+                  style={{
+                    borderColor: usage.remaining === 0 ? "rgba(239,68,68,0.4)" : usage.remaining === 1 ? "rgba(245,158,11,0.4)" : "var(--color-border)",
+                    background: usage.remaining === 0 ? "rgba(239,68,68,0.08)" : usage.remaining === 1 ? "rgba(245,158,11,0.08)" : "var(--muted)",
+                    color: usage.remaining === 0 ? "#ef4444" : usage.remaining === 1 ? "#d97706" : "var(--muted-foreground)",
+                  }}
+                >
+                  <Zap className="h-3 w-3" />
+                  <span>
+                    {usage.remaining === 0
+                      ? "No generations left"
+                      : usage.remaining === 1
+                        ? "⚠ Only 1 generation left"
+                        : `${usage.remaining} generations left`}
+                    <span className="opacity-60 ml-1">({usage.used_this_week}/{usage.weekly_limit})</span>
                   </span>
-                </span>
+                </div>
+                {usage.remaining <= 1 && usage.resets_at_ist && (
+                  <span className="text-[10.5px] text-muted-foreground pr-1">
+                    Resets on {usage.resets_at_ist}
+                  </span>
+                )}
               </div>
             )}
             {canGenerateCurrent && (
@@ -1773,6 +1793,23 @@ function SummariesSection({
           </div>
         </div>
       </div>
+
+      {/* Generation timeout banner */}
+      {generationTimedOut && (
+        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-900/20 px-4 py-3">
+          <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+          <p className="text-sm text-amber-800 dark:text-amber-300 flex-1">
+            Summary generation is taking longer than expected. Please try again.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => { setGenerationTimedOut(false); setGenerateOpen(true); }}
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       {/* Feed */}
       {loading ? (

@@ -9,6 +9,9 @@ import {
   Users as UsersIcon,
   User as UserIcon,
   ArrowRight,
+  Plus,
+  Hourglass,
+  Zap,
 } from "lucide-react";
 import { apiFetch, isAuthenticated, setToken } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
@@ -17,6 +20,19 @@ import { useProjects, type Project } from "@/lib/projects-store";
 import { projectColor, projectInitials } from "@/lib/project-colors";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+
+type OnboardingAction =
+  | "create_project"
+  | "wait_for_project_assignment"
+  | "add_channels"
+  | "wait_for_channels"
+  | "add_team_members"
+  | "generate_first_summary"
+  | null;
+
+interface OnboardingStatus {
+  next_action: OnboardingAction;
+}
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: () => {
@@ -48,9 +64,13 @@ function DashboardPage() {
   const { projects, loading } = useProjects();
   const role = user?.role;
   const showStats = role === "manager" || role === "admin";
+  const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
 
   useEffect(() => {
     document.title = "Dashboard — Slack Autom8";
+    apiFetch("/users/me/onboarding-status")
+      .then(async (res) => { if (res.ok) setOnboarding(await res.json()); })
+      .catch(() => {});
   }, []);
 
   const displayName = (user?.name || user?.email || "there").split(" ")[0];
@@ -118,30 +138,8 @@ function DashboardPage() {
               ))}
             </div>
           ) : !projects || projects.length === 0 ? (
-            <div
-              className="rounded-2xl p-12 text-center bg-card"
-              style={{ border: "2px dashed var(--color-border)" }}
-            >
-              <FolderKanban className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-              <p className="font-semibold mb-1 text-foreground" style={{ fontSize: "15px" }}>
-                No projects yet
-              </p>
-              <p className="mb-5 text-muted-foreground" style={{ fontSize: "13px" }}>
-                {role === "admin"
-                  ? "Create your first project to start tracking Slack summaries."
-                  : "You haven't been added to any projects yet. Ask your admin to add you."}
-              </p>
-              {role === "admin" && (
-                <Link
-                  to="/projects"
-                  className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold no-underline transition-opacity hover:opacity-80"
-                  style={{ background: "#1264a3", color: "#fff" }}
-                >
-                  <FolderKanban className="h-4 w-4" />
-                  Go to Projects
-                </Link>
-              )}
-            </div>
+            <OnboardingEmptyState action={onboarding?.next_action ?? null} role={role} />
+
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {projects.slice(0, 6).map((p) => (
@@ -152,6 +150,83 @@ function DashboardPage() {
         </section>
       </div>
     </AppShell>
+  );
+}
+
+const ONBOARDING_STEPS: Record<
+  NonNullable<OnboardingAction>,
+  { icon: typeof FolderKanban; title: string; body: string; cta?: { label: string; to: string } }
+> = {
+  create_project: {
+    icon: FolderKanban,
+    title: "Create your first project",
+    body: "Set up a project to start tracking Slack channel activity and generating AI summaries.",
+    cta: { label: "Go to Projects", to: "/projects" },
+  },
+  wait_for_project_assignment: {
+    icon: Hourglass,
+    title: "Waiting for project access",
+    body: "You haven't been assigned to any project yet. Ask your admin to add you to a project.",
+  },
+  add_channels: {
+    icon: Hash,
+    title: "Add Slack channels",
+    body: "Your project is ready — now add the Slack channels you want to track for summaries.",
+    cta: { label: "Go to Projects", to: "/projects" },
+  },
+  wait_for_channels: {
+    icon: Hourglass,
+    title: "Waiting for channels",
+    body: "Your project has no Slack channels yet. Ask a team lead or admin to add channels.",
+  },
+  add_team_members: {
+    icon: UsersIcon,
+    title: "Invite team members",
+    body: "Channels are configured — now add team members so everyone gets their personalized summaries.",
+    cta: { label: "Go to Projects", to: "/projects" },
+  },
+  generate_first_summary: {
+    icon: Zap,
+    title: "Ready! Generate your first summary",
+    body: "Everything is set up. Open a project and generate your first summary to see it in action.",
+    cta: { label: "Go to Projects", to: "/projects" },
+  },
+};
+
+function OnboardingEmptyState({ action, role }: { action: OnboardingAction; role?: string }) {
+  const step = action ? ONBOARDING_STEPS[action] : null;
+  const Icon = step?.icon ?? FolderKanban;
+  const title = step?.title ?? (role === "admin" ? "No projects yet" : "No projects yet");
+  const body =
+    step?.body ??
+    (role === "admin"
+      ? "Create your first project to start tracking Slack summaries."
+      : "You haven't been added to any projects yet. Ask your admin to add you.");
+  const cta = step?.cta;
+
+  return (
+    <div
+      className="rounded-2xl p-12 text-center bg-card"
+      style={{ border: "2px dashed var(--color-border)" }}
+    >
+      <Icon className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+      <p className="font-semibold mb-1 text-foreground" style={{ fontSize: "15px" }}>
+        {title}
+      </p>
+      <p className="mb-5 text-muted-foreground" style={{ fontSize: "13px" }}>
+        {body}
+      </p>
+      {cta && (
+        <Link
+          to={cta.to}
+          className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold no-underline transition-opacity hover:opacity-80"
+          style={{ background: "#1264a3", color: "#fff" }}
+        >
+          <Plus className="h-4 w-4" />
+          {cta.label}
+        </Link>
+      )}
+    </div>
   );
 }
 
