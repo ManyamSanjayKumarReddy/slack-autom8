@@ -15,12 +15,26 @@ import {
   Search,
   Bell,
 } from "lucide-react";
+import { toast } from "sonner";
 import { SlackIcon } from "@/components/SlackIcon";
-import { clearToken } from "@/lib/auth";
+import { clearToken, apiFetch } from "@/lib/auth";
 import { useCurrentUser, clearCachedUser } from "@/lib/user-store";
-import { useProjects } from "@/lib/projects-store";
+import { useProjects, invalidateProjectsCache } from "@/lib/projects-store";
 import type { Role } from "@/lib/roles";
 import { isOneOf } from "@/lib/roles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { handleApiError } from "@/lib/api-helpers";
 
 interface NavItem {
   to: string;
@@ -131,11 +145,12 @@ interface ChannelsProps {
   workspaceName: string;
   displayName: string;
   role: Role | undefined;
+  canCreateProject?: boolean;
   onCloseMobile?: () => void;
 }
 
-function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: ChannelsProps) {
-  const { projects, loading } = useProjects();
+function ChannelsColumn({ workspaceName, displayName, role, canCreateProject, onCloseMobile }: ChannelsProps) {
+  const { projects, loading, refresh } = useProjects();
   const location = useLocation();
   const params = useParams({ strict: false }) as { projectId?: string };
   const activeProjectId = params.projectId;
@@ -143,6 +158,7 @@ function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: Cha
   const [openProjects, setOpenProjects] = useState(true);
   const [openDirect, setOpenDirect] = useState(true);
   const [filter, setFilter] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const projectBase = "/projects";
 
@@ -249,9 +265,15 @@ function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: Cha
               <ChevronRight className="h-3 w-3 opacity-70" />
             )}
             <span className="text-[13px] font-semibold tracking-tight opacity-90">Projects</span>
-            <span className="ml-auto h-5 w-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white/10">
-              <Plus className="h-3 w-3" />
-            </span>
+            {canCreateProject && (
+              <span
+                className="ml-auto h-5 w-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white/10"
+                onClick={(e) => { e.stopPropagation(); setCreateOpen(true); }}
+                title="Create new project"
+              >
+                <Plus className="h-3 w-3" />
+              </span>
+            )}
           </button>
 
           {openProjects && (
@@ -294,50 +316,72 @@ function ChannelsColumn({ workspaceName, displayName, role, onCloseMobile }: Cha
           )}
         </div>
 
-        {/* Sections passthrough — second-tier nav */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setOpenDirect((v) => !v)}
-            className="w-full flex items-center gap-1.5 px-2 h-7 rounded-md hover:bg-white/5 transition-colors"
-          >
-            {openDirect ? (
-              <ChevronDown className="h-3 w-3 opacity-70" />
-            ) : (
-              <ChevronRight className="h-3 w-3 opacity-70" />
-            )}
-            <span className="text-[13px] font-semibold tracking-tight opacity-90">Workspace</span>
-          </button>
-          {openDirect && (
-            <div className="mt-0.5 space-y-px">
-              {NAV.filter((n) => (role ? isOneOf(role, n.allowed) : false))
-                .filter((n) => n.to !== "/dashboard" && n.to !== "/projects")
-                .map((item) => {
-                  const Icon = item.icon;
-                  const active =
-                    location.pathname === item.to ||
-                    location.pathname.startsWith(item.to + "/");
-                  return (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      onClick={onCloseMobile}
-                      className="flex items-center gap-2 pl-5 pr-2 h-7 rounded-md text-[13.5px] no-underline transition-colors"
-                      style={{
-                        background: active ? "var(--slack-channels-active)" : "transparent",
-                        color: active ? "#fff" : "var(--slack-channels-text)",
-                        fontWeight: active ? 700 : 500,
-                      }}
-                    >
-                      <Icon className="h-[13.5px] w-[13.5px] opacity-90 shrink-0" />
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  );
-                })}
+        {/* Workspace section — only render if there are items for this role */}
+        {(() => {
+          const workspaceItems = NAV.filter((n) => (role ? isOneOf(role, n.allowed) : false))
+            .filter((n) => n.to !== "/dashboard" && n.to !== "/projects");
+          if (workspaceItems.length === 0) return null;
+          return (
+            <div>
+              <button
+                type="button"
+                onClick={() => setOpenDirect((v) => !v)}
+                className="w-full flex items-center gap-1.5 px-2 h-7 rounded-md hover:bg-white/5 transition-colors"
+              >
+                {openDirect ? (
+                  <ChevronDown className="h-3 w-3 opacity-70" />
+                ) : (
+                  <ChevronRight className="h-3 w-3 opacity-70" />
+                )}
+                <span className="text-[13px] font-semibold tracking-tight opacity-90">Workspace</span>
+              </button>
+              {openDirect && (
+                <div className="mt-0.5 space-y-px">
+                  {workspaceItems.map((item) => {
+                    const Icon = item.icon;
+                    const active =
+                      location.pathname === item.to ||
+                      location.pathname.startsWith(item.to + "/");
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={onCloseMobile}
+                        className="flex items-center gap-2 pl-5 pr-2 h-7 rounded-md text-[13.5px] no-underline transition-colors"
+                        style={{
+                          background: active ? "var(--slack-channels-active)" : "transparent",
+                          color: active ? "#fff" : "var(--slack-channels-text)",
+                          fontWeight: active ? 700 : 400,
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!active) e.currentTarget.style.background = "transparent";
+                        }}
+                      >
+                        <Icon className="h-[13.5px] w-[13.5px] opacity-90 shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
       </nav>
+
+      {/* Create project dialog */}
+      {createOpen && (
+        <CreateProjectDialog
+          onOpenChange={setCreateOpen}
+          onSaved={() => {
+            invalidateProjectsCache();
+            refresh();
+          }}
+        />
+      )}
 
       {/* Footer user card */}
       <Link
@@ -453,6 +497,7 @@ export function AppShell({
 
   const role = user?.role;
   const items = NAV.filter((n) => (role ? isOneOf(role, n.allowed) : false));
+  const canCreateProject = role === "admin";
 
   const handleLogout = () => {
     clearToken();
@@ -482,6 +527,7 @@ export function AppShell({
             workspaceName="Slack Autom8"
             displayName={displayName}
             role={role}
+            canCreateProject={canCreateProject}
           />
         </div>
       </aside>
@@ -504,6 +550,7 @@ export function AppShell({
                 workspaceName="Slack Autom8"
                 displayName={displayName}
                 role={role}
+                canCreateProject={canCreateProject}
                 onCloseMobile={() => setMobileOpen(false)}
               />
             </div>
@@ -531,5 +578,82 @@ export function AppShell({
         </main>
       </div>
     </div>
+  );
+}
+
+function CreateProjectDialog({
+  onOpenChange,
+  onSaved,
+}: {
+  onOpenChange: (o: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await apiFetch("/projects/", {
+        method: "POST",
+        body: JSON.stringify({ name: name.trim(), description: description.trim() }),
+      });
+      if (!res.ok) {
+        await handleApiError(res, "Failed to create project");
+        return;
+      }
+      toast.success("Project created");
+      onSaved();
+      onOpenChange(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create project</DialogTitle>
+          <DialogDescription>Add a new project. You can assign a manager and channels next.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="cp-name">Name</Label>
+            <Input
+              id="cp-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Scheduler Project"
+              autoFocus
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cp-desc">Description</Label>
+            <Textarea
+              id="cp-desc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Optional"
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Creating…" : "Create"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
