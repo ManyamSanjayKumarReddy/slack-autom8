@@ -23,6 +23,7 @@ interface UsageInfo {
   used_this_week: number;
   weekly_limit: number;
   remaining: number;
+  resets_at_ist?: string;
 }
 
 interface Props {
@@ -55,6 +56,7 @@ export function GenerateProjectSummaryDialog({
   const today = new Date();
   const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: today, to: today });
   const [context, setContext] = useState("");
+  const [showContext, setShowContext] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [calOpen, setCalOpen] = useState(false);
   const [rateLimitMsg, setRateLimitMsg] = useState<string | null>(null);
@@ -65,6 +67,7 @@ export function GenerateProjectSummaryDialog({
     if (open && !lastOpen.current) {
       setDateRange({ from: new Date(), to: new Date() });
       setContext("");
+      setShowContext(false);
       setRateLimitMsg(null);
       // Fetch current usage when dialog opens
       apiFetch("/summaries/usage")
@@ -175,6 +178,11 @@ export function GenerateProjectSummaryDialog({
                     }}
                   />
                 </div>
+                {usage.remaining <= 1 && usage.resets_at_ist && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Resets {usage.resets_at_ist}
+                  </p>
+                )}
               </div>
               <span className={`text-xs font-medium shrink-0 ${usage.remaining === 0 ? "text-destructive" : usage.remaining <= 2 ? "text-amber-600" : "text-muted-foreground"}`}>
                 {usage.remaining} left
@@ -235,20 +243,44 @@ export function GenerateProjectSummaryDialog({
             </Popover>
           </div>
 
-          {/* Context */}
+          {/* Custom focus (collapsible) */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="gp-context">
-              Context{" "}
-              <span className="text-muted-foreground font-normal">(optional)</span>
-            </Label>
-            <Textarea
-              id="gp-context"
-              value={context}
-              onChange={(e) => setContext(e.target.value)}
-              placeholder="e.g. focus on action items and decisions"
-              disabled={submitting}
-              rows={3}
-            />
+            {!showContext ? (
+              <button
+                type="button"
+                onClick={() => setShowContext(true)}
+                disabled={submitting}
+                className="self-start text-xs font-medium text-[#1264a3] hover:underline disabled:opacity-50"
+              >
+                + Add custom focus
+              </button>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="gp-context">
+                    Custom focus{" "}
+                    <span className="text-muted-foreground font-normal">(optional)</span>
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={() => { setShowContext(false); setContext(""); }}
+                    disabled={submitting}
+                    className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <Textarea
+                  id="gp-context"
+                  value={context}
+                  onChange={(e) => setContext(e.target.value)}
+                  placeholder="e.g. Focus on blockers and pending action items"
+                  disabled={submitting}
+                  rows={3}
+                  autoFocus
+                />
+              </>
+            )}
           </div>
 
           {/* Rate limit error */}
