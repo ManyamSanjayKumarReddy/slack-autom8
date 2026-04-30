@@ -1730,7 +1730,7 @@ function SummariesSection({
                 <Loader2 className="h-3 w-3 animate-spin" /> Generating…
               </span>
             )}
-            {usage && (
+            {usage && canGenerateCurrent && (
               <div
                 className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-medium"
                 style={{
