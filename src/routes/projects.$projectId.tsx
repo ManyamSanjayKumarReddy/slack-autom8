@@ -89,7 +89,8 @@ interface ProjectMember {
   username: string;
   name: string;
   email: string;
-  role: ProjectRole;
+  workspace_role: string;
+  project_role: ProjectRole;
   joined_at?: string;
 }
 
@@ -985,12 +986,12 @@ function MembersTab({
               {/* Role badge — subtle outlined chip */}
               <span
                 className={`shrink-0 text-[10.5px] font-semibold px-2 py-0.5 rounded-full border ${
-                  m.role === "team_lead"
+                  m.project_role === "team_lead"
                     ? "border-primary/30 text-primary bg-primary/10"
                     : "border-border text-muted-foreground"
                 }`}
               >
-                {m.role === "team_lead" ? "Team Lead" : "Employee"}
+                {m.project_role === "team_lead" ? "Team Lead" : "Employee"}
               </span>
               {/* Edit/remove — hidden until hover, Slack-style */}
               {canManage && (
@@ -1172,7 +1173,7 @@ function EditMemberRoleDialog({
   onOpenChange: (o: boolean) => void;
   onSaved: () => void;
 }) {
-  const [role, setRole] = useState<ProjectRole>(member.role);
+  const [role, setRole] = useState<ProjectRole>(member.project_role);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -1219,7 +1220,7 @@ function EditMemberRoleDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting || role === member.role}>
+          <Button onClick={handleSubmit} disabled={submitting || role === member.project_role}>
             {submitting ? "Saving…" : "Save"}
           </Button>
         </DialogFooter>
@@ -1712,7 +1713,7 @@ function SummariesSection({
                         <span className="min-w-0">
                           <div className="font-medium truncate">{m.name}</div>
                           <div className="text-[11px] text-muted-foreground capitalize">
-                            {m.role === "team_lead" ? "Team Lead" : "Member"}
+                            {m.project_role === "team_lead" ? "Team Lead" : "Member"}
                           </div>
                         </span>
                       </button>
